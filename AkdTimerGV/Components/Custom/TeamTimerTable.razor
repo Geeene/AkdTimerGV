@@ -1,0 +1,45 @@
+﻿@using AkdTimerGV.Components.Models
+
+<style>
+    .TeamTimerTable {
+        max-width: 350px;
+    }
+</style>
+
+@if (Lobby != null && Lobby.GetParticipatingTeams().Count > 0) {
+    <div class="TeamTimerTable">
+        <table class="table">
+            <thead>
+                <tr>
+                    <td></td>
+                    <td>Team</td>
+                    <td>Active</td>
+                    <td>Extra</td>
+                    <td>Break</td>
+                </tr>
+            </thead>
+
+            @foreach (Team Team in Lobby.GetParticipatingTeams()) {
+                <tr>
+                    <td>        
+                        <TeamTimerStatusIndicator Team="Team"/>
+                    </td>
+                    <td>@Team.Name</td>
+                    <td style="text-align:end">@(getTimeValueAsString(Team.TimerData.GetElapsedActiveTime()))</td>
+                    <td style="text-align:end">@(getTimeValueAsString(Team.TimerData.GetExtraTime()))</td>
+                    <td style="text-align:end">@(getTimeValueAsString(Team.TimerData.GetRemainingExtraTime()))</td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Lobby Lobby { get; set; }
+
+    protected string getTimeValueAsString(long value) {
+        return TimeUtil.getTimeAsString(value);
+    }
+
+}

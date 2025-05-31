@@ -1,0 +1,111 @@
+﻿@using AkdTimerGV.Components.Models
+
+@*
+    Component for Adding time to a Timer.
+    This could be Penalty / Break / Active Time
+
+    There are two versions, simplified is (for now) used for break & penalty time, 
+    where you chose form a radio button wether you're adding a number of seconds or minutes.
+
+    Since usually penalties / breaktimes aren't a mix of minutes and seconds this works well
+
+    The "Complex" mode allows the user to enter a number of hours / minutes / seconds directly.
+    Complex mode is for now intended when resuming a race in a second session to add the time from previously to the timer.
+*@
+
+<div class="d-flex flex-column container Panel">
+    <span>@TimerAdditionType</span>
+    
+    @* Simplified mode, simply have a radio button for selecting if minutes or seconds are added in addition to a number input *@
+    @if (simplified) {
+        <div class="d-flex flex-column">
+            <input type="number" style="max-width:150px" class="input-group-text" @bind="PenaltyToAdd"/>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="flexRadioDefault-@TimerAdditionType" checked>
+              <label class="form-check-label">
+                Minutes
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="flexRadioDefault-@TimerAdditionType">
+              <label class="form-check-label">
+                Seconds
+              </label>
+            </div>
+        </div>
+    } else {
+        @* "Complex" mode, have separate inputs for Hours / Minutes / Seconds *@
+        <div class="d-flex flex-row">
+            <input type="number" style="width: 50px" class="input-group-text" @bind="HoursToAdd"/>
+            <span>h</span>
+            <input type="number" style="width: 50px" class="input-group-text" @bind="MinutesToAdd"/>
+            <span>m</span>
+            <input type="number" style="width: 50px" class="input-group-text" @bind="SecondsToAdd"/>
+            <span>s</span>
+        </div>
+    }
+
+    @**@
+    <div class="flex flex-row" style="width:100%">
+        <input type="button" class="btn btn-light" value="Add" onclick="@(() => AddTimeImpl(1))"/>
+        <input type="button" class="btn btn-light" value="Subtract" onclick="@(() => AddTimeImpl(-1))"/>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool simplified { get; set; } = true;
+
+    [Parameter]
+    public List<TeamTimerData> TimerData { get; set; }
+
+    [Parameter]
+    public TimerAdditionType TimerAdditionType { get; set; }
+
+    private int HoursToAdd { get; set; }
+    private int MinutesToAdd { get; set; }
+    private int SecondsToAdd { get; set; }
+
+    /// <summary>
+    /// Amount in seconds that will be added to the timer
+    /// </summary>
+    private int PenaltyToAdd { get; set; } = 1;
+
+    /// <summary>
+    /// Simplified mode only, what time unit is added
+    /// </summary>
+    private String TimeUnit { get; set; } = "Minutes";
+
+
+    private void AddTimeImpl(int multiplier) {
+        int ValueInSeconds = 0;
+        if (simplified) {
+            ValueInSeconds = PenaltyToAdd;
+            if ("Minutes".Equals(TimeUnit)) {
+                ValueInSeconds *= 60;
+            }
+        } else {
+            ValueInSeconds += HoursToAdd * 3600;
+            ValueInSeconds += MinutesToAdd * 60;
+            ValueInSeconds += SecondsToAdd;
+        }
+
+        ValueInSeconds *= multiplier;
+
+        foreach (TeamTimerData timer in TimerData) {
+            switch (TimerAdditionType) {
+                case TimerAdditionType.Active:
+                    timer.AddActiveTime(ValueInSeconds);
+                    break;
+                case TimerAdditionType.Break:
+                    timer.AddBreakTime(ValueInSeconds);
+                    break;
+                case TimerAdditionType.Penalty:
+                    timer.AddPenaltyTime(ValueInSeconds);
+                    break;
+            }
+        }
+
+
+    }
+}

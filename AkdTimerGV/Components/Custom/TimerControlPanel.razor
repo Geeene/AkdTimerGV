@@ -1,0 +1,52 @@
+﻿@using AkdTimerGV.Components.Models
+
+@*
+Custom component which lets Members of a team control their Teams Timer.
+
+Start / Stop Timer
+Start / Stop Break
+Add Penalty
+*@
+
+<div class="TimerControlPanel d-flex flex-row">
+    @*Allow team to start / stop their timer *@
+    <div class="d-flex flex-column Panel">
+        <span>Timer</span>
+        @if (!timerData.Active) {
+            <input type="button" class="btn btn-success" value="Start" onclick="@(() => HandleStart())"/>
+        } else {
+            <input type="button" class="btn btn-danger" value="Stop" onclick="@(() => HandleFinish())"/>
+        }
+    </div>
+
+    @*Allow team to start / stop their Break *@
+    <div class="d-flex flex-column Panel">
+        <span>Break</span>
+        <input type="button" class="btn btn-light" disabled="@(timerData.Paused)" value="Start Break" onclick="@(() => timerData.StartBreak())"/>
+        <input type="button" class="btn btn-light" disabled="@(timerData.IsNotPaused())" value="End Break" onclick="@(() => timerData.EndBreak())"/>
+    </div>
+
+    @*Allow team to Add Penalty time *@
+    <AddToTimer TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(new List<TeamTimerData>() { timerData })"/>
+</div>
+
+@code {
+    [Parameter]
+    public TeamTimerData timerData { get; set; }
+
+    /// <summary>
+    /// Lambda to re-calculate the standings for all teams
+    /// </summary>
+    [Parameter]
+    public Object TriggerStandingsCalculation { get; set; }
+
+    public void HandleStart() {
+        timerData.Start();
+        ((Func<bool>)TriggerStandingsCalculation).Invoke();
+    }
+
+    public void HandleFinish() {
+        timerData.Finish();
+        ((Func<bool>)TriggerStandingsCalculation).Invoke();
+    }
+}

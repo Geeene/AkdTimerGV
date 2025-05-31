@@ -1,0 +1,202 @@
+﻿@page "/timer/lobby"
+@rendermode InteractiveServer
+<PageTitle>Lobby</PageTitle>
+@using AkdTimerGV.Components.Models
+@using AkdTimerGV.Components.Custom
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Threading
+@inject ProtectedLocalStorage BrowserStorage;
+@inject NavigationManager NavigationManager;
+@inject ILogger<Home> Logger
+
+<style>
+    .TeamTimersPanel {
+        @* At minimum 168 px as the timers are 168 incl. border*@
+        min-height: 168px;
+    }
+    .HostControlPanel {
+        border-left: 1px solid lightgray;
+        padding-left: 5px;
+    }
+</style>
+
+<div class="d-flex flex-column">
+    @if (Lobby != null && currentUser != null) {
+        <h1>
+            <label style="float: left;">@Lobby.Description</label>
+            <input type="button" class="btn btn-warning btn-lg" style="float:right;" onclick="@leaveLobby" value="Leave lobby"/>
+        </h1>
+        <h6>
+            <label style="float: left;">CurrentLobbyId: @Lobby.LobbyId</label>
+        </h6>
+
+        <hr />
+        <div class="flex-row d-flex justify-content-evenly w-100">
+            <div class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
+                @if (Lobby.StartingPistolValue == 0) {
+                    @* Panel showing the actual timers *@
+                    @foreach (var team in Lobby.GetParticipatingTeams()) {
+                        <TeamTimer Team="team"/>
+                    }
+                } else {
+                    <h1>@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</h1>
+                }
+            </div>
+            <TeamTimerTable Lobby="@Lobby"/>
+            @if (userIsHost()) {
+                <div class="HostControlPanel">
+                    <HostControlPanel Lobby="@Lobby"/>
+                </div>
+            }
+        </div>
+
+        <hr/>
+
+        <div class="d-flex flex-row Panel">
+            @* Give the User an option to create a Team if they are not part of one, or are a spectator. *@
+            @if (currentUser.Team == null || currentUser.Team.Name.Equals(Team.SPECTATOR)) {
+                <div class="Panel">
+                    <span>You're currently not a member of any Team, do you want to create one?</span><br />
+                    <label>Team Name: </label>
+                    <input style="max-width: 250px" id="teamNameInputText" type="text" @bind="ChosenTeamName"/>
+                    <input style="max-width: 250px" type="button" value="Create Team" class="btn btn-light" @onclick="() => createTeam()"/>
+                </div>
+            } else {
+                <div class="flex-row d-flex">
+                    <TeamList Team="@currentUser.Team" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" ButtonLabel="Leave"/>
+                    <TimerControlPanel timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() =>Lobby.DetermineStandings())"/>
+                </div>
+            }
+            <OBSLinkPanel Lobby=@Lobby/>
+        </div>
+
+        <hr/>
+
+        <div class="d-flex flex-row">
+            @* Panel showing all the Spectators *@
+            <TeamList Team="@Lobby.GetSpectatorTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" ButtonLabel="Join"/>
+            @* Panel showing all the Teams except the users own with their members *@
+            @foreach (var Team in GetParticipatingTeamsExceptOwn()) {
+                <TeamList Team="Team" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.Name))" ButtonLabel="Join"/>
+            }
+        </div>
+
+        <hr/>
+
+    } else {
+        <h2>Not currently in a Lobby, try joining one :)</h2>
+    }
+</div>
+
+
+@code {
+    public Lobby? Lobby = null;
+    protected User? currentUser;
+    protected String? ChosenTeamName;
+    private Timer Timer;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            return;
+        }
+
+        Lobby = await getStoredLobby();
+        currentUser = await getStoredUser();
+        if (Lobby == null || currentUser == null) {
+            await BrowserStorage.DeleteAsync("currentLobby");
+            return;    
+        }
+
+        // Have the Page refresh every 100ms
+        Timer = new Timer(new TimerCallback(LobbyRef => {
+            InvokeAsync(() => {
+                ((LobbyPage)LobbyRef).NotifyStateHasChanged();
+                Logger.LogInformation("Refreshing for User {User}", currentUser.UserId);
+                StateHasChanged();
+            });
+        }
+        ), this, 100, 100);
+    }
+
+    private void NotifyStateHasChanged() {
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Get the LobbyId from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<Lobby?> getStoredLobby() {
+        var storedLobby = await BrowserStorage.GetAsync<Guid>("currentLobby");
+        Guid? currentLobbyId = storedLobby.Value;
+        if (currentLobbyId == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present, 
+        // then remove the locally saved Lobby id and switch to the main page
+        return LobbyHolder.getLobby((Guid) currentLobbyId);
+    }
+
+    /// <summary>
+    /// Get the User from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<User?> getStoredUser() {
+        var storedUser = await BrowserStorage.GetAsync<Guid>("user");
+        Guid? currentUser = storedUser.Value;
+        if (currentUser == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present, 
+        // then remove the locally saved Lobby id and switch to the main page
+        return UserHolder.GetUserById((Guid) currentUser);
+    }
+
+
+    private async void leaveLobby() {
+        Lobby? lobby = await getStoredLobby();
+        var savedUser = await BrowserStorage.GetAsync<Guid>("user");
+        User? user = UserHolder.GetUserById(savedUser.Value);
+        if (lobby == null || user == null) {
+            return;
+        }
+        lobby.LeaveLobby(user);
+        NavigationManager.NavigateTo("/timer/home");
+    }
+
+    /// <summary>
+    /// Create a Team for the current user
+    /// </summary>
+    private void createTeam() {
+        if (ChosenTeamName == null || Lobby == null || currentUser == null) {
+            return;    
+        }
+
+        Lobby.SwitchTeam(currentUser, ChosenTeamName);
+    }
+
+    /// <summary>
+    /// Returns wether the current user is the lobby host.
+    /// </summary>
+    /// <returns></returns>
+    private bool userIsHost() {
+        return currentUser != null && Lobby != null && currentUser.Equals(Lobby.Owner);
+    }
+
+    /// <summary>
+    /// Get all teams except the one of the current user
+    /// </summary>
+    /// <returns></returns>
+    private List<Team> GetParticipatingTeamsExceptOwn() {
+        if (Lobby == null || currentUser == null) {
+            return [];
+        }
+
+        List<Team> teams = new List<Team>(Lobby.GetParticipatingTeams());
+        teams.Remove(currentUser.Team);
+        return teams;
+    }
+}

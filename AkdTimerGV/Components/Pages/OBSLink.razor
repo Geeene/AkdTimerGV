@@ -1,0 +1,69 @@
+﻿@page "/timer/lobby/{LobbyId}/AllTeams/{Table:bool}"
+@page "/timer/lobby/{LobbyId}/SingleTeam/{TeamName}/{Table:bool}"
+@using AkdTimerGV.Components.Models
+@using AkdTimerGV.Components.Custom
+@using AkdTimerGV.Components.Layout
+
+@*
+    This rendermode is needed to enable using OnAfterRenderAsync
+*@
+@rendermode InteractiveServer
+
+@*
+    Since this is intended to be the page which is used for OBS Browser capture, 
+    just use an empty layout without clutter to avoid cropping
+*@
+@layout EmptyLayout
+
+<div class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
+    @if (Lobby != null) {
+        @if (TeamName == null) {
+            @foreach (Team team in Lobby.GetParticipatingTeams()) {
+                <TeamTimer Team="team"/>
+            }
+
+        } else {
+            <TeamTimer Team="Lobby.Teams[new(TeamName)]"/>
+        }
+    }
+    @if (Table) {
+        <TeamTimerTable Lobby="@Lobby"/>
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public String LobbyId { get; set; }
+
+    [Parameter]
+    public String? TeamName { get; set; }
+
+    [Parameter]
+    public bool Table { get; set; }
+
+    public Lobby Lobby { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            return;
+        }
+        
+        // If we didn't receive a valid LobbyId somehow, then just do nothing
+        if (!Guid.TryParse(LobbyId, out Guid ParsedLobbyid)) {
+            return;
+        }
+
+        // Retrieve the reference to the Lobby from the LobbyHolder.
+        Lobby = LobbyHolder.getLobby(ParsedLobbyid);
+
+        // Have the Page refresh every 100ms
+        var timer = new Timer(new TimerCallback(_ => {
+            InvokeAsync(() => {
+                StateHasChanged();
+            });
+        }
+        ), null, 100, 100);
+    }
+}

@@ -1,0 +1,14 @@
+﻿@using AkdTimerGV.Components.Models
+
+@if (Team.TimerData.Active && !Team.TimerData.Paused) {
+    <i class="bi bi-play-circle" style="color:lightblue"></i>
+} else if (Team.TimerData.Paused) {
+    <i class="bi bi-cup-hot" style="color:lightgreen"></i>
+} else if (Team.TimerData.GetElapsedActiveTime() > 0) {
+    <i class="bi bi-flag-fill" > @Team.TimerData.Standing </i>
+}
+
+@code {
+    [Parameter]
+    public Team Team { get; set; }
+}

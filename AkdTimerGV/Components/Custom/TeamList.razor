@@ -1,0 +1,51 @@
+﻿@using AkdTimerGV.Components.Models;
+@* Component to show the members of the team *@
+
+<style>
+    .TeamList {
+        margin: 0px 5px 0px 0px;
+        border-right: 1px solid lightgray;
+        height: 100%;
+    }
+</style>
+
+<div class="Panel TeamList">
+    <h6><b>@Team.Name</b></h6>
+
+    <table>
+        @foreach (var member in Team.members) {
+            <tr>
+                <td>
+                    @if (member.Equals(Team.Creator)) {
+                        <span>*</span>
+                    }
+                </td> 
+                <td>@member.Name</td>
+            </tr>
+        }
+        <tr>
+            <td colspan="2"><input type="button" class="btn btn-primary" value="@ButtonLabel" onclick="@lambda"/> </td>
+        </tr>
+    </table>
+</div>
+
+@code {
+    /// <summary>
+    /// The Team whose users should be listed out
+    /// </summary>
+    [Parameter]
+    public Team Team { get; set; }
+
+    /// <summary>
+    /// This is a little bit cursed, but at creation of the TeamList we pass in a lambda function which 
+    /// lets the user join this team when clickin the button that is part of this component. 
+    ///  
+    ///  We do this because the function to properly join a team is on the Lobby object
+    /// </summary>
+    [Parameter]
+    public object lambda { get; set; }
+
+    [Parameter]
+    public String ButtonLabel { get; set; }
+
+}

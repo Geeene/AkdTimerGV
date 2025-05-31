@@ -1,0 +1,74 @@
+﻿@using AkdTimerGV.Components.Models
+
+<style>
+    .teamTimerContainer {
+        border: 1px solid black;
+        width: 320px;
+        height: 168px;
+        display:flex;
+        flex-direction:column;
+        text-align:center;
+        margin: 5px;
+        padding: 5px;
+    }
+
+    .teamTimerTeamName {
+        width: 100%;
+    }
+
+    .teamTimerMainTimer {
+        width: 100%;
+        font-size: 50pt;
+    }
+
+    .teamTimerSubtimers {
+        width: 100%;
+        display:flex;
+        flex-direction: row;
+        justify-content:space-evenly;
+    }
+
+</style>
+
+
+<div id="teamTimer-@Team.Name" class="teamTimerContainer fw-bold">
+    <h5>
+        <span class="teamTimerTeamName">@Team.Name</span>
+        <span>
+            <TeamTimerStatusIndicator Team="Team"/>
+        </span>
+    </h5>
+
+    <div class="teamTimerMainTimer">
+        @getTimeValueAsString(Team.TimerData.GetElapsedActiveTime())
+    </div>
+    @if (Team.TimerData.PenaltyTime > 0 || Team.TimerData.BreakTime > 0) {
+        <div class="teamTimerSubtimers">
+            <div class="teamTimerTotalTime">
+                @if (!Team.TimerData.Active) {
+                    <i class="bi bi-stopwatch"/>     @getTimeValueAsString(Team.TimerData.GetTotalTime())
+                } else {
+                    <i class="bi bi-stopwatch"/>   <span>+</span>@getTimeValueAsString(Team.TimerData.GetExtraTime())
+                }
+            </div>
+            <div class="teamTimerTotalTime">
+                <i class="bi bi-cup-hot" style="color:lightgreen"/>  @getTimeValueAsString(Team.TimerData.GetRemainingExtraTime())
+            </div>
+            @if (Team.TimerData.PenaltyTime > 0) {
+                <div class="teamTimerTotalTime">
+                    <i class="bi bi-clipboard-plus" style="color:red"/>  @getTimeValueAsString(Team.TimerData.PenaltyTime)
+                </div>
+            }
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public Team Team { get; set; }
+
+    protected string getTimeValueAsString(long value) {
+        return TimeUtil.getTimeAsString(value);
+    }
+}

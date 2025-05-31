@@ -1,0 +1,58 @@
+﻿@using AkdTimerGV.Components.Models
+@rendermode InteractiveServer
+
+@*
+    Custom Component to offer the Host some additional controls:
+    Global Pause, Global Reset, Starting Pistol, Add Break To All.
+*@
+
+<span>Host Controls</span>
+
+<AddToTimer TimerAdditionType="@TimerAdditionType.Break" TimerData="@GetRelevantTimerData()"></AddToTimer>
+<br />
+<div>
+    <div class="container">
+        <input type="button" class="btn btn-light" value="Global Reset" onclick="@(() => Lobby.GlobalReset())"/>
+        <input type="button" class="btn btn-light" value="Global Pause" onclick="@(() => Lobby.PauseAll())"  disabled="@(!Lobby.Started)"/>
+    </div>
+    <br />
+    <div class="container">
+        <input type="number" style="width: 50px" @bind="StartingPistolDuration" disabled="@Lobby.Started"/><label> Seconds</label>
+        <input type="button" class="btn btn-light" value="Starting Pistol" onclick="@(() => StartingPistol())" disabled="@Lobby.Started"/>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Lobby Lobby { get; set; }
+
+    private int StartingPistolDuration { get; set; } = 5;
+
+    protected Timer? timer;
+
+    private List<TeamTimerData> GetRelevantTimerData() {
+        return new List<TeamTimerData>(Lobby.GetParticipatingTeams().Select(Team => Team.TimerData));
+    }
+
+    private void StartingPistol() {
+        Lobby.StartingPistolValue = StartingPistolDuration;
+        var autoEvent = new AutoResetEvent(false);
+        
+        // Some more cursed tech, adds a timer on this class, but also passes this class as a parameter into the timer.
+        // The Objective is to every 0.1 seconds set the Starting Pistol value on the Lobby Object, 
+        // so that each client is updated, and then once the timer is done, we dispose of it.
+        timer = new Timer(new TimerCallback(panel => {
+            InvokeAsync(() => {
+                if (((HostControlPanel)panel).Lobby.StartingPistolValue <= 0.1) {
+                    ((HostControlPanel)panel).Lobby.StartingPistolValue = 0;
+                    ((HostControlPanel)panel).Lobby.Started = true;
+                    ((HostControlPanel)panel).timer.Dispose();
+                    Lobby.StartAllTimers();
+                    return;
+                }
+                Lobby.StartingPistolValue -= 0.1;
+            });
+        }
+        ), this, 100, 100);
+    }
+}

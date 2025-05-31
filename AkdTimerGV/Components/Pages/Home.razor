@@ -1,0 +1,158 @@
+﻿@page "/timer/Home"
+@page "/timer/"
+@page "/"
+@using AkdTimerGV.Components.Models
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using AkdTimerGV.Components.Custom
+@inject ProtectedLocalStorage BrowserStorage
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+@inject ILogger<Home> Logger
+
+@*
+    The HTML For the Actual Page
+*@
+
+<PageTitle>Home</PageTitle>
+<h2>Create a Lobby</h2>
+<div class="form-group">
+    <table>
+        <tr>
+            <td>Name of the Lobby:</td>
+            <td><input type="text" required="true" @bind="lobbyId" /></td>
+        </tr>
+        <tr>
+            <td>Username</td>
+            <td><input type="text" required="true" @bind="userName" /></td>
+        </tr>
+        <tr>
+            <td>Lobby Password</td>
+            <td><input type="text" required="true" @bind="password" /></td>
+        </tr>
+    </table>
+</div>
+
+<input type="button" class="btn btn-primary" onclick="@createLobby" value="Create Lobby" />
+
+<hr/>
+
+<h2>Open Lobbies</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Lobby Name</th>
+            <th>Lobby Owner</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var lobby in lobbies)
+        {
+            <tr>
+                <td>@lobby.Description</td>
+                <td>@lobby.Owner.Name</td>
+                <td><input type="button" class="btn btn-primary" value="Join Lobby" onclick="@(() => showModalToJoinLobby(lobby))"/> </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@*
+    The HTML for the Modal Dialog
+*@
+
+<ModalDialog @ref="@ModalDialog">
+    Name: <input type="text" @bind="modalDialogUserName"/><br />
+    Password: <input type="text" @bind="modalDialogPassword"/><br/>
+    <input type="button" value="Confirm" @onclick="() => joinLobby()"/>
+
+</ModalDialog>
+
+@code {
+    private string? lobbyId;
+    private string? userName;
+    private string? password;
+    private List<Lobby> lobbies = LobbyHolder.getLobbies();
+    private ModalDialog ModalDialog { get; set; }
+    private Lobby? lobbyToJoin;
+
+    private string? modalDialogUserName;
+    private string? modalDialogPassword;
+
+    public async void createLobby() {
+        if (lobbyId == null || userName == null) {
+            Logger.LogInformation("necessary information for lobby creation not filled");
+            return;
+        }
+
+        User currentUser = await getOrCreateUserInLocalStorage(userName);
+        Lobby lobby = LobbyHolder.createLobby(lobbyId, currentUser, password);
+        await handleMovingUserToLobby(currentUser, password, lobby);
+    }
+
+    /// <summary>
+    /// The App stores the Userinformation (Guid + Name) in the Browsers Local storage.
+    /// If the info is already saved in there, then we just grab it, and make sure to update the user name.
+    /// If it is not there already, then we will save it instead.
+    /// </summary>
+    /// <param name="userName"></param>
+    /// <returns></returns>
+    public async Task<User> getOrCreateUserInLocalStorage(String userName) {
+        var storedUser = await BrowserStorage.GetAsync<Guid?>("user");
+        if (!storedUser.Success || storedUser.Value == null) {
+            Logger.LogInformation("Need to create a new user, as nothing was stored");
+            User createdUser = UserHolder.createUser(userName);
+            await BrowserStorage.SetAsync("user", createdUser.UserId);
+            return createdUser;
+        } else {
+            Logger.LogInformation("User already exists in local storage {}", storedUser.Value);
+            User? currentUser = UserHolder.GetUserById((Guid) storedUser.Value);
+
+            // If there was a user cached, but that user no longer exists in memory, 
+            // then delete the Guid from local storage and re-call the method so a new user is created.
+            if (currentUser == null) {
+                await BrowserStorage.DeleteAsync("user");
+                return await getOrCreateUserInLocalStorage(userName);
+            }
+
+            return currentUser;
+        }
+    }
+
+    public void showModalToJoinLobby(Lobby lobby) {
+        lobbyToJoin = lobby;
+        ModalDialog.showDialog();
+    }
+
+
+    public async void joinLobby() {
+        if (modalDialogUserName == null || lobbyToJoin == null) {
+            return;
+        }
+
+        User currentUser = await getOrCreateUserInLocalStorage(modalDialogUserName);
+        if (await handleMovingUserToLobby(currentUser, modalDialogPassword, lobbyToJoin)) {
+            ModalDialog.closeDialog();
+            StateHasChanged();
+        }
+    }
+
+    public async Task<bool> handleMovingUserToLobby(User user, string? password, Lobby lobby) {
+        if (lobby.TryJoinLobby(user, password)) {
+            await BrowserStorage.SetAsync("currentLobby", lobby.LobbyId);
+            NavigationManager.NavigateTo("timer/lobby");
+            StateHasChanged();
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public bool isPasswordRequired() {
+        return lobbyToJoin != null && lobbyToJoin.Password != null;
+    }
+}
