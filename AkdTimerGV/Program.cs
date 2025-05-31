@@ -1,10 +1,12 @@
 using AkdTimerGV.Components;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo("/home/web/Apps/AkdTimerGV/Keys"));
 
 var app = builder.Build();
 

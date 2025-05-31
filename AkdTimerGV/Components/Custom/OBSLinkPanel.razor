@@ -1,5 +1,6 @@
 ﻿@using AkdTimerGV.Components.Models
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 <div class="d-flex flex-column Panel">
     <span>Stream Link</span>
@@ -27,20 +28,6 @@
     <input type="button" class="btn btn-light" value="Generate Link" onclick="@(() => generateLink())"/>
 </div>
 
-<script>
-    @* https://chrissainty.com/copy-to-clipboard-in-blazor/*@
-    window.clipboardCopy = {
-        copyText: function(text) {
-            navigator.clipboard.writeText(text).then(function () {
-                alert("Copied to clipboard!");
-            })
-            .catch(function (error) {
-                alert(error);
-            });
-        }
-    };
-</script>
-
 @code {
     [Parameter]
     public Lobby Lobby { get; set; }
@@ -51,8 +38,9 @@
 
     String ChosenTeam { get; set; }
 
+
     public async void generateLink() {
-        String link = "localhost:7052/timer/lobby/"+Lobby.LobbyId+"/";
+        String link = NavigationManager.BaseUri+"timer/lobby/"+Lobby.LobbyId+"/";
 
         if (AllTeams) {
             link += "AllTeams/";
@@ -61,7 +49,8 @@
         }
 
         link += IncludeTable ? "true" : "false";
-
-        await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", link);
+        // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
+        await JSRuntime.InvokeVoidAsync("exampleJsFunctions.ShowMsg", 
+                                                    link);
     }
 }

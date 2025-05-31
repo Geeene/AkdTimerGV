@@ -112,7 +112,7 @@
         Timer = new Timer(new TimerCallback(LobbyRef => {
             InvokeAsync(() => {
                 ((LobbyPage)LobbyRef).NotifyStateHasChanged();
-                Logger.LogInformation("Refreshing for User {User}", currentUser.UserId);
+                Logger.LogDebug("Refreshing for User {User}", currentUser.UserId);
                 StateHasChanged();
             });
         }
