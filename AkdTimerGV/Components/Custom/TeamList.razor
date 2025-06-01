@@ -3,8 +3,6 @@
 
 <style>
     .TeamList {
-        margin: 0px 5px 0px 0px;
-        border-right: 1px solid lightgray;
         height: 100%;
     }
 </style>
@@ -17,24 +15,62 @@
             <tr>
                 <td>
                     @if (member.Equals(Team.Creator)) {
-                        <span>*</span>
+                        <i class="bi bi-person-fill-gear"></i>
+                    } else {
+                        @if (member.HasTeamPermission) {
+                            <i class="bi bi-person-fill-check"></i>
+                        } else {
+                            <i class="bi bi-person-fill-slash"></i>
+                        }
                     }
                 </td> 
                 <td>@member.Name</td>
+                @*Screen is being rendered for the Team creator, and the current user is not them. Add a column to grant them permission*@
+                @if (RenderForTeamCreator && !member.Equals(Team.Creator)) {
+                    <td>
+                        @if (member.HasTeamPermission) {
+                            <input type="button" value="Revoke Perm." onclick="@(() => RevokePermissions(member))"/>
+                        } else {
+                            <input type="button" value="Grant Perm." onclick="@(() => GrantPermission(member))"/>
+                        }
+                    </td>
+                }
             </tr>
         }
+
+        @if (RenderForTeamCreator) {
+            <td colspan="3"><input type="button" class="btn btn-danger" value="@(Team.Locked ? "Unlock" : "Lock Team")" onclick="@(() => SwapTeamLockStatus())"/> </td>
+        }
+
         <tr>
-            <td colspan="2"><input type="button" class="btn btn-primary" value="@ButtonLabel" onclick="@lambda"/> </td>
+            @if (TeamJoinType.JOIN == JoinType) {
+                if (!Team.Locked) {
+                    <td colspan="3"><input type="button" class="btn btn-primary" value="Join" onclick="@lambda"/> </td>
+                }
+            } else if (TeamJoinType.LEAVE == JoinType) {
+                <td colspan="3"><input type="button" class="btn btn-primary" value="Leave" onclick="@lambda"/> </td>
+            }
         </tr>
     </table>
 </div>
 
 @code {
+    public enum TeamJoinType {
+        JOIN, LEAVE, NONE
+
+    }
+
     /// <summary>
     /// The Team whose users should be listed out
     /// </summary>
     [Parameter]
     public Team Team { get; set; }
+
+    /// <summary>
+    /// Wether the user that this list is rendered for is the creator of the Team
+    /// </summary>
+    [Parameter]
+    public bool RenderForTeamCreator { get; set; } = false;
 
     /// <summary>
     /// This is a little bit cursed, but at creation of the TeamList we pass in a lambda function which 
@@ -45,7 +81,26 @@
     [Parameter]
     public object lambda { get; set; }
 
+    /// <summary>
+    /// Determines how the Join Button will be shown.
+    /// 
+    /// NONE = This is the spectator team, this team can only be joined by leaving your current team
+    /// JOIN = User Can join this team, assuming it's not locked
+    /// LEAVE = User Can always leave this team, logically they must already be part of the team
+    /// </summary>
     [Parameter]
-    public String ButtonLabel { get; set; }
+    public TeamJoinType JoinType { get; set; }
+
+    private void GrantPermission(User user) {
+        user.HasTeamPermission = true;
+    }
+
+    private void RevokePermissions(User user) {
+        user.HasTeamPermission = false;
+    }
+
+    private void SwapTeamLockStatus() {
+        Team.Locked = !Team.Locked;
+    }
 
 }

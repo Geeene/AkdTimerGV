@@ -4,6 +4,7 @@
 @using AkdTimerGV.Components.Models
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using AkdTimerGV.Components.Custom
+@using System.Security.Cryptography
 @inject ProtectedLocalStorage BrowserStorage
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
@@ -79,6 +80,19 @@
 
     private string? modalDialogUserName;
     private string? modalDialogPassword;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (firstRender) {
+            try {
+                var storedUser = await BrowserStorage.GetAsync<Guid?>("user");
+            } catch (CryptographicException e) {
+                Logger.LogError("Ran into a cryptography Exception, deleting local storage. Probably Key is invalid due to re-deploy");
+                await BrowserStorage.DeleteAsync("user");
+                await BrowserStorage.DeleteAsync("currentLobby");
+            }
+        }
+    }
+
 
     public async void createLobby() {
         if (lobbyId == null || userName == null) {

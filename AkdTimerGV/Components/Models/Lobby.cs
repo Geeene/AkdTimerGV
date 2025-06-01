@@ -55,6 +55,7 @@
             
             // Then check if the Team they want to joins exists already
             Teams.TryGetValue(new(newTeamName), out Team? newTeam);
+            user.HasTeamPermission = false;
             // If there is no team yet with the chosen name, then create a new Team
             if (newTeam == null) {
                 newTeam = new Team(newTeamName);
@@ -62,6 +63,7 @@
                     newTeam.Participating = false;
                 } else { 
                     newTeam.Creator = user;
+                    user.HasTeamPermission = true;
                 }
                 Teams.Add(new(newTeamName), newTeam);
             }

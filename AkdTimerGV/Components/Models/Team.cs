@@ -27,6 +27,11 @@
         public User? Creator { get; set; }
 
         /// <summary>
+        /// If this value is true, then users can not join this team
+        /// </summary>
+        public bool Locked { get; set; } = false;
+
+        /// <summary>
         /// The Users that can maintain the timer
         /// </summary>
         public readonly List<User> members = [];
@@ -63,7 +68,10 @@
             user.Team = null;
 
             if (Creator != null && Creator.Equals(user) && members.Count > 0) {
-                Creator = members[0];
+                // Pass down the permissions to the next user, prefer users that already have been given permissions 
+                List<User> MembersWithPermission = members.Where(member => member.HasTeamPermission).ToList();
+
+                Creator = MembersWithPermission.Count > 0 ? MembersWithPermission[0] : members[0]; 
             }
         }
     }

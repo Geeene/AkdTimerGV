@@ -5,6 +5,7 @@
 @using AkdTimerGV.Components.Custom
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Threading
+@using static AkdTimerGV.Components.Custom.TeamList
 @inject ProtectedLocalStorage BrowserStorage;
 @inject NavigationManager NavigationManager;
 @inject ILogger<Home> Logger
@@ -13,10 +14,6 @@
     .TeamTimersPanel {
         @* At minimum 168 px as the timers are 168 incl. border*@
         min-height: 168px;
-    }
-    .HostControlPanel {
-        border-left: 1px solid lightgray;
-        padding-left: 5px;
     }
 </style>
 
@@ -44,7 +41,7 @@
             </div>
             <TeamTimerTable Lobby="@Lobby"/>
             @if (userIsHost()) {
-                <div class="HostControlPanel">
+                <div class="PanelWithLeftBorder">
                     <HostControlPanel Lobby="@Lobby"/>
                 </div>
             }
@@ -63,8 +60,8 @@
                 </div>
             } else {
                 <div class="flex-row d-flex">
-                    <TeamList Team="@currentUser.Team" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" ButtonLabel="Leave"/>
-                    <TimerControlPanel timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() =>Lobby.DetermineStandings())"/>
+                    <TeamList Team="@currentUser.Team" RenderForTeamCreator="@currentUser.IsCreatorOfTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" JoinType="TeamJoinType.LEAVE"/>
+                    <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() =>Lobby.DetermineStandings())"/>
                 </div>
             }
             <OBSLinkPanel Lobby=@Lobby/>
@@ -74,10 +71,10 @@
 
         <div class="d-flex flex-row">
             @* Panel showing all the Spectators *@
-            <TeamList Team="@Lobby.GetSpectatorTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" ButtonLabel="Join"/>
+            <TeamList Team="@Lobby.GetSpectatorTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" JoinType="TeamJoinType.NONE"/>
             @* Panel showing all the Teams except the users own with their members *@
             @foreach (var Team in GetParticipatingTeamsExceptOwn()) {
-                <TeamList Team="Team" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.Name))" ButtonLabel="Join"/>
+                <TeamList Team="Team" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.Name))" JoinType="TeamJoinType.JOIN"/>
             }
         </div>
 
@@ -109,9 +106,12 @@
         }
 
         // Have the Page refresh every 100ms
+        // On Live I had some issues with the Timer being garbage collected, 
+        // so make sure the Instance has a reference to the timer && pass this page instance as a state to the timer, 
+        // without it still happened for some reason
         Timer = new Timer(new TimerCallback(LobbyRef => {
             InvokeAsync(() => {
-                ((LobbyPage)LobbyRef).NotifyStateHasChanged();
+                ((LobbyPage) LobbyRef).NotifyStateHasChanged();
                 Logger.LogDebug("Refreshing for User {User}", currentUser.UserId);
                 StateHasChanged();
             });

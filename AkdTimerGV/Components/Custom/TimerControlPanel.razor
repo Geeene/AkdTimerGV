@@ -13,24 +13,27 @@ Add Penalty
     <div class="d-flex flex-column Panel">
         <span>Timer</span>
         @if (!timerData.Active) {
-            <input type="button" class="btn btn-success" value="Start" onclick="@(() => HandleStart())"/>
+            <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Start" onclick="@(() => HandleStart())"/>
         } else {
-            <input type="button" class="btn btn-danger" value="Stop" onclick="@(() => HandleFinish())"/>
+            <input type="button" class="btn btn-danger" disabled="@(Disabled)" value="Stop" onclick="@(() => HandleFinish())"/>
         }
     </div>
 
     @*Allow team to start / stop their Break *@
     <div class="d-flex flex-column Panel">
         <span>Break</span>
-        <input type="button" class="btn btn-light" disabled="@(timerData.Paused)" value="Start Break" onclick="@(() => timerData.StartBreak())"/>
-        <input type="button" class="btn btn-light" disabled="@(timerData.IsNotPaused())" value="End Break" onclick="@(() => timerData.EndBreak())"/>
+        <input type="button" class="btn btn-light" disabled="@(timerData.Paused || Disabled)" value="Start Break" onclick="@(() => timerData.StartBreak())"/>
+        <input type="button" class="btn btn-light" disabled="@(timerData.IsNotPaused() || Disabled)" value="End Break" onclick="@(() => timerData.EndBreak())"/>
     </div>
 
     @*Allow team to Add Penalty time *@
-    <AddToTimer TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(new List<TeamTimerData>() { timerData })"/>
+    <AddToTimer Disabled="@Disabled" TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(new List<TeamTimerData>() { timerData })"/>
 </div>
 
 @code {
+    [Parameter]
+    public bool Disabled { get; set; }
+
     [Parameter]
     public TeamTimerData timerData { get; set; }
 
