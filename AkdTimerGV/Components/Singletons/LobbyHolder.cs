@@ -5,7 +5,22 @@ public sealed class LobbyHolder {
     private static LobbyHolder instance = null;
     private static readonly object padlock = new object();
     private static readonly Dictionary<Guid, Lobby> lobbies = new Dictionary<Guid, Lobby>();
+
+    private static Timer CleanupTimer;
+
     LobbyHolder() {
+        CleanupTimer = new Timer(new TimerCallback(_ => {
+            foreach (var item in lobbies) {
+                // Check for each lobby if it has been open for more than 2 days, and remove the lobby if it is. 
+                if (DateTime.Now.AddDays(-2) > item.Value.Created) {
+                    // Remove the Lobby from our dictionary so it is garbage collected.
+                    // Within the lobbies, there are circular references between teams / users / lobby, but those don't matter.
+                    // It's cleaned up regardless
+                    lobbies.Remove(item.Key);
+                }
+            }
+            ;
+        }), this, 0, 24 * 60 * 60);
     }
 
     // Make it threadsafe to create the Singleton instance by locking a shared object

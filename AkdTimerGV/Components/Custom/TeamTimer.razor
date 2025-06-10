@@ -3,7 +3,7 @@
 <style>
     .teamTimerContainer {
         border: 1px solid black;
-        width: 320px;
+        min-width: 320px;
         height: 168px;
         display:flex;
         flex-direction:column;
@@ -28,6 +28,10 @@
         justify-content:space-evenly;
     }
 
+    .teamTimerSubtimers div {
+        margin: 0px 5px 0px 5px;
+    }
+
 </style>
 
 
@@ -42,7 +46,7 @@
     <div class="teamTimerMainTimer">
         @getTimeValueAsString(Team.TimerData.GetElapsedActiveTime())
     </div>
-    @if (Team.TimerData.PenaltyTime > 0 || Team.TimerData.BreakTime > 0) {
+    @if (Team.TimerData.PenaltyTime > 0 || Team.TimerData.BreakTime > 0 || Team.TimerData.PreviousTime > 0) {
         <div class="teamTimerSubtimers">
             <div class="teamTimerTotalTime">
                 @if (!Team.TimerData.Active) {
@@ -57,6 +61,12 @@
             @if (Team.TimerData.PenaltyTime > 0) {
                 <div class="teamTimerTotalTime">
                     <i class="bi bi-clipboard-plus" style="color:red"/>  @getTimeValueAsString(Team.TimerData.PenaltyTime)
+                </div>
+            }
+
+            @if (Team.TimerData.PreviousTime > 0) {
+                <div class="teamTimerPreviousTime">
+                    <i class="bi bi-calendar2-event" style="color:lightblue"/>  @getTimeValueAsString(Team.TimerData.PreviousTime)
                 </div>
             }
         </div>

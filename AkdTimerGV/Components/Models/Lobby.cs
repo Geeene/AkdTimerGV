@@ -29,7 +29,7 @@
         /// <summary>
         /// The Time Stamp when the lobby was created.
         /// </summary>
-        private DateTime Created = DateTime.Now;
+        public DateTime Created = DateTime.Now;
         /// <summary>
         /// Wether it is possible to join another team, by default is true
         /// </summary>
@@ -42,7 +42,15 @@
         /// </summary>
         public double StartingPistolValue = 0;
 
+        /// <summary>
+        /// Used to determine wether the global pause button should be enabled or not
+        /// </summary>
         public bool Started { get; set; } = false;
+
+        /// <summary>
+        /// Wether this race is resumed or not. This determines if the teams will have the ability to add previous time
+        /// </summary>
+        public bool ResumedRace { get; set; } = false;
 
         /// <summary>
         /// Switches the user to the Team with the given name, if there is no such Team yet, then it will be created.

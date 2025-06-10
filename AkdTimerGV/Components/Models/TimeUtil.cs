@@ -13,7 +13,7 @@ namespace AkdTimerGV.Components.Models {
             long timeHoursOnly = timeWithoutSeconds - (timeWithoutSeconds % (60 * 60));
             long numberHours = timeHoursOnly / (60 * 60);
 
-            StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder stringBuilder = new();
 
             if (numberHours > 0) {
                 stringBuilder.Append(numberHours + ":");
@@ -21,6 +21,9 @@ namespace AkdTimerGV.Components.Models {
 
             if (numberHours > 0 && numberMinutes < 10) {
                 stringBuilder.Append('0');
+                if (numberMinutes == 0) {
+                    stringBuilder.Append("0:");
+                }
             }
             if (numberMinutes > 0) { 
                 stringBuilder.Append(numberMinutes + ":");

@@ -13,11 +13,11 @@
     Complex mode is for now intended when resuming a race in a second session to add the time from previously to the timer.
 *@
 
-<div class="d-flex flex-column container Panel">
+<div class="d-flex flex-column Panel">
     <span>@TimerAdditionType</span>
     
     @* Simplified mode, simply have a radio button for selecting if minutes or seconds are added in addition to a number input *@
-    @if (simplified) {
+    @if (Simplified) {
         <div class="d-flex flex-column">
             <input type="number" style="max-width:150px" class="input-group-text" @bind="PenaltyToAdd"/>
             <div class="form-check">
@@ -36,12 +36,12 @@
     } else {
         @* "Complex" mode, have separate inputs for Hours / Minutes / Seconds *@
         <div class="d-flex flex-row">
-            <input type="number" style="width: 50px" class="input-group-text" @bind="HoursToAdd"/>
-            <span>h</span>
-            <input type="number" style="width: 50px" class="input-group-text" @bind="MinutesToAdd"/>
-            <span>m</span>
-            <input type="number" style="width: 50px" class="input-group-text" @bind="SecondsToAdd"/>
-            <span>s</span>
+            <input type="number" style="width: 80px" class="input-group-text" @bind="HoursToAdd"/>
+            <span style="margin: 0px 5px 0px 5px; vertical-align:middle;">h</span>
+            <input type="number" style="width: 80px" class="input-group-text" @bind="MinutesToAdd"/>
+            <span style="margin: 0px 5px 0px 5px; vertical-align:middle;">m</span>
+            <input type="number" style="width: 80px" class="input-group-text" @bind="SecondsToAdd"/>
+            <span style="margin: 0px 5px 0px 5px; vertical-align:middle;">s</span>
         </div>
     }
 
@@ -57,7 +57,7 @@
     public bool Disabled { get; set; } = false;
 
     [Parameter]
-    public bool simplified { get; set; } = true;
+    public bool Simplified { get; set; } = true;
 
     [Parameter]
     public List<TeamTimerData> TimerData { get; set; }
@@ -82,7 +82,7 @@
 
     private void AddTimeImpl(int multiplier) {
         int ValueInSeconds = 0;
-        if (simplified) {
+        if (Simplified) {
             ValueInSeconds = PenaltyToAdd;
             if ("Minutes".Equals(TimeUnit)) {
                 ValueInSeconds *= 60;
@@ -105,6 +105,9 @@
                     break;
                 case TimerAdditionType.Penalty:
                     timer.AddPenaltyTime(ValueInSeconds);
+                    break;
+                case TimerAdditionType.Previous:
+                    timer.AddPreviousTime(ValueInSeconds);
                     break;
             }
         }

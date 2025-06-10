@@ -47,6 +47,11 @@
         /// </summary>
         public long PenaltyTime { get; set; }
 
+        /// <summary>
+        /// How much time the team has from a previous session of the race in SECONDS
+        /// </summary>
+        public long PreviousTime { get; set; } = 0;
+
 
         /// <summary>
         /// Start the break, mainly sets the StartCurrentBreak to now
@@ -96,7 +101,7 @@
             }
 
 
-            return ((long) DateTime.Now.Subtract((DateTime) StartTime).TotalSeconds) + ActiveSeconds;
+            return ((long) DateTime.Now.Subtract((DateTime) StartTime).TotalSeconds) + ActiveSeconds + PreviousTime;
         }
 
         /// <summary>
@@ -125,7 +130,7 @@
         }
 
         /// <summary>
-        /// add active time to this timer
+        /// Add active time to this timer
         /// </summary>
         /// <param name="ActiveTimeToAdd"></param>
         public void AddActiveTime(long ActiveTimeToAdd) {
@@ -146,6 +151,14 @@
         /// <param name="breakTimeToAdd">Must be given in SECONDS</param>
         public void AddBreakTime(long breakTimeToAdd) {
             BreakTime += breakTimeToAdd;
+        }
+
+        /// <summary>
+        /// Adds the given number of Seconds to the Previous time
+        /// </summary>
+        /// <param name="previousTimeToAdd"></param>
+        public void AddPreviousTime(long previousTimeToAdd) { 
+            PreviousTime += previousTimeToAdd;
         }
 
         /// <summary>
@@ -174,6 +187,7 @@
             return !Paused;
         }
 
+
         /// <summary>
         /// Get the sum of breaktime + penalty
         /// </summary>
@@ -183,11 +197,11 @@
         }
 
         /// <summary>
-        /// Get the Sum of Active time + penalty
+        /// Get the Sum of Active time + Penalty + Previous Time. This specifically does not include break
         /// </summary>
         /// <returns></returns>
         public long GetSubmittedTime() {
-            return GetElapsedActiveTime() + BreakTime;
+            return GetElapsedActiveTime() + PenaltyTime + PreviousTime;
         }
 
         /// <summary>

@@ -36,7 +36,7 @@
                         <TeamTimer Team="team"/>
                     }
                 } else {
-                    <h1>@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</h1>
+                    <b style="font-size:100pt">@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</b>
                 }
             </div>
             <TeamTimerTable Lobby="@Lobby"/>
@@ -61,7 +61,7 @@
             } else {
                 <div class="flex-row d-flex">
                     <TeamList Team="@currentUser.Team" RenderForTeamCreator="@currentUser.IsCreatorOfTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" JoinType="TeamJoinType.LEAVE"/>
-                    <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() =>Lobby.DetermineStandings())"/>
+                    <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() =>Lobby.DetermineStandings())" ResumedRace="@Lobby.ResumedRace"/>
                 </div>
             }
             <OBSLinkPanel Lobby=@Lobby/>
