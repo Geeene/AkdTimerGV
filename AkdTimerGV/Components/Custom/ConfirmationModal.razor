@@ -1,0 +1,33 @@
+﻿@*
+    Generic extension of the Modal Dialog that is used to have the User confirm an action that they want to do.
+    To be used with Dangerous actions, such as handing over host permissions
+*@
+
+<ModalDialog Title="Confirm?" @ref="ModalDialog">
+    <h4>@ActionDescription</h4>
+    <br />
+    <span>
+        <button class="btn btn-default" onclick="@(() => ExecuteRunnable())">Yes</button>
+        <button class="btn btn-danger" onclick="@(() => ModalDialog.closeDialog())">No</button>
+    </span>
+</ModalDialog>
+
+@code {
+    
+    [Parameter]
+    public string ActionDescription { get; set; }
+
+    [Parameter]
+    public Object ActionRunnable { get; set; }
+
+    private ModalDialog ModalDialog { get; set; }
+
+    public void showDialog() {
+        ModalDialog.showDialog();
+    }
+
+    private void ExecuteRunnable() {
+        ((Action) ActionRunnable).Invoke();
+        ModalDialog.closeDialog();
+    }
+}

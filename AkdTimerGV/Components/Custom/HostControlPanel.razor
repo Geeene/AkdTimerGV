@@ -1,5 +1,6 @@
 ﻿@using AkdTimerGV.Components.Models
 @rendermode InteractiveServer
+@inject ILogger<HostControlPanel> Logger
 
 @*
     Custom Component to offer the Host some additional controls:
@@ -10,7 +11,8 @@
     <span>Host Controls</span>
     <hr />
     <span><input type="checkbox" class="btn" @bind="ResumeRace" @bind:after="ToggleResume"/> Resumed Race</span>
-    <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Break" TimerData="@GetRelevantTimerData()"></AddToTimer>
+
+    <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Break" TimerData="@GetRelevantTimerData()"/>
     <div style="margin-top: 10px;">
         <input type="button" class="btn btn-light" value="Global Reset" onclick="@(() => Lobby.GlobalReset())"/>
         <input type="button" class="btn btn-light" value="Global Pause" onclick="@(() => Lobby.PauseAll())"  disabled="@(!Lobby.Started)"/>
@@ -21,6 +23,22 @@
         <label style="margin: 0px 5px 0px 5px"> Seconds</label>
         <input type="button" class="btn btn-light" value="Starting Pistol" onclick="@(() => StartingPistol())" disabled="@Lobby.Started"/>
     </div>
+
+    <hr />
+    <span>
+        <InputSelect name="NewHostSelect" @bind-value="SelectedNewHost">
+            <option value="@Guid.Empty">Select the new Host</option>
+            @foreach (var user in Lobby.GetUsersExceptHost()) {
+                <option value="@user.UserId">@user.Name</option>
+            }
+        </InputSelect>
+        <input type="button" value="Make Host" onclick="@(() => ConfirmationModal.showDialog())"/>
+    </span>
+
+    <ConfirmationModal @ref="ConfirmationModal"
+        ActionDescription="Are you sure you want to handover host controls to the selected user?"
+        ActionRunnable="@(() => HandoverHostControls())"/>
+
 </div>
 
 @code {
@@ -32,6 +50,10 @@
     private int StartingPistolDuration { get; set; } = 5;
 
     protected Timer? timer;
+
+    private ConfirmationModal ConfirmationModal  { get; set; }
+
+    private Guid SelectedNewHost { get; set; }
 
     private List<TeamTimerData> GetRelevantTimerData() {
         return new List<TeamTimerData>(Lobby.GetParticipatingTeams().Select(Team => Team.TimerData));
@@ -46,10 +68,10 @@
         // so that each client is updated, and then once the timer is done, we dispose of it.
         timer = new Timer(new TimerCallback(panel => {
             InvokeAsync(() => {
-                if (((HostControlPanel)panel).Lobby.StartingPistolValue <= 0.1) {
-                    ((HostControlPanel)panel).Lobby.StartingPistolValue = 0;
-                    ((HostControlPanel)panel).Lobby.Started = true;
-                    ((HostControlPanel)panel).timer.Dispose();
+                if (((HostControlPanel) panel).Lobby.StartingPistolValue <= 0.1) {
+                    ((HostControlPanel) panel).Lobby.StartingPistolValue = 0;
+                    ((HostControlPanel) panel).Lobby.Started = true;
+                    ((HostControlPanel) panel).timer.Dispose();
                     Lobby.StartAllTimers();
                     return;
                 }
@@ -65,5 +87,22 @@
         if (!Lobby.ResumedRace) {
             Lobby.GetParticipatingTeams().ForEach(team => team.TimerData.PreviousTime = 0);
         }
+    }
+
+    private void HandoverHostControls() {
+        if (Guid.Empty == SelectedNewHost) {
+            Logger.LogInformation("User didn't make a selection");
+            return;
+        }
+
+        User? newHost = UserHolder.GetUserById(SelectedNewHost);
+
+        if (newHost == null) {
+            Logger.LogInformation("User {newHost} is Null, didn't find user for {SelectedNewHost}", newHost, SelectedNewHost);
+            return;
+        }
+
+        Lobby.Owner = newHost;
+        StateHasChanged();
     }
 }

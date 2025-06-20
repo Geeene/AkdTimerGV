@@ -19,7 +19,7 @@
         /// <summary>
         /// The User who created this lobby
         /// </summary>
-        public User Owner { get; } = Owner;
+        public User Owner { get; set; } = Owner;
         
         /// <summary>
         /// The password a user has to enter when joining the Lobby, stored as plain text as it isn't exactly that relevant to be secure here
@@ -92,11 +92,6 @@
                 return false;
             }
 
-            // If Any user already has the same display name, then disallow joining
-            if (UserTeamMapping.Keys.Where(u => u.Name.Equals(user.Name)).Any()) {
-                return false;
-            }
-
             // Join was successful, add the user as a spectator by default
             SwitchTeam(user, Team.SPECTATOR);
             return true;
@@ -153,6 +148,15 @@
                 }
             }
             UserTeamMapping.Remove(user);
+        }
+
+        /// <summary>
+        /// Returns true if the given User is present in the UserTeamMapping
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public bool IsUserInLobby(User user) { 
+            return this.UserTeamMapping.ContainsKey(user);
         }
 
         public Team GetSpectatorTeam() {
@@ -213,6 +217,23 @@
                 Teams[FinishedTeams[i].NormalizedName].TimerData.Standing = standing;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Return a list of all users except the host. 
+        /// </summary>
+        /// <returns></returns>
+        public List<User> GetUsersExceptHost() {
+            return UserTeamMapping.Keys.Where(v => !v.Equals(Owner)).ToList();
+        }
+
+        /// <summary>
+        /// Returns true if a user in this lobby has the given name; false otherwise
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public User? GetUserWithName(String name) { 
+            return UserTeamMapping.Keys.Where(v => v.Name.Equals(name)).FirstOrDefault();
         }
     }
 }

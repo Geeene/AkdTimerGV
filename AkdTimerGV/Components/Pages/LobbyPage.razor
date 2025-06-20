@@ -165,6 +165,7 @@
         }
         lobby.LeaveLobby(user);
         await BrowserStorage.DeleteAsync("currentLobby");
+        await BrowserStorage.DeleteAsync("user");
         NavigationManager.NavigateTo("/timer");
     }
 

@@ -35,7 +35,10 @@ public sealed class UserHolder {
     /// Get the user with the given Id from the Dictionary
     /// </summary>
     public static User? GetUserById(Guid userId) {
-        Users.TryGetValue(userId, out User foundUser);
-        return foundUser;
+        if (!Users.ContainsKey(userId)) {
+            return null;
+        }
+
+        return Users[userId];
     }
 }

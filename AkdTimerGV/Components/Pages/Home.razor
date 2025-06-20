@@ -64,11 +64,15 @@
 *@
 
 <ModalDialog @ref="@ModalDialog">
-    Name: <input type="text" @bind="modalDialogUserName"/><br />
+    Name: <input type="text" @bind="modalDialogUserName" required="true"/><br />
     Password: <input type="text" @bind="modalDialogPassword"/><br/>
     <input type="button" value="Confirm" @onclick="() => joinLobby()"/>
-
 </ModalDialog>
+
+<ConfirmationModal @ref="@ConfirmationModal" 
+    ActionDescription="A user with the chosen name already exists, are you sure you want to chose that name?"
+    ActionRunnable="@(() => JoinLobbyWhileReusingName())"
+    />
 
 @code {
     private string? lobbyId;
@@ -76,7 +80,9 @@
     private string? password;
     private List<Lobby> lobbies = LobbyHolder.getLobbies();
     private ModalDialog ModalDialog { get; set; }
+    private ConfirmationModal ConfirmationModal { get; set; }
     private Lobby? lobbyToJoin;
+    private User? UserWithNameInLobby;
 
     private string? modalDialogUserName;
     private string? modalDialogPassword;
@@ -113,19 +119,23 @@
     /// <param name="userName"></param>
     /// <returns></returns>
     public async Task<User> getOrCreateUserInLocalStorage(String userName) {
+        if (userName == null) {
+            throw new Exception("UserName must not be null");
+        }
+
         var storedUser = await BrowserStorage.GetAsync<Guid?>("user");
-        if (!storedUser.Success || storedUser.Value == null) {
+        if ((!storedUser.Success || storedUser.Value == null)) {
             Logger.LogInformation("Need to create a new user, as nothing was stored");
             User createdUser = UserHolder.createUser(userName);
             await BrowserStorage.SetAsync("user", createdUser.UserId);
             return createdUser;
         } else {
-            Logger.LogInformation("User already exists in local storage {}", storedUser.Value);
+            Logger.LogInformation("User exists in local storage {}", storedUser.Value);
             User? currentUser = UserHolder.GetUserById((Guid) storedUser.Value);
 
             // If there was a user cached, but that user no longer exists in memory, 
             // then delete the Guid from local storage and re-call the method so a new user is created.
-            if (currentUser == null) {
+            if (currentUser == null && userName != null) {
                 await BrowserStorage.DeleteAsync("user");
                 return await getOrCreateUserInLocalStorage(userName);
             }
@@ -134,7 +144,18 @@
         }
     }
 
-    public void showModalToJoinLobby(Lobby lobby) {
+    public async Task showModalToJoinLobby(Lobby lobby) {
+        var storedUser = await BrowserStorage.GetAsync<Guid?>("user");
+        if (storedUser.Value != null) {
+            User? currentUser = UserHolder.GetUserById((Guid) storedUser.Value);
+
+            // User was already in the lobby previously, just skip past the modal dialog
+            if (currentUser != null && lobby.IsUserInLobby(currentUser)) {
+                await handleMovingUserToLobby(currentUser, lobby.Password, lobby);
+                return;
+            }
+        }
+
         lobbyToJoin = lobby;
         ModalDialog.showDialog();
     }
@@ -145,11 +166,28 @@
             return;
         }
 
+        UserWithNameInLobby = lobbyToJoin.GetUserWithName(modalDialogUserName);
+        if (UserWithNameInLobby != null) {
+            ConfirmationModal.showDialog();
+            StateHasChanged();
+            return;
+        }
+
+
         User currentUser = await getOrCreateUserInLocalStorage(modalDialogUserName);
         if (await handleMovingUserToLobby(currentUser, modalDialogPassword, lobbyToJoin)) {
             ModalDialog.closeDialog();
             StateHasChanged();
         }
+    }
+
+    public async void JoinLobbyWhileReusingName() {
+        if (UserWithNameInLobby == null || lobbyToJoin == null) {
+            return;
+        }
+
+        await BrowserStorage.SetAsync("user", UserWithNameInLobby.UserId);
+        await handleMovingUserToLobby(UserWithNameInLobby, lobbyToJoin.Password, lobbyToJoin);
     }
 
     public async Task<bool> handleMovingUserToLobby(User user, string? password, Lobby lobby) {
