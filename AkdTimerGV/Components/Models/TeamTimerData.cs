@@ -167,6 +167,10 @@
         public void Start() {
             StartTime = DateTime.Now;
             Active = true;
+
+            if (ActiveSeconds > 0 && PreviousTime > 0) {
+                ActiveSeconds -= PreviousTime;
+            }
         }
 
         /// <summary>
@@ -216,6 +220,7 @@
             StartTime = null;
             Paused = false;
             ConsumedBreakTime = 0;
+            PreviousTime = 0;
         }
     }
 }

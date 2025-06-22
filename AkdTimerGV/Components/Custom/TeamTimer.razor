@@ -7,6 +7,7 @@
         height: 168px;
         display:flex;
         flex-direction:column;
+        justify-content:space-between;
         text-align:center;
         margin: 5px;
         padding: 5px;
@@ -14,10 +15,13 @@
 
     .teamTimerTeamName {
         width: 100%;
+        font-size: 20pt;
+        line-height: 20pt;
     }
 
     .teamTimerMainTimer {
         width: 100%;
+        line-height: 50pt;
         font-size: 50pt;
     }
 
@@ -34,8 +38,7 @@
 
 </style>
 
-
-<div id="teamTimer-@Team.Name" class="teamTimerContainer fw-bold">
+<div id="teamTimer-@Team.Name" class="teamTimerContainer fw-bold" style="margin:@(NoMargin ? "0px" : "5px")">
     <h5>
         <span class="teamTimerTeamName">@Team.Name</span>
         <span>
@@ -46,37 +49,40 @@
     <div class="teamTimerMainTimer">
         @getTimeValueAsString(Team.TimerData.GetElapsedActiveTime())
     </div>
-    @if (Team.TimerData.PenaltyTime > 0 || Team.TimerData.BreakTime > 0 || Team.TimerData.PreviousTime > 0) {
-        <div class="teamTimerSubtimers">
-            <div class="teamTimerTotalTime">
-                @if (!Team.TimerData.Active) {
-                    <i class="bi bi-stopwatch"/>     @getTimeValueAsString(Team.TimerData.GetTotalTime())
-                } else {
-                    <i class="bi bi-stopwatch"/>   <span>+</span>@getTimeValueAsString(Team.TimerData.GetExtraTime())
-                }
-            </div>
-            <div class="teamTimerTotalTime">
-                <i class="bi bi-cup-hot" style="color:lightgreen"/>  @getTimeValueAsString(Team.TimerData.GetRemainingExtraTime())
-            </div>
-            @if (Team.TimerData.PenaltyTime > 0) {
+    <div class="teamTimerSubtimers">
+        @if (Team.TimerData.PenaltyTime > 0 || Team.TimerData.BreakTime > 0 || Team.TimerData.PreviousTime > 0) {
                 <div class="teamTimerTotalTime">
-                    <i class="bi bi-clipboard-plus" style="color:red"/>  @getTimeValueAsString(Team.TimerData.PenaltyTime)
+                    @if (!Team.TimerData.Active) {
+                        <i class="bi bi-stopwatch"/>     @getTimeValueAsString(Team.TimerData.GetTotalTime())
+                    } else {
+                        <i class="bi bi-stopwatch"/>   <span>+</span>@getTimeValueAsString(Team.TimerData.GetExtraTime())
+                    }
                 </div>
-            }
+                <div class="teamTimerTotalTime">
+                    <i class="bi bi-cup-hot" style="color:lightgreen"/>  @getTimeValueAsString(Team.TimerData.GetRemainingExtraTime())
+                </div>
+                @if (Team.TimerData.PenaltyTime > 0) {
+                    <div class="teamTimerTotalTime">
+                        <i class="bi bi-clipboard-plus" style="color:red"/>  @getTimeValueAsString(Team.TimerData.PenaltyTime)
+                    </div>
+                }
 
-            @if (Team.TimerData.PreviousTime > 0) {
-                <div class="teamTimerPreviousTime">
-                    <i class="bi bi-calendar2-event" style="color:lightblue"/>  @getTimeValueAsString(Team.TimerData.PreviousTime)
-                </div>
-            }
-        </div>
-    }
+                @if (Team.TimerData.PreviousTime > 0) {
+                    <div class="teamTimerPreviousTime">
+                        <i class="bi bi-calendar2-event" style="color:lightblue"/>  @getTimeValueAsString(Team.TimerData.PreviousTime)
+                    </div>
+                }
+        }
+    </div>
 </div>
 
 
 @code {
     [Parameter]
     public Team Team { get; set; }
+
+    [Parameter]
+    public bool NoMargin { get; set; }
 
     protected string getTimeValueAsString(long value) {
         return TimeUtil.getTimeAsString(value);

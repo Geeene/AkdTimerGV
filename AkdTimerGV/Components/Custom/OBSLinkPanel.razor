@@ -5,14 +5,14 @@
 <div class="d-flex flex-column PanelWithLeftBorder">
     <span>Stream Link</span>
         <div class="d-flex flex-row">
-            <input class="form-check-input" type="radio" @onchange="(() => AllTeams = !AllTeams)" name="LinkTeamChoice" checked>
+            <input class="form-check-input" type="radio" @onchange="(() => AllTeams = true)" name="LinkTeamChoice" checked>
             <label class="form-check-label">
                 All Teams
             </label>
         </div>
     @foreach (Team team in Lobby.GetParticipatingTeams()) {
         <div class="d-flex flex-row">
-            <input class="form-check-input" id="StreamLinkTeamOption-@team.NormalizedName.get()" type="radio" @onchange="(() => ChosenTeam = team.Name)" name="LinkTeamChoice">
+            <input class="form-check-input" id="StreamLinkTeamOption-@team.NormalizedName.get()" type="radio" @onchange="(() => {ChosenTeam = team.Name; AllTeams = false;})" name="LinkTeamChoice">
             <label class="form-check-label" for="StreamLinkTeamOption-@team.NormalizedName.get()">
                 @team.Name
             </label>
