@@ -88,7 +88,7 @@
         /// <returns></returns>
         public bool TryJoinLobby(User user, String? password) {
             // if the lobby has a password, and that password doesn't match what the user entered, then refuse
-            if (this.Password != null && this.Password.Equals(password)) {
+            if (this.Password != null && !this.Password.Equals(password)) {
                 return false;
             }
 
