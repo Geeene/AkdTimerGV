@@ -1,5 +1,6 @@
 ﻿@page "/timer/Home"
 @page "/timer/"
+@page "/timer/lobby/{InviteLinkLobby}"
 @page "/"
 @using AkdTimerGV.Components.Models
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
@@ -63,9 +64,9 @@
     The HTML for the Modal Dialog
 *@
 
-<ModalDialog @ref="@ModalDialog">
-    Name: <input type="text" @bind="modalDialogUserName" required="true"/><br />
-    Password: <input type="text" @bind="modalDialogPassword"/><br/>
+<ModalDialog @ref="@ModalDialog" Title="Join Lobby">
+    <span>Name: <input type="text" @bind="modalDialogUserName" required="true"/></span><br />
+    <span>Password: <input type="text" @bind="modalDialogPassword"/></span><br />
     <input type="button" value="Confirm" @onclick="() => joinLobby()"/>
 </ModalDialog>
 
@@ -75,6 +76,9 @@
     />
 
 @code {
+    [Parameter]
+    public String? InviteLinkLobby { get; set; }
+
     private string? lobbyId;
     private string? userName;
     private string? password;
@@ -95,6 +99,12 @@
                 Logger.LogError("Ran into a cryptography Exception, deleting local storage. Probably Key is invalid due to re-deploy");
                 await BrowserStorage.DeleteAsync("user");
                 await BrowserStorage.DeleteAsync("currentLobby");
+            }
+
+            if (InviteLinkLobby != null) {
+                Lobby lobby = LobbyHolder.getLobby(Guid.Parse(InviteLinkLobby));
+                modalDialogPassword = lobby.Password;
+                await showModalToJoinLobby(lobby);
             }
         }
     }
