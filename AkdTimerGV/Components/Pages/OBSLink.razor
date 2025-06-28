@@ -17,13 +17,17 @@
 
 <div class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
     @if (Lobby != null) {
-        @if (TeamName == null) {
-            @foreach (Team team in Lobby.GetParticipatingTeams()) {
-                <TeamTimer Team="team"/>
-            }
+        @if (Lobby.StartingPistolValue == 0) {
+            @if (TeamName == null) {
+                @foreach (Team team in Lobby.GetParticipatingTeams()) {
+                    <TeamTimer Team="team"/>
+                }
 
+            } else {
+                <TeamTimer Team="Lobby.Teams[new(TeamName)]" NoMargin="true"/>
+            }
         } else {
-            <TeamTimer Team="Lobby.Teams[new(TeamName)]" NoMargin="true"/>
+            <b style="font-size:100pt">@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</b>
         }
     }
     @if (Table) {
@@ -44,6 +48,8 @@
 
     public Lobby Lobby { get; set; }
 
+    private Timer Timer;
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
@@ -58,12 +64,16 @@
         // Retrieve the reference to the Lobby from the LobbyHolder.
         Lobby = LobbyHolder.getLobby(ParsedLobbyid);
 
-        // Have the Page refresh every 100ms
-        var timer = new Timer(new TimerCallback(_ => {
+        Timer = new Timer(new TimerCallback(LobbyRef => {
             InvokeAsync(() => {
+                ((OBSLink) LobbyRef).NotifyStateHasChanged();
                 StateHasChanged();
             });
         }
-        ), null, 100, 100);
+        ), this, 100, 100);
+    }
+
+    private void NotifyStateHasChanged() {
+        StateHasChanged();
     }
 }
