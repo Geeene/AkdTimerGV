@@ -16,9 +16,9 @@
         public String Name { get; set; } = name;
 
         /// <summary>
-        /// The name but normalized to remove spaces
+        /// The Id of the team
         /// </summary>
-        public NormalizedTeamName NormalizedName = new(name);
+        public Guid TeamId = Guid.NewGuid();
 
         /// <summary>
         /// The User that created the team, nullable as unnecessary for the Spectator team.

@@ -34,7 +34,7 @@
         /// Wether it is possible to join another team, by default is true
         /// </summary>
         public bool TeamMode { get; set; } = true;
-        public readonly Dictionary<NormalizedTeamName, Team> Teams = [];
+        public readonly Dictionary<Guid, Team> Teams = [];
         private readonly Dictionary<User, Team> UserTeamMapping = [];
 
         /// <summary>
@@ -58,11 +58,18 @@
         /// <param name="user"></param>
         /// <param name="newTeamName"></param>
         public void SwitchTeam(User user, String newTeamName) {
+
+            // Then check if the Team they want to joins exists already
+            Team? newTeam = GetTeamByName(newTeamName);
+
+            // If the team already exists, and is locked, then do nothing
+            if (newTeam != null && newTeam.Locked) {
+                return;
+            }
+
             // First up, remove the user from their current Team
             RemoveUserFromTeam(user);
-            
-            // Then check if the Team they want to joins exists already
-            Teams.TryGetValue(new(newTeamName), out Team? newTeam);
+
             user.HasTeamPermission = false;
             // If there is no team yet with the chosen name, then create a new Team
             if (newTeam == null) {
@@ -73,11 +80,15 @@
                     newTeam.Creator = user;
                     user.HasTeamPermission = true;
                 }
-                Teams.Add(new(newTeamName), newTeam);
+                Teams.Add(newTeam.TeamId, newTeam);
             }
 
             newTeam.AddMember(user);
             UserTeamMapping.Add(user, newTeam);
+        }
+
+        public Team? GetTeamByName(String TeamName) {
+            return Teams.Values.Where(team => team.Name.Equals(TeamName)).FirstOrDefault();
         }
 
         /// <summary>
@@ -95,15 +106,6 @@
             // Join was successful, add the user as a spectator by default
             SwitchTeam(user, Team.SPECTATOR);
             return true;
-        }
-
-        /// <summary>
-        /// Get all members of the team with the given name
-        /// </summary>
-        /// <param name="teamName"></param>
-        /// <returns></returns>
-        public List<User> GetUsersOfTeam(String teamName) {
-            return Teams[new NormalizedTeamName(teamName)].members;
         }
 
         /// <summary>
@@ -144,7 +146,7 @@
                 bool isSpectator = !teamToRemoveFrom.Participating;
                 teamToRemoveFrom.RemoveMember(user);
                 if (teamToRemoveFrom.members.Count == 0 && !isSpectator) {
-                    this.Teams.Remove(teamToRemoveFrom.NormalizedName);
+                    this.Teams.Remove(teamToRemoveFrom.TeamId);
                 }
             }
             UserTeamMapping.Remove(user);
@@ -160,11 +162,11 @@
         }
 
         public Team GetSpectatorTeam() {
-            return Teams[new(Team.SPECTATOR)];
+            return GetTeamByName(Team.SPECTATOR);
         }
 
-        public Team GetTeamByNormalizedName(NormalizedTeamName normalizedTeamName) {
-            return Teams[normalizedTeamName];
+        public Team GetTeamByTeamId(Guid teamId) {
+            return Teams[teamId];
         }
 
         /// <summary>
@@ -214,7 +216,7 @@
                     standing = (int) FinishedTeams[i - 1].TimerData.Standing;
                 }
 
-                Teams[FinishedTeams[i].NormalizedName].TimerData.Standing = standing;
+                Teams[FinishedTeams[i].TeamId].TimerData.Standing = standing;
             }
             return true;
         }

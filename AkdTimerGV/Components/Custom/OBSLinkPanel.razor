@@ -12,8 +12,8 @@
         </div>
     @foreach (Team team in Lobby.GetParticipatingTeams()) {
         <div class="d-flex flex-row">
-            <input class="form-check-input" id="StreamLinkTeamOption-@team.NormalizedName.get()" type="radio" @onchange="(() => {ChosenTeam = team.Name; AllTeams = false;})" name="LinkTeamChoice">
-            <label class="form-check-label" for="StreamLinkTeamOption-@team.NormalizedName.get()">
+            <input class="form-check-input" id="StreamLinkTeamOption-@team.TeamId" type="radio" @onchange="(() => {ChosenTeam = team.TeamId; AllTeams = false;})" name="LinkTeamChoice">
+            <label class="form-check-label" for="StreamLinkTeamOption-@team.TeamId">
                 @team.Name
             </label>
         </div>
@@ -36,7 +36,7 @@
 
     private bool IncludeTable { get; set; } = false;
 
-    String ChosenTeam { get; set; }
+    Guid ChosenTeam { get; set; }
 
 
     public async void generateLink() {
@@ -45,12 +45,11 @@
         if (AllTeams) {
             link += "AllTeams/";
         } else {
-            link += "SingleTeam/"+(new NormalizedTeamName(ChosenTeam).get())+"/";
+            link += "SingleTeam/"+(Lobby.GetTeamByTeamId(ChosenTeam)).TeamId+"/";
         }
 
         link += IncludeTable ? "true" : "false";
         // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
-        await JSRuntime.InvokeVoidAsync("exampleJsFunctions.ShowMsg", 
-                                                    link);
+        await JSRuntime.InvokeVoidAsync("exampleJsFunctions.ShowMsg", link);
     }
 }
