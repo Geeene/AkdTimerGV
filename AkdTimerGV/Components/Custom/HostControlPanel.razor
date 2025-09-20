@@ -29,7 +29,8 @@
             }
         </InputSelect>
         <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Penalty" 
-            TimerData="@(() => (new List<TeamTimerData> () {Lobby.GetTeamByTeamId(SelectedUserAddPenalty).TimerData}))"/>
+            TimerData="@(() => (SelectedUserAddPenalty == Guid.Empty ? new List<TeamTimerData>() : new List<TeamTimerData> () {Lobby.GetTeamByTeamId((Guid) SelectedUserAddPenalty).TimerData}))"
+                Origin="HostControl"/>
     </span>
     <hr />
     <span><input type="checkbox" class="btn" @bind="ResumeRace" @bind:after="ToggleResume"/> Resumed Race</span>
@@ -66,7 +67,7 @@
     private ConfirmationModal ConfirmationModal  { get; set; }
 
     private Guid SelectedNewHost { get; set; }
-    private Guid SelectedUserAddPenalty { get; set; }
+    private Guid? SelectedUserAddPenalty { get; set; }
 
     private List<TeamTimerData> GetRelevantTimerData() {
         return new List<TeamTimerData>(Lobby.GetParticipatingTeams().Select(Team => Team.TimerData));

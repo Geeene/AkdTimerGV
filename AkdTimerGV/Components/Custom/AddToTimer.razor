@@ -21,13 +21,13 @@
         <div class="d-flex flex-column">
             <input type="number" style="max-width:150px" class="input-group-text" @bind="PenaltyToAdd"/>
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="flexRadioDefault-@TimerAdditionType" checked @onclick="() => CurrentTimeUnit = TimeUnit.MINUTES">
+              <input class="form-check-input" type="radio" name="flexRadioDefault-@(TimerAdditionType+Origin)" checked @onclick="() => CurrentTimeUnit = TimeUnit.MINUTES">
               <label class="form-check-label">
                 Minutes
               </label>
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="flexRadioDefault-@TimerAdditionType" @onclick="() => CurrentTimeUnit = TimeUnit.SECONDS">
+              <input class="form-check-input" type="radio" name="flexRadioDefault-@(TimerAdditionType+Origin)" @onclick="() => CurrentTimeUnit = TimeUnit.SECONDS">
               <label class="form-check-label">
                 Seconds
               </label>
@@ -60,10 +60,13 @@
     public bool Simplified { get; set; } = true;
 
     [Parameter]
-    public Func<List<TeamTimerData>> TimerData { get; set; }
+    public Func<List<TeamTimerData?>> TimerData { get; set; }
 
     [Parameter]
     public TimerAdditionType TimerAdditionType { get; set; }
+
+    [Parameter]
+    public String Origin { get; set; } = "TimerControlPanel";
 
     private int HoursToAdd { get; set; }
     private int MinutesToAdd { get; set; }
@@ -95,6 +98,10 @@
             ValueInSeconds += HoursToAdd * 3600;
             ValueInSeconds += MinutesToAdd * 60;
             ValueInSeconds += SecondsToAdd;
+        }
+
+        if (TimerData().Count == 0) {
+            return;
         }
 
         ValueInSeconds *= multiplier;
