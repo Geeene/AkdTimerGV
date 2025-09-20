@@ -60,7 +60,7 @@
     public bool Simplified { get; set; } = true;
 
     [Parameter]
-    public List<TeamTimerData> TimerData { get; set; }
+    public Func<List<TeamTimerData>> TimerData { get; set; }
 
     [Parameter]
     public TimerAdditionType TimerAdditionType { get; set; }
@@ -98,8 +98,7 @@
         }
 
         ValueInSeconds *= multiplier;
-
-        foreach (TeamTimerData timer in TimerData) {
+        foreach (TeamTimerData timer in TimerData()) {
             switch (TimerAdditionType) {
                 case TimerAdditionType.Active:
                     timer.AddActiveTime(ValueInSeconds);

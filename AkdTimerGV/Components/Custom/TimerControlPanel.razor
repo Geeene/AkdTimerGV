@@ -12,10 +12,11 @@ Add Penalty
     @*Allow team to start / stop their timer *@
     <div class="d-flex flex-column Panel">
         <span>Timer</span>
-        @if (!timerData.Active) {
+        @if (!timerData.Active && !timerData.dnf) {
             <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Start" onclick="@(() => HandleStart())"/>
         } else {
-            <input type="button" class="btn btn-danger" disabled="@(Disabled)" value="Stop" onclick="@(() => HandleFinish())"/>
+            <input type="button" class="btn btn-info" disabled="@(Disabled)" value="Stop" onclick="@(() => HandleFinish())"/>
+            <input type="button" class="btn btn-danger" disabled="@(Disabled)" value="DNF" onclick="@(() => ConfirmationModal.showDialog())"/>
         }
     </div>
 
@@ -27,11 +28,15 @@ Add Penalty
     </div>
 
     @*Allow team to Add Penalty time *@
-    <AddToTimer Disabled="@Disabled" TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(new List<TeamTimerData>() { timerData })"/>
+    <AddToTimer Disabled="@Disabled" TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
 
     @if (ResumedRace) {
-        <AddToTimer Disabled="@Disabled" Simplified="false" TimerAdditionType="@TimerAdditionType.Previous" TimerData="@(new List<TeamTimerData>() { timerData })"/>
+        <AddToTimer Disabled="@Disabled" Simplified="false" TimerAdditionType="@TimerAdditionType.Previous" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
     }
+
+        <ConfirmationModal @ref="ConfirmationModal"
+        ActionDescription="Are you sure you want to DNF? This action is not reversible!"
+        ActionRunnable="@(() => HandleDnf())"/>
 </div>
 
 @code {
@@ -43,6 +48,8 @@ Add Penalty
 
     [Parameter]
     public TeamTimerData timerData { get; set; }
+
+    private ConfirmationModal ConfirmationModal  { get; set; }
 
     /// <summary>
     /// Lambda to re-calculate the standings for all teams
@@ -59,4 +66,10 @@ Add Penalty
         timerData.Finish();
         ((Func<bool>)TriggerStandingsCalculation).Invoke();
     }
+
+    public void HandleDnf() {
+        timerData.confirmDNF();
+        ((Func<bool>)TriggerStandingsCalculation).Invoke();
+    }
+
 }

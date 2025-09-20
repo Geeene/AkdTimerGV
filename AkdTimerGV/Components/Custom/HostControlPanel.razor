@@ -9,10 +9,6 @@
 
 <div class="Panel d-flex flex-column flex-justify">
     <span>Host Controls</span>
-    <hr />
-    <span><input type="checkbox" class="btn" @bind="ResumeRace" @bind:after="ToggleResume"/> Resumed Race</span>
-
-    <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Break" TimerData="@GetRelevantTimerData()"/>
     <div style="margin-top: 10px;">
         <input type="button" class="btn btn-light" value="Global Reset" onclick="@(() => Lobby.GlobalReset())"/>
         <input type="button" class="btn btn-light" value="Global Pause" onclick="@(() => Lobby.PauseAll())"  disabled="@(!Lobby.Started)"/>
@@ -26,6 +22,22 @@
 
     <hr />
     <span>
+        <InputSelect name="AddPenaltySelect" @bind-value="SelectedUserAddPenalty">
+            <option value="@Guid.Empty">Add Penalty to Team</option>
+            @foreach (var team in Lobby.GetParticipatingTeams()) {
+                <option value="@team.TeamId">@team.Name</option>
+            }
+        </InputSelect>
+        <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Penalty" 
+            TimerData="@(() => (new List<TeamTimerData> () {Lobby.GetTeamByTeamId(SelectedUserAddPenalty).TimerData}))"/>
+    </span>
+    <hr />
+    <span><input type="checkbox" class="btn" @bind="ResumeRace" @bind:after="ToggleResume"/> Resumed Race</span>
+    @if (Lobby.ResumedRace) {
+        <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Break" TimerData="@(() => GetRelevantTimerData())"/>
+    }
+    <hr />
+        <span>
         <InputSelect name="NewHostSelect" @bind-value="SelectedNewHost">
             <option value="@Guid.Empty">Select the new Host</option>
             @foreach (var user in Lobby.GetUsersExceptHost()) {
@@ -54,6 +66,7 @@
     private ConfirmationModal ConfirmationModal  { get; set; }
 
     private Guid SelectedNewHost { get; set; }
+    private Guid SelectedUserAddPenalty { get; set; }
 
     private List<TeamTimerData> GetRelevantTimerData() {
         return new List<TeamTimerData>(Lobby.GetParticipatingTeams().Select(Team => Team.TimerData));

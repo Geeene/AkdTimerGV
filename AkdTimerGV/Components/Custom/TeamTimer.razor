@@ -47,10 +47,14 @@
     </h5>
 
     <div class="teamTimerMainTimer">
-        @getTimeValueAsString(Team.TimerData.GetElapsedActiveTime())
+        @if (Team.TimerData.dnf) {
+            <span>DNF</span>
+        } else {
+            @getTimeValueAsString(Team.TimerData.GetElapsedActiveTime())
+        }
     </div>
     <div class="teamTimerSubtimers">
-        @if (Team.TimerData.PenaltyTime > 0 || Team.TimerData.BreakTime > 0 || Team.TimerData.PreviousTime > 0) {
+        @if (Team.TimerData.PenaltyTime > 0 || Team.TimerData.BreakTime > 0 || Team.TimerData.PreviousTime > 0 || Team.TimerData.dnf) {
                 <div class="teamTimerTotalTime">
                     @if (!Team.TimerData.Active) {
                         <i class="bi bi-stopwatch"/>     @getTimeValueAsString(Team.TimerData.GetTotalTime())

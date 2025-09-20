@@ -10,6 +10,11 @@
         /// </summary>
         public Boolean Active = false;
 
+        /// <summary>
+        /// Wether the timer was DNFd
+        /// </summary>
+        public Boolean dnf = false;
+
         public int? Standing { get; set; }
 
         /// <summary>
@@ -182,6 +187,14 @@
             Active = false;
         }
 
+        /// <summary>
+        /// To be pressed when finishing the race
+        /// </summary>
+        public void confirmDNF() {
+            Finish();
+            dnf = true;
+        }
+
 
         /// <summary>
         /// Returns true if the timer is not paused, needed because the html is a bit wacky with adding an ! into the disabled
@@ -221,6 +234,7 @@
             Paused = false;
             ConsumedBreakTime = 0;
             PreviousTime = 0;
+            dnf = false;
         }
     }
 }

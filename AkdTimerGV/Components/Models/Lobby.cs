@@ -205,7 +205,7 @@
         public bool DetermineStandings() {
             List<Team> FinishedTeams = GetParticipatingTeams()
                 // Filter for teams that aren't active and have spent time playing
-                .Where(team => !team.TimerData.Active && team.TimerData.GetElapsedActiveTime() > 0)
+                .Where(team => !team.TimerData.Active && !team.TimerData.dnf && team.TimerData.GetElapsedActiveTime() > 0)
                 // Sort those teams by the amount of time they would submit
                 .OrderBy(team => team.TimerData.GetSubmittedTime())
                 .ToList();
