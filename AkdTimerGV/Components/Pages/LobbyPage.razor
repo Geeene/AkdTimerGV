@@ -42,7 +42,7 @@
             </div>
             <TeamTimerTable Lobby="@Lobby"/>
             @if (userIsHost()) {
-                <div class="PanelWithLeftBorder">
+                <div class="Panel">
                     <HostControlPanel Lobby="@Lobby"/>
                 </div>
             }
@@ -50,7 +50,7 @@
 
         <hr/>
 
-        <div class="d-flex flex-row Panel">
+        <div class="d-flex flex-row Panel justify-content-between">
             @* Give the User an option to create a Team if they are not part of one, or are a spectator. *@
             @if (currentUser.Team == null || currentUser.Team.Name.Equals(Team.SPECTATOR)) {
                 <div class="Panel">
@@ -60,10 +60,8 @@
                     <input style="max-width: 250px" type="button" value="Create Team" class="btn btn-light" @onclick="() => createTeam()"/>
                 </div>
             } else {
-                <div class="flex-row d-flex">
-                    <TeamList Team="@currentUser.Team" RenderForTeamCreator="@currentUser.IsCreatorOfTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" JoinType="TeamJoinType.LEAVE"/>
-                    <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() =>Lobby.DetermineStandings())" ResumedRace="@Lobby.ResumedRace"/>
-                </div>
+                <TeamList Team="@currentUser.Team" RenderForTeamCreator="@currentUser.IsCreatorOfTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" JoinType="TeamJoinType.LEAVE"/>
+                <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() =>Lobby.DetermineStandings())" ResumedRace="@Lobby.ResumedRace"/>
             }
             <OBSLinkPanel Lobby=@Lobby/>
         </div>

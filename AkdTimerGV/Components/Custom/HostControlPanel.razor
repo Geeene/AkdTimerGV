@@ -8,45 +8,94 @@
 *@
 
 <div class="Panel d-flex flex-column flex-justify">
-    <span>Host Controls</span>
-    <div style="margin-top: 10px;">
-        <input type="button" class="btn btn-light" value="Global Reset" onclick="@(() => Lobby.GlobalReset())"/>
-        <input type="button" class="btn btn-light" value="Global Pause" onclick="@(() => Lobby.PauseAll())"  disabled="@(!Lobby.Started)"/>
-    </div>
-    <br />
-    <div style="margin-top: 10px;" class="Panel d-flex flex-row">
-        <input type="number" class="input-group-text" style="width: 80px" @bind="StartingPistolDuration" disabled="@Lobby.Started"/>
-        <label style="margin: 0px 5px 0px 5px"> Seconds</label>
-        <input type="button" class="btn btn-light" value="Starting Pistol" onclick="@(() => StartingPistol())" disabled="@Lobby.Started"/>
-    </div>
+    <div class="accordion" id="accordion" style="width:100%">
+        <div class="accordion-item">
+            <div class="accordion-header" style="width:350px" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                    Timer Control
+                </button>
+            </div>
 
-    <hr />
-    <span>
-        <InputSelect name="AddPenaltySelect" @bind-value="SelectedUserAddPenalty">
-            <option value="@Guid.Empty">Add Penalty to Team</option>
-            @foreach (var team in Lobby.GetParticipatingTeams()) {
-                <option value="@team.TeamId">@team.Name</option>
-            }
-        </InputSelect>
-        <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Penalty" 
-            TimerData="@(() => (SelectedUserAddPenalty == Guid.Empty ? new List<TeamTimerData>() : new List<TeamTimerData> () {Lobby.GetTeamByTeamId((Guid) SelectedUserAddPenalty).TimerData}))"
-                Origin="HostControl"/>
-    </span>
-    <hr />
-    <span><input type="checkbox" class="btn" @bind="ResumeRace" @bind:after="ToggleResume"/> Resumed Race</span>
-    @if (Lobby.ResumedRace) {
-        <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Break" TimerData="@(() => GetRelevantTimerData())"/>
-    }
-    <hr />
-        <span>
-        <InputSelect name="NewHostSelect" @bind-value="SelectedNewHost">
-            <option value="@Guid.Empty">Select the new Host</option>
-            @foreach (var user in Lobby.GetUsersExceptHost()) {
-                <option value="@user.UserId">@user.Name</option>
-            }
-        </InputSelect>
-        <input type="button" value="Make Host" onclick="@(() => ConfirmationModal.showDialog())"/>
-    </span>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordion">
+                <div class="accordion-body">
+                    <div style="width: 100%" class="Panel d-flex form-inline justify-content-between">
+                        <div class="input-group mb-3">
+                            <input type="button" class="btn btn-success form-control input-group-text" value="Starting Pistol" onclick="@(() => StartingPistol())" disabled="@Lobby.Started"/>
+                            <input type="number" class="form-control input-group-text" style="max-width: 80px" @bind="StartingPistolDuration" disabled="@Lobby.Started"/>
+                            <span class="form-control input-group-text"> Seconds</span>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="d-flex flex-row justify-content-around">
+                        <input type="button" class="btn btn-info flex-fill" value="Global Pause" onclick="@(() => Lobby.PauseAll())"  disabled="@(!Lobby.Started)"/>
+                        <input type="button" class="btn btn-danger flex-fill" value="Global Reset" onclick="@(() => Lobby.GlobalReset())"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="accordion-item">
+            <div class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Add Break
+                </button>
+            </div>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordion">
+                <div class="accordion-body">
+                    <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Break" TimerData="@(() => GetRelevantTimerData())"/>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                    Add Penalty
+                </button>
+            </div>
+
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordion">
+                <div class="accordion-body">
+                    <InputSelect name="AddPenaltySelect" class="dropdown btn btn-dark dropdown-toggle" style="border:var(--bs-border-width) solid var(--bs-border-color);" @bind-value="SelectedUserAddPenalty">
+                        <option value="@Guid.Empty">Select Team</option>
+                        @foreach (var team in Lobby.GetParticipatingTeams()) {
+                        <option value="@team.TeamId">@team.Name</option>
+                        }
+                    </InputSelect>
+                    <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Penalty" 
+                    TimerData="@(() => GetTimersToChange())"
+                    Origin="HostControl"/>
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <div class="accordion-header" id="headingFour">
+                <button class="accordion-button collapsed" type="button">
+                    <span><input type="checkbox" class="btn" @bind="ResumeRace" @bind:after="ToggleResume"/> Resumed Race</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" id="headingFive">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                    Change Host
+                </button>
+            </div>
+
+            <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordion">
+                <div class="accordion-body">
+                    <InputSelect name="NewHostSelect" @bind-value="SelectedNewHost">
+                        <option value="@Guid.Empty">Select User</option>
+                        @foreach (var user in Lobby.GetUsersExceptHost()) {
+                            <option value="@user.UserId">@user.Name</option>
+                        }
+                    </InputSelect>
+                    <input type="button" value="Make Host" onclick="@(() => ConfirmationModal.showDialog())"/>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <ConfirmationModal @ref="ConfirmationModal"
         ActionDescription="Are you sure you want to handover host controls to the selected user?"
@@ -118,5 +167,9 @@
 
         Lobby.Owner = newHost;
         StateHasChanged();
+    }
+
+    private List<TeamTimerData> GetTimersToChange(){
+        return SelectedUserAddPenalty == Guid.Empty ? new List<TeamTimerData>() : new List<TeamTimerData>() { Lobby.GetTeamByTeamId((Guid)SelectedUserAddPenalty).TimerData };    
     }
 }

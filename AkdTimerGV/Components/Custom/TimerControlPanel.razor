@@ -8,30 +8,31 @@ Start / Stop Break
 Add Penalty
 *@
 
-<div class="TimerControlPanel d-flex flex-row">
-    @*Allow team to start / stop their timer *@
+<div class="TimerControlPanel d-flex flex-row justify-content-around" style="width:100%">
+    @*Allow team to start / stop their Timer / Break *@
     <div class="d-flex flex-column Panel">
-        <span>Timer</span>
+        <span>Timer Control</span>
         @if (!timerData.Active && !timerData.dnf) {
             <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Start" onclick="@(() => HandleStart())"/>
         } else {
-            <input type="button" class="btn btn-info" disabled="@(Disabled)" value="Stop" onclick="@(() => HandleFinish())"/>
+            <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Stop" onclick="@(() => HandleFinish())"/>
             <input type="button" class="btn btn-danger" disabled="@(Disabled)" value="DNF" onclick="@(() => ConfirmationModal.showDialog())"/>
         }
-    </div>
-
-    @*Allow team to start / stop their Break *@
-    <div class="d-flex flex-column Panel">
-        <span>Break</span>
         <input type="button" class="btn btn-light" disabled="@(timerData.Paused || Disabled)" value="Start Break" onclick="@(() => timerData.StartBreak())"/>
         <input type="button" class="btn btn-light" disabled="@(timerData.IsNotPaused() || Disabled)" value="End Break" onclick="@(() => timerData.EndBreak())"/>
     </div>
 
     @*Allow team to Add Penalty time *@
-    <AddToTimer Disabled="@Disabled" TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
+    <div class="d-flex flex-column">
+        Add Penalty
+        <AddToTimer Disabled="@Disabled" TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
+    </div>
 
     @if (ResumedRace) {
-        <AddToTimer Disabled="@Disabled" Simplified="false" TimerAdditionType="@TimerAdditionType.Previous" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
+        <div class="d-flex flex-column">
+            Add Previous Time
+            <AddToTimer Disabled="@Disabled" Simplified="false" TimerAdditionType="@TimerAdditionType.Previous" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
+        </div>
     }
 
         <ConfirmationModal @ref="ConfirmationModal"
