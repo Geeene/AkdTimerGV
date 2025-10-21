@@ -13,10 +13,14 @@ Add Penalty
     <div class="d-flex flex-column Panel">
         <span>Timer Control</span>
         @if (!timerData.Active && !timerData.dnf) {
-            <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Start" onclick="@(() => HandleStart())"/>
+            @if (timerData.FinishTime == null) {
+                <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Start" onclick="@(() => HandleStart())"/>
+            } else {
+                <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Undo Finish" onclick="@(() => ConfirmUndoFinishModal.showDialog())"/>
+            }
         } else {
-            <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Stop" onclick="@(() => HandleFinish())"/>
-            <input type="button" class="btn btn-danger" disabled="@(Disabled)" value="DNF" onclick="@(() => ConfirmationModal.showDialog())"/>
+            <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Finish" onclick="@(() => HandleFinish())"/>
+            <input type="button" class="btn btn-danger" disabled="@(Disabled)" value="DNF" onclick="@(() => ConfirmDnfModal.showDialog())"/>
         }
         <input type="button" class="btn btn-light" disabled="@(timerData.Paused || Disabled)" value="Start Break" onclick="@(() => timerData.StartBreak())"/>
         <input type="button" class="btn btn-light" disabled="@(timerData.IsNotPaused() || Disabled)" value="End Break" onclick="@(() => timerData.EndBreak())"/>
@@ -35,9 +39,12 @@ Add Penalty
         </div>
     }
 
-        <ConfirmationModal @ref="ConfirmationModal"
+        <ConfirmationModal @ref="ConfirmDnfModal"
         ActionDescription="Are you sure you want to DNF? This action is not reversible!"
         ActionRunnable="@(() => HandleDnf())"/>
+        <ConfirmationModal @ref="ConfirmUndoFinishModal"
+        ActionDescription="Are you sure you want to undo your finish? This will add the time that has passed since your last finish to your total time!"
+        ActionRunnable="@(() => HandleUndoFinish())"/>
 </div>
 
 @code {
@@ -50,7 +57,8 @@ Add Penalty
     [Parameter]
     public TeamTimerData timerData { get; set; }
 
-    private ConfirmationModal ConfirmationModal  { get; set; }
+    private ConfirmationModal ConfirmDnfModal  { get; set; }
+    private ConfirmationModal ConfirmUndoFinishModal  { get; set; }
 
     /// <summary>
     /// Lambda to re-calculate the standings for all teams
@@ -60,6 +68,10 @@ Add Penalty
 
     public void HandleStart() {
         timerData.Start();
+        ((Func<bool>)TriggerStandingsCalculation).Invoke();
+    }
+    public void HandleUndoFinish() {
+        timerData.UndoFinish();
         ((Func<bool>)TriggerStandingsCalculation).Invoke();
     }
 

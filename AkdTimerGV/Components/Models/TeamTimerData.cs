@@ -31,6 +31,11 @@
         /// The time when the current break was started
         /// </summary>
         private DateTime? StartCurrentBreak { get; set; }
+        
+        /// <summary>
+        /// The time when the player last finished the race
+        /// </summary>
+        public DateTime? FinishTime { get; set; }
 
         /// <summary>
         /// Total time in Seconds that the Team was actively running in SECONDS
@@ -185,6 +190,16 @@
             EndBreak();
             ActiveSeconds = GetElapsedActiveTime();
             Active = false;
+            FinishTime = DateTime.Now;
+        }
+
+        /// <summary>
+        /// To be pressed when finishing the race
+        /// </summary>
+        public void UndoFinish() {
+            ActiveSeconds += ((long)DateTime.Now.Subtract((DateTime) FinishTime).TotalSeconds);
+            Active = true;
+            FinishTime = null;
         }
 
         /// <summary>

@@ -25,7 +25,7 @@
                         <TeamTimerStatusIndicator Team="Team"/>
                     </td>
                     <td>@Team.Name</td>
-                    <td style="text-align:end">@(getTimeValueAsString(Team.TimerData.GetElapsedActiveTime()))</td>
+                    <td style="text-align:end">@(getTimeValueAsString(Team.TimerData.GetSubmittedTime()))</td>
                     <td style="text-align:end">@(getTimeValueAsString(Team.TimerData.GetExtraTime()))</td>
                     <td style="text-align:end">@(getTimeValueAsString(Team.TimerData.GetRemainingExtraTime()))</td>
                 </tr>
