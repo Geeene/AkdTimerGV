@@ -50,6 +50,6 @@
 
         link += IncludeTable ? "true" : "false";
         // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
-        await JSRuntime.InvokeVoidAsync("exampleJsFunctions.ShowMsg", link);
+        await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
     }
 }
