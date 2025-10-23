@@ -1,4 +1,4 @@
-Timer for Fire Emblem Draft Racing.
+Timer for Fire Emblem Draft Racing. Use at http://geeene.xyz/
 Largely Inspired by the Original Racetime-Coordinator by Akd (http://schwjm.me/race-coordinator/)
 
 If you're familiar with that timer you should feel right at home with this one :)
