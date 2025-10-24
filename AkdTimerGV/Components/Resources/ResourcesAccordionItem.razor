@@ -1,0 +1,22 @@
+﻿<div class="accordion-item">
+    <h2 class="accordion-header" id="heading_@Title">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_@Title" aria-expanded="true" aria-controls="collapse_@Title">
+            @Title
+        </button>
+    </h2>
+    <div id="collapse_@Title" class="accordion-collapse collapse" aria-labelledby="heading_@Title" data-bs-parent="#resourcesAccordion_@AccordionId">
+        <div class="accordion-body">
+            @ChildContent
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+    [Parameter]
+    public string AccordionId { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

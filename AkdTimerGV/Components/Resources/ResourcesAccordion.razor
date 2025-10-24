@@ -1,0 +1,27 @@
+﻿<div class="accordion" style="width:100%" id="resourcesAccordion_@AccordionId">
+    @foreach (Category category in categories) {
+        <ResourcesAccordionItem Title="@category.categoryName" AccordionId="@AccordionId">
+            @if (category.subCategories.Count > 0) {
+                <ResourcesAccordion AccordionId="@category.categoryName" categories="@category.subCategories" TagDisplayDict="TagDisplayDict"/>
+            }
+
+            @foreach (CategoryEntry entry in category.entries) {
+                <!-- Only show an entry if it has no tag, or atleast one of the tags has been chosen to be displayed.-->
+                @if (TagDisplayDict.Values.Where(v => v == true).Count() == 0 || entry.tags.Count == 0 || entry.tags.Where(tag => TagDisplayDict.GetValueOrDefault(tag, true) == true).Count() > 0) {
+                    <ResourcesAccordionEntry entry="entry"/>
+                }
+            }
+        </ResourcesAccordionItem>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<Category> categories { get; set; } = new List<Category>();
+
+    [Parameter]
+    public string AccordionId { get; set; }
+
+    [Parameter]
+    public Dictionary<String, bool> TagDisplayDict { get; set; } = new Dictionary<string, bool>();
+}

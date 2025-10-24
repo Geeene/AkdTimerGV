@@ -1,0 +1,13 @@
+﻿<div style="padding: 5px;">
+    <h4><a href="@entry.reference">@entry.name</a></h4>
+    @if (entry.credit != null) {
+        <span>Credit: @entry.credit <br /></span>
+    }
+    @entry.description <br />
+</div>
+
+@code {
+    [Parameter]
+    public CategoryEntry entry { get; set; }
+
+}

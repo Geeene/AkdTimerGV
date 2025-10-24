@@ -1,0 +1,38 @@
+﻿@page "/resources"
+@rendermode InteractiveServer
+@using System.Text.Json;
+
+<div>
+    <div style="width:79%; float:left;">
+        <ResourcesAccordion AccordionId="Main" categories="@configuredResources.categories" TagDisplayDict="TagDisplayDict"/>
+    </div>
+    <div style=" width:20%; margin:5px; height:auto; padding:5px; float:left">
+        @foreach ((string key, int value) in Tags) {    
+            <span><input type="checkbox" class="btn" @bind="TagDisplayDict[key]" @bind:after="@(()=> StateHasChanged())" /> @key (@value)</span><br />
+        }
+    </div>
+</div>
+
+@code {
+    ResourcesJson configuredResources = JsonSerializer.Deserialize<ResourcesJson>(File.ReadAllText("wwwroot/resources.json"));
+    Dictionary<string, int> Tags = new Dictionary<string, int>();
+    Dictionary<string, bool> TagDisplayDict = new Dictionary<string, bool>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            return;
+        }
+        Tags = configuredResources.getAllTags();
+        foreach (string tag in Tags.Keys) {
+            TagDisplayDict[tag] = false;
+        }
+        StateHasChanged();
+    }
+
+    protected void refreshDisplayedItems() {
+        
+    }
+
+
+
+}

@@ -1,0 +1,73 @@
+{
+  "categories": [
+    {
+      "categoryName": "Tools",
+      "iconPath": "",
+      "entries": [
+        {
+          "name": "AKDTimerGV",
+          "reference": "http://geeene.xyz/",
+          "credit": "Geene",
+          "description": "Timer for Draft Races",
+          "tags": ["Tool"]
+        },
+        {
+          "name": "Draft Racing Community Discord",
+          "reference": "https://discord.gg/QNV4tgYx27",
+          "credit": "Castle345",
+          "description": "Our Community Discord",
+          "tags": [ "Tool" ]
+        },
+        {
+          "name": "WR / PB Sheet",
+          "reference": "https://docs.google.com/spreadsheets/d/1Di9LA2UxeaYfXcypAf0Np55niiPyN8F4xsHp5Wm7aJk/edit?usp=sharing",
+          "credit": "Geene",
+          "description": "Spreadsheet for tracking the WR / PBs in our draft racing community",
+          "tags": [ "Tool" ]
+        }
+      ]
+    },
+    {
+      "categoryName": "GBA",
+      "iconPath": "",
+      "subCategories": [
+        {
+          "categoryName": "FE8",
+          "iconPath": "",
+          "entries": [
+            {
+              "name": "Any% Draft Race Rules",
+              "description": "The Basic Any% Draft Race Rules",
+              "tags": [ "Ruleset" ]
+            }
+          ]
+        }
+      ],
+      "entries": [
+        {
+          "name": "RNG Script - MGBA",
+          "reference": "https://pastebin.com/D6qfynNY",
+          "credit": "Pyrobe Leijon / Geene",
+          "description": "",
+          "tags": [ "Emulator Script" ]
+        },
+        {
+          "name": "RNG Script - Bizhawk",
+          "reference": "https://drive.google.com/file/d/12XR2x9cyTGC_cH9FIFexwjWKb9iG-UoD/view?usp=sharing",
+          "credit": "Dondon151",
+          "description": "",
+          "tags": [ "Emulator Script" ]
+        },
+        {
+          "name": "RNG Script - VBA-RR",
+          "reference": "https://drive.google.com/file/d/1bKdSt8w6At3GwiVlv2_7Bf5zZqonVFEZ/view?usp=sharing",
+          "credit": "Dondon151",
+          "description": "",
+          "tags": [ "Emulator Script" ]
+        }
+      ]
+    }
+
+
+  ]
+}
