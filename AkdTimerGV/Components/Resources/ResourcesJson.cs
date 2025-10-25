@@ -34,6 +34,19 @@
 
             return tags;
         }
+
+        public List<CategoryEntry> getAllEntries() {
+            List<CategoryEntry> AllEntries = new List<CategoryEntry>();
+            foreach (Category category in subCategories) {
+                AllEntries.AddRange(category.getAllEntries());
+            }
+            AllEntries.AddRange(this.entries);
+            return AllEntries;
+        }
+
+        public bool hasAnyEntryToShow(Dictionary<String, bool> TagDisplayDict) {
+            return getAllEntries().Find(ce => ce.shouldBeShown(TagDisplayDict)) != null;
+        }
     }
 
     public class CategoryEntry {
@@ -45,5 +58,15 @@
         public string credit { get; set; }
         public string description { get; set; }
         public List<String> tags { get; set; }
+
+        public bool shouldBeShown(Dictionary<String, bool> TagDisplayDict) {
+            return 
+                // By default all tags are unchecked, if so, we still want to show everything
+                TagDisplayDict.Values.Where(v => v == true).Any() == false 
+                // If the entry has no tags, just show it
+                || this.tags.Count == 0 
+                // Otherwise, only show the entry if atleast one of it's tags should be displayed
+                || this.tags.Where(tag => TagDisplayDict.GetValueOrDefault(tag, true) == true).Any();
+        }
     }
 }
