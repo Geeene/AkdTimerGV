@@ -1,14 +1,14 @@
-﻿<div class="accordion" style="width:100%" id="resourcesAccordion_@AccordionId">
+﻿<div class="accordion open" style="width:100%" id="resourcesAccordion_@(AccordionId.Replace(" ", "_"))">
     @foreach (Category category in categories) {
-        @if (category.hasAnyEntryToShow(TagDisplayDict)) {
-            <ResourcesAccordionItem Title="@category.categoryName" AccordionId="@AccordionId">
+        @if (category.hasAnyEntryToShow(TagDisplayDict, GameFilterDict)) {
+            <ResourcesAccordionItem Title="@category.categoryName" AccordionId="@(category.categoryName.Replace(" ", "_"))">
                 @if (category.subCategories.Count > 0) {
-                    <ResourcesAccordion AccordionId="@category.categoryName" categories="@category.subCategories" TagDisplayDict="TagDisplayDict"/>
+                    <ResourcesAccordion AccordionId="@(category.categoryName.Replace(" ","_"))" categories="@category.subCategories" TagDisplayDict="TagDisplayDict" GameFilterDict="GameFilterDict"/>
                 }
 
                 @foreach (CategoryEntry entry in category.entries) {
                     <!-- Only show an entry if it has no tag, or atleast one of the tags has been chosen to be displayed.-->
-                    @if (entry.shouldBeShown(TagDisplayDict)) {
+                    @if (entry.shouldBeShown(TagDisplayDict, GameFilterDict)) {
                         <ResourcesAccordionEntry entry="entry"/>
                     }
                 }
@@ -26,4 +26,7 @@
 
     [Parameter]
     public Dictionary<String, bool> TagDisplayDict { get; set; } = new Dictionary<string, bool>();
+    
+    [Parameter]
+    public Dictionary<String, bool> GameFilterDict { get; set; } = new Dictionary<string, bool>();
 }

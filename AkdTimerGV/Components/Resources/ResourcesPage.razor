@@ -3,12 +3,17 @@
 @using System.Text.Json;
 
 <div>
-    <div style="width:79%; float:left;">
-        <ResourcesAccordion AccordionId="Main" categories="@configuredResources.categories" TagDisplayDict="TagDisplayDict"/>
+    <div style="width:79%; min-width:79%; float:left;">
+        <ResourcesAccordion AccordionId="Main" categories="@configuredResources.categories" TagDisplayDict="TagDisplayDict" GameFilterDict="GameFilterDict"/>
     </div>
     <div style=" width:20%; margin:5px; height:auto; padding:5px; float:left">
-        <h5>Filter</h5>
-        @foreach ((string key, int value) in Tags) {    
+        <h5>Filters</h5>
+        <hr />
+        @foreach ((string key, int value) in GameFilters.OrderBy(tag => tag.Key)) {
+            <span><input type="checkbox" class="btn" @bind="GameFilterDict[key]" @bind:after="@(()=> StateHasChanged())" /> @key (@value)</span><br />
+        }
+        <hr />
+        @foreach ((string key, int value) in Tags.OrderBy(tag => tag.Key)) {
             <span><input type="checkbox" class="btn" @bind="TagDisplayDict[key]" @bind:after="@(()=> StateHasChanged())" /> @key (@value)</span><br />
         }
     </div>
@@ -18,6 +23,8 @@
     ResourcesJson configuredResources = JsonSerializer.Deserialize<ResourcesJson>(File.ReadAllText("wwwroot/resources.json"));
     Dictionary<string, int> Tags = new Dictionary<string, int>();
     Dictionary<string, bool> TagDisplayDict = new Dictionary<string, bool>();
+    Dictionary<string, int> GameFilters = new Dictionary<string, int>();
+    Dictionary<string, bool> GameFilterDict = new Dictionary<string, bool>();
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
@@ -27,13 +34,12 @@
         foreach (string tag in Tags.Keys) {
             TagDisplayDict[tag] = false;
         }
+
+        GameFilters = configuredResources.getAllGameFilters();
+        foreach (string filter in GameFilters.Keys) {
+            GameFilterDict[filter] = false;
+        }
+
         StateHasChanged();
     }
-
-    protected void refreshDisplayedItems() {
-        
-    }
-
-
-
 }

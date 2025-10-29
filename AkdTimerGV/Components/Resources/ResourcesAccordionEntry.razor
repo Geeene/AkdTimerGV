@@ -3,7 +3,16 @@
     @if (entry.credit != null) {
         <span>Credit: @entry.credit <br /></span>
     }
-    @entry.description <br />
+    @((MarkupString)entry.description) <br />
+    <div style="font-size:12px; color: lightgray; margin-top: 5px; text-align:right" class="tags">
+        @foreach (String tag in entry.tags) {
+            @if (entry.tags.IndexOf(tag) == 0) {
+                @tag
+            } else {
+                <span>, @tag</span>
+            }
+        }
+    </div>
 </div>
 
 @code {
