@@ -116,7 +116,7 @@
     private ConfirmationModal ConfirmationModal  { get; set; }
 
     private Guid SelectedNewHost { get; set; }
-    private Guid? SelectedUserAddPenalty { get; set; }
+    private Guid? SelectedUserAddPenalty { get; set; } = Guid.Empty;
 
     private List<TeamTimerData> GetRelevantTimerData() {
         return new List<TeamTimerData>(Lobby.GetParticipatingTeams().Select(Team => Team.TimerData));

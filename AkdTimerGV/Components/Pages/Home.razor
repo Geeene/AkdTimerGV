@@ -82,7 +82,7 @@
     private string? lobbyId;
     private string? userName;
     private string? password;
-    private List<Lobby> lobbies = LobbyHolder.getLobbies();
+    private List<Lobby> lobbies = LobbyHolder.Instance.getLobbies();
     private ModalDialog ModalDialog { get; set; }
     private ConfirmationModal ConfirmationModal { get; set; }
     private Lobby? lobbyToJoin;
@@ -102,7 +102,7 @@
             }
 
             if (InviteLinkLobby != null) {
-                Lobby lobby = LobbyHolder.getLobby(Guid.Parse(InviteLinkLobby));
+                Lobby lobby = LobbyHolder.Instance.getLobby(Guid.Parse(InviteLinkLobby));
                 modalDialogPassword = lobby.Password;
                 await showModalToJoinLobby(lobby);
             }
@@ -117,7 +117,7 @@
         }
 
         User currentUser = await getOrCreateUserInLocalStorage(userName);
-        Lobby lobby = LobbyHolder.createLobby(lobbyId, currentUser, password);
+        Lobby lobby = LobbyHolder.Instance.createLobby(lobbyId, currentUser, password);
         await handleMovingUserToLobby(currentUser, password, lobby);
     }
 

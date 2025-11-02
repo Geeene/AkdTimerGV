@@ -153,6 +153,9 @@
         /// <param name="penaltyTimeToAdd">Must be given in SECONDS</param>
         public void AddPenaltyTime(long penaltyTimeToAdd) {
             PenaltyTime += penaltyTimeToAdd;
+            if (PenaltyTime < 0) {
+                PenaltyTime = 0;
+            }
         }
 
         /// <summary>
@@ -161,6 +164,9 @@
         /// <param name="breakTimeToAdd">Must be given in SECONDS</param>
         public void AddBreakTime(long breakTimeToAdd) {
             BreakTime += breakTimeToAdd;
+            if (BreakTime < 0) {
+                BreakTime = 0;
+            }
         }
 
         /// <summary>

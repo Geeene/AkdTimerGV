@@ -35,7 +35,6 @@
     }
 </div>
 
-
 @code {
     [Parameter]
     public String LobbyId { get; set; }
@@ -61,8 +60,8 @@
             return;
         }
 
-        // Retrieve the reference to the Lobby from the LobbyHolder.
-        Lobby = LobbyHolder.getLobby(ParsedLobbyid);
+        // Retrieve the reference to the Lobby from the LobbyHolder.Instance.
+        Lobby = LobbyHolder.Instance.getLobby(ParsedLobbyid);
 
         Timer = new Timer(new TimerCallback(LobbyRef => {
             InvokeAsync(() => {

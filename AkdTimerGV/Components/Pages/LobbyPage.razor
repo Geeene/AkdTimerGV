@@ -84,7 +84,6 @@
     }
 </div>
 
-
 @code {
     public Lobby? Lobby = null;
     protected User? currentUser;
@@ -135,7 +134,7 @@
 
         // if the data of the Locally stored lobby is no longer present, 
         // then remove the locally saved Lobby id and switch to the main page
-        return LobbyHolder.getLobby((Guid) currentLobbyId);
+        return LobbyHolder.Instance.getLobby((Guid) currentLobbyId);
     }
 
     /// <summary>

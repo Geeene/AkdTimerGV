@@ -131,7 +131,7 @@
         public void LeaveLobby(User user) {
             RemoveUserFromTeam(user);
             if (UserTeamMapping.Count == 0) {
-                LobbyHolder.removeLobby(this);
+                LobbyHolder.Instance.removeLobby(this);
             }
         }
 
