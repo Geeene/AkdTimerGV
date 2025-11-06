@@ -3,7 +3,7 @@
     /// Represents a Team participating in the race, or the spectator team
     /// </summary>
     /// <param name="name"></param>
-    public class Team(String name) {
+    public class Team(String name, int index) {
         
         /// <summary>
         /// Constant for the name of the spectator team
@@ -45,6 +45,11 @@
         /// The Teams timer
         /// </summary>
         public TeamTimerData TimerData { get; } = new TeamTimerData();
+
+        /// <summary>
+        /// The order of teams joining the lobby
+        /// </summary>
+        public int Index { get; set; } = index;
         
         /// <summary>
         /// Add the given user to the team

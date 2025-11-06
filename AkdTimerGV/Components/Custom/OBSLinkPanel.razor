@@ -32,6 +32,9 @@
     [Parameter]
     public Lobby Lobby { get; set; }
 
+    [Parameter]
+    public String CustomOrder { get; set; }
+
     private bool AllTeams { get; set; } = true;
 
     private bool IncludeTable { get; set; } = false;
@@ -44,6 +47,9 @@
 
         if (AllTeams) {
             link += "AllTeams/";
+            if (CustomOrder != null && CustomOrder.Length > 0) {
+                link += "CustomOrder/" + CustomOrder+"/";
+            }
         } else {
             link += "SingleTeam/"+(Lobby.GetTeamByTeamId(ChosenTeam)).TeamId+"/";
         }

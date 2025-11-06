@@ -1,4 +1,4 @@
-﻿@page "/timer/lobby/{LobbyId}/AllTeams/{Table:bool}"
+﻿@page "/timer/lobby/{LobbyId}/AllTeams/CustomOrder/{CustomOrder}/{Table:bool}"
 @page "/timer/lobby/{LobbyId}/SingleTeam/{TeamName}/{Table:bool}"
 @using AkdTimerGV.Components.Models
 @using AkdTimerGV.Components.Custom
@@ -19,8 +19,8 @@
     @if (Lobby != null) {
         @if (Lobby.StartingPistolValue == 0) {
             @if (TeamName == null) {
-                @foreach (Team team in Lobby.GetParticipatingTeams()) {
-                    <TeamTimer Team="team"/>
+                @foreach (Team team in Lobby.GetParticipatingTeams(CustomOrder)) {
+                    <TeamTimer @ref="TimerRef" Team="team" AllTeams="TimerReferences" />
                 }
 
             } else {
@@ -45,9 +45,16 @@
     [Parameter]
     public bool Table { get; set; }
 
+    [Parameter]
+    public String? CustomOrder { get; set; }
+
     public Lobby Lobby { get; set; }
 
     private Timer Timer;
+    private List<TeamTimer> TimerReferences = new List<TeamTimer>();
+    private TeamTimer TimerRef {
+        set { TimerReferences.Add(value); }
+    }
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {

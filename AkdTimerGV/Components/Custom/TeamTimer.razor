@@ -36,14 +36,24 @@
         margin: 0px 5px 0px 5px;
     }
 
+    .moveTimerLeft {
+        display: none !important;
+    }
+
+    .teamTimerContainer:hover .moveTimerLeft {
+        display:inline-block !important;
+    }
+
 </style>
 
-<div id="teamTimer-@Team.Name" class="teamTimerContainer fw-bold" style="margin:@(NoMargin ? "0px" : "5px")">
+<div id="teamTimer-@Team.Name" class="teamTimerContainer fw-bold" style="margin:@(NoMargin ? "0px" : "5px"); order:@AllTeams.IndexOf(this)">
     <h5>
+        <i class="bi bi-arrow-left-circle moveTimerLeft" onclick="@(() => moveLeft())" />
         <span class="teamTimerTeamName">@Team.Name</span>
         <span>
             <TeamTimerStatusIndicator Team="Team"/>
         </span>
+        <i class="bi bi-arrow-right-circle moveTimerLeft" onclick="@(() => moveRight())" />
     </h5>
 
     <div class="teamTimerMainTimer">
@@ -82,8 +92,12 @@
 
 
 @code {
+
     [Parameter]
     public Team Team { get; set; }
+
+    [Parameter]
+    public List<TeamTimer> AllTeams { get; set; }
 
     [Parameter]
     public bool NoMargin { get; set; }
@@ -91,4 +105,26 @@
     protected string getTimeValueAsString(long value) {
         return TimeUtil.getTimeAsString(value);
     }
+
+    protected void moveLeft() {
+        int currentPosition = AllTeams.IndexOf(this);
+        if (currentPosition == 0) {
+            return;
+        }
+        TeamTimer temp = AllTeams[currentPosition - 1];
+        AllTeams[currentPosition - 1] = AllTeams[currentPosition];
+        AllTeams[currentPosition] = temp;
+    }
+
+    protected void moveRight() {
+        int currentPosition = AllTeams.IndexOf(this);
+        if (currentPosition == AllTeams.Count() - 1) {
+            return;
+        }
+
+        TeamTimer temp = AllTeams[currentPosition + 1];
+        AllTeams[currentPosition + 1] = AllTeams[currentPosition];
+        AllTeams[currentPosition] = temp;
+    }
+
 }

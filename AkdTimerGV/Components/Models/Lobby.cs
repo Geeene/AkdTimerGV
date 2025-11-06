@@ -53,6 +53,11 @@
         public bool ResumedRace { get; set; } = false;
 
         /// <summary>
+        /// Index of the next created team
+        /// </summary>
+        public int NextIndex { get; set; } = 0;
+
+        /// <summary>
         /// Switches the user to the Team with the given name, if there is no such Team yet, then it will be created.
         /// </summary>
         /// <param name="user"></param>
@@ -73,7 +78,7 @@
             user.HasTeamPermission = false;
             // If there is no team yet with the chosen name, then create a new Team
             if (newTeam == null) {
-                newTeam = new Team(newTeamName);
+                newTeam = new Team(newTeamName, NextIndex++);
                 if (Team.SPECTATOR.Equals(newTeamName)) {
                     newTeam.Participating = false;
                 } else { 
@@ -113,7 +118,26 @@
         /// </summary>
         /// <returns></returns>
         public List<Team> GetParticipatingTeams() {
-            return Teams.Values.Where(testc => testc.Participating).ToList();
+            return GetParticipatingTeams(null);
+        }
+        public List<Team> GetParticipatingTeams(String? ordering) {
+            Dictionary<int, int> CustomOrder = new Dictionary<int, int>();
+
+            // If the user re-ordered the teams in their UI, the order will be part of the URL in this format:
+            // 1-4-3-2 => the numbers represent the order in which the teams joined, so it will first show team 1, then team 4 etc.
+            
+            if (ordering != null && ordering.Length > 0) {
+                int i = 0;
+                foreach (string s in ordering.Split("-")) {
+                    CustomOrder.Add(int.Parse(s), i);
+                    i++;
+                }
+            }
+
+
+            return Teams.Values.Where(testc => testc.Participating)
+                .OrderBy(team => CustomOrder.Count == 0 ? team.Index : CustomOrder[team.Index])
+                .ToList();
         }
 
         /// <summary>

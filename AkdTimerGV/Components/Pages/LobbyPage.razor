@@ -34,7 +34,7 @@
                 @if (Lobby.StartingPistolValue == 0) {
                     @* Panel showing the actual timers *@
                     @foreach (var team in Lobby.GetParticipatingTeams()) {
-                        <TeamTimer Team="team"/>
+                        <TeamTimer @ref="TimerRef" Team="team" AllTeams="TimerReferences"/>
                     }
                 } else {
                     <b style="font-size:100pt">@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</b>
@@ -63,7 +63,7 @@
                 <TeamList Team="@currentUser.Team" RenderForTeamCreator="@currentUser.IsCreatorOfTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" JoinType="TeamJoinType.LEAVE"/>
                 <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() =>Lobby.DetermineStandings())" ResumedRace="@Lobby.ResumedRace"/>
             }
-            <OBSLinkPanel Lobby=@Lobby/>
+            <OBSLinkPanel Lobby=@Lobby CustomOrder="@CustomOrder"/>
         </div>
 
         <hr/>
@@ -89,6 +89,22 @@
     protected User? currentUser;
     protected String? ChosenTeamName;
     private Timer Timer;
+    private List<TeamTimer> TimerReferences = new List<TeamTimer>();
+    private TeamTimer TimerRef {
+        set { TimerReferences.Add(value); }
+    }
+    private String CustomOrder {
+        get {
+            String a = "";
+            foreach (TeamTimer timer in TimerReferences) {
+                if (TimerReferences.IndexOf(timer) != 0) {
+                    a += "-";
+                }
+                a += timer.Team.Index;
+            }
+            return a;
+        }
+    }
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
@@ -200,7 +216,7 @@
         return teams;
     }
 
-    
+
     public async void GenerateInviteLink() {
         String link = NavigationManager.BaseUri+"timer/lobby/"+Lobby.LobbyId+"/";
         // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
