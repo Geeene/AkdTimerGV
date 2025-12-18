@@ -26,6 +26,8 @@
         /// </summary>
         public string? Password { get; } = Password;
 
+        public DraftState DraftState { get; set; } = new DraftState();
+
         /// <summary>
         /// The Time Stamp when the lobby was created.
         /// </summary>

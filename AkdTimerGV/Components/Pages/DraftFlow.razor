@@ -1,0 +1,140 @@
+﻿@rendermode InteractiveServer
+@using AkdTimerGV.Components.Models
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedLocalStorage BrowserStorage;
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager;
+@page "/timer/draft"
+
+
+@if (Lobby == null) {
+
+} else {
+    @if (DraftFlowState.START == Lobby.DraftState.FlowState) {
+        <input type="button" value="Randomize Order" onclick="@(() => InitializeDraftOrder())" />
+
+    } else if (DraftFlowState.ORDER_RANDOMIZED == Lobby.DraftState.FlowState) {
+        @for (int i = 0; i < RandomizedOrder.Count(); i++) {
+            <h2>@(i + 1 + " - " + RandomizedOrder[i])</h2>
+        }
+
+        <input type="button" value="Reroll" onclick="@(() => RerollOrder())" />
+        <input type="button" value="Continue" onclick="@(() => StartDrafting())" />
+    } else if (DraftFlowState.CHOOSE_GAME == Lobby.DraftState.FlowState) {
+        <div style="width: 100%; height: 5vh">
+            <input type="button" value="Reroll" onclick="@(() => RerollOrder())" />
+        </div>
+
+        <span>choose a game</span>
+        <input type="button" value="Load Test Roster" onclick="@(() => ChooseGame())" />
+
+    } else if (DraftFlowState.DRAFTING_STARTED == Lobby.DraftState.FlowState) {
+        <div style="width: 100%; height: 5vh">
+            <input type="button" value="Reroll" onclick="@(() => RerollOrder())" />
+
+        </div>
+
+        @foreach (DraftGrouping draftGrouping in Lobby.DraftState.DraftGroupings.Values) {
+            <div class="d-flex flex-row" style="border: 1px solid lightgray;">
+                <div style="vertical-align:middle; border-right: 1px solid lightgray; width: 100px; height: 64px;">@draftGrouping.Name</div>
+                <div style="width: 640px; height: 64px;">
+                    <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter">
+                        <ChildContent><img src="@context.ImagePath" style="height: 64px; width: 64px"/></ChildContent>
+                    </Dropzone>
+
+                </div>
+            </div>
+        }
+    }
+}
+
+@code {
+    private Lobby Lobby { get; set; }
+    private User currentUser { get; set; }
+    private String[] RandomizedOrder { get; set; } = [];
+    private bool namesSet = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            return;
+        }
+
+        Lobby = await getStoredLobby();
+        currentUser = await getStoredUser();
+        if (Lobby == null || currentUser == null) {
+            await BrowserStorage.DeleteAsync("currentLobby");
+            return;
+        }
+
+
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Get the LobbyId from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<Lobby?> getStoredLobby() {
+        var storedLobby = await BrowserStorage.GetAsync<Guid>("currentLobby");
+        Guid? currentLobbyId = storedLobby.Value;
+        if (currentLobbyId == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present,
+        // then remove the locally saved Lobby id and switch to the main page
+        return LobbyHolder.Instance.getLobby((Guid)currentLobbyId);
+    }
+
+    /// <summary>
+    /// Get the User from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<User?> getStoredUser() {
+        var storedUser = await BrowserStorage.GetAsync<Guid>("user");
+        Guid? currentUser = storedUser.Value;
+        if (currentUser == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present,
+        // then remove the locally saved Lobby id and switch to the main page
+        return UserHolder.GetUserById((Guid)currentUser);
+    }
+
+
+    private void InitializeDraftOrder() {
+        if (RandomizedOrder.Count() == 0) {
+            RandomizedOrder = new List<String>(Lobby.GetParticipatingTeams().Select(currentTeam => currentTeam.Name)).ToArray();
+            RerollOrder();
+            Lobby.DraftState.FlowState = DraftFlowState.ORDER_RANDOMIZED;
+            StateHasChanged();
+        }
+    }
+
+    private void RerollOrder() {
+        Random.Shared.Shuffle(RandomizedOrder);
+        StateHasChanged();
+    }
+
+    <!-- TODO: Actually make it chooseable -->
+    private void ChooseGame() {
+        DraftGrouping draftables = new DraftGrouping("draftable");
+        draftables.Characters.Add(new DraftCharacter("Test", "/images/favicon.png"));
+        Lobby.DraftState.DraftGroupings.Add("draftable", draftables);
+        Lobby.DraftState.FlowState = DraftFlowState.DRAFTING_STARTED;
+    }
+
+    private void StartDrafting() {
+        Lobby.DraftState.FlowState = DraftFlowState.CHOOSE_GAME;
+        foreach (String team in RandomizedOrder) {
+            Lobby.DraftState.DraftGroupings.Add(team, new DraftGrouping(team));
+        }
+        StateHasChanged();
+    }
+
+    private void FinishDraft() {
+        Lobby.DraftState.FlowState = DraftFlowState.DRAFTING_FINISHED;
+        NavigationManager.NavigateTo("/timer/lobby");
+    }
+}
