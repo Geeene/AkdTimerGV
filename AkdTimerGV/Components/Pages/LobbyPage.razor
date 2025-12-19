@@ -3,6 +3,7 @@
 <PageTitle>Lobby</PageTitle>
 @using AkdTimerGV.Components.Models
 @using AkdTimerGV.Components.Custom
+@using AkdTimerGV.Components.Draft
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Threading
 @using static AkdTimerGV.Components.Custom.TeamList
@@ -108,9 +109,10 @@
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
-        if (Lobby != null && 
-            !(new List<DraftFlowState> { DraftFlowState.NOT_STARTED, DraftFlowState.DRAFTING_FINISHED }.Contains(Lobby.DraftState.FlowState))) {
+        if (Lobby != null && currentUser != null && !currentUser.wasRedirectedToDraft && 
+        !(new List<DraftFlowState> { DraftFlowState.NOT_STARTED, DraftFlowState.DRAFTING_FINISHED }.Contains(Lobby.DraftState.FlowState))) {
             NavigationManager.NavigateTo("/timer/draft");
+            currentUser.wasRedirectedToDraft = true;
             return;
         }
 

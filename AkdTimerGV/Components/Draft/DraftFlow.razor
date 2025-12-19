@@ -1,0 +1,166 @@
+﻿@page "/timer/draft"
+@rendermode InteractiveServer
+@using AkdTimerGV.Components.Models
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Threading
+@inject ProtectedLocalStorage BrowserStorage;
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager;
+@inject ILogger<DraftFlow> Logger
+<div class="d-flex flex-column">
+
+    <div style="width: 100%">
+        <input type="button" value="Reset Drafting Process" onclick="@(() => Lobby.RestartDraft())" />
+    </div>
+
+
+    @if (Lobby == null) {
+
+    } else {
+        @if (DraftFlowState.START == Lobby.DraftState.FlowState) {
+            <input style="vertical-align:middle; font-size: 4em;" type="button" value="Randomize Order" onclick="@(() => Lobby.DraftState.InitializeDraftOrder(Lobby.GetParticipatingTeams()))" />
+
+        } else if (DraftFlowState.ORDER_RANDOMIZED == Lobby.DraftState.FlowState) {
+            @for (int i = 0; i < Lobby.DraftState.RandomizedDraftOrder.Count(); i++) {
+                <h2>@(i + 1 + " - " + Lobby.DraftState.RandomizedDraftOrder[i])</h2>
+            }
+
+            <input type="button" value="Reroll" onclick="@(() => Lobby.DraftState.RerollOrder())" />
+            <input type="button" value="Continue" onclick="@(() => StartDrafting())" />
+        } else if (DraftFlowState.CHOOSE_GAME == Lobby.DraftState.FlowState) {
+            <span>Choose games to add</span>
+            <input type="button" value="Load selected Rosters" onclick="@(() => ChooseGame())" />
+
+        } else if (DraftFlowState.DRAFTING_STARTED == Lobby.DraftState.FlowState) {
+            <div class="d-flex flex-column">
+                <div style="background-color: #1A1A1A; margin: 30px auto 30px auto">
+                    @foreach (DraftGrouping draftGrouping in DraftGroupings) {
+                        <div class="d-flex flex-row" style="border: 3px solid black;">
+                            <div class="draft-label-holder" contenteditable="true">
+                                <span class="draft-label">@draftGrouping.Name</span>
+                            </div>
+                            <div style="width: 640px; height: 64px;">
+                                <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(false))">
+                                    <ChildContent><img src="@context.ImagePath" style="height: 64px; width: 64px"/></ChildContent>
+                                </Dropzone>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex flex-row" style="margin: 10px auto; width: 1024px;">
+                    <Dropzone Items="availableCharacters.Characters" TItem="DraftCharacter">
+                        <ChildContent><img src="@context.ImagePath" style="height: 64px; width: 64px" /></ChildContent>
+                    </Dropzone>
+                </div>
+                <input type="button" value="Commit changes" onclick="@(() => CommitChanges(false))" />
+                <span><input type="checkbox" @bind="AutoCommit" /> Automatic Commit</span>
+                <span><input type="checkbox" @bind="SuppressAutoRefresh" /> Suppress refreshes</span>
+                <input type="button" value="Manual refresh" onclick="@(() => refreshFromDraftState(false))" />
+            </div>
+
+        }
+    }
+</div>
+
+@code {
+    private Lobby Lobby { get; set; }
+    private User currentUser { get; set; }
+    private bool namesSet = false;
+    private Timer Timer;
+    private List<DraftGrouping> DraftGroupings = [];
+    private DraftGrouping availableCharacters;
+    private bool AutoCommit = true;
+    public bool SuppressAutoRefresh = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            if (Lobby.DraftState.FlowState == DraftFlowState.DRAFTING_FINISHED) {
+                NavigationManager.NavigateTo("/timer/lobby");
+            }
+            return;
+        }
+
+        Lobby = await getStoredLobby();
+        currentUser = await getStoredUser();
+        if (Lobby == null || currentUser == null) {
+            await BrowserStorage.DeleteAsync("currentLobby");
+            return;
+        }
+
+        Lobby.DraftState.Subscribe(this);
+        refreshFromDraftState(false);
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Get the LobbyId from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<Lobby?> getStoredLobby() {
+        var storedLobby = await BrowserStorage.GetAsync<Guid>("currentLobby");
+        Guid? currentLobbyId = storedLobby.Value;
+        if (currentLobbyId == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present,
+        // then remove the locally saved Lobby id and switch to the main page
+        return LobbyHolder.Instance.getLobby((Guid)currentLobbyId);
+    }
+
+    /// <summary>
+    /// Get the User from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<User?> getStoredUser() {
+        var storedUser = await BrowserStorage.GetAsync<Guid>("user");
+        Guid? currentUser = storedUser.Value;
+        if (currentUser == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present,
+        // then remove the locally saved Lobby id and switch to the main page
+        return UserHolder.GetUserById((Guid)currentUser);
+    }
+
+    <!-- TODO: Actually make it chooseable -->
+    private void ChooseGame() {
+        List<DraftCharacter> draftCharacters = [];
+        for (int i = 0; i < 20; i++) {
+            draftCharacters.Add(new DraftCharacter("Test", "/images/favicon.png"));
+        }
+        Lobby.DraftState.AddMoreCharacters(draftCharacters);
+        Lobby.DraftState.FlowState = DraftFlowState.DRAFTING_STARTED;
+    }
+
+    private void StartDrafting() {
+        Lobby.DraftState.FlowState = DraftFlowState.CHOOSE_GAME;
+        foreach (String team in Lobby.DraftState.RandomizedDraftOrder) {
+            Lobby.DraftState.DraftGroupings.Add(team, new DraftGrouping(team));
+        }
+        refreshFromDraftState(false);
+    }
+
+    private void FinishDraft() {
+        Lobby.DraftState.FlowState = DraftFlowState.DRAFTING_FINISHED;
+    }
+
+    public void CommitChanges(bool automatic) {
+        if (automatic && !AutoCommit) {
+            return;
+        }
+        Lobby.DraftState.UpdateState(DraftGroupings, availableCharacters);
+    }
+
+    public void refreshFromDraftState(bool automatic) {
+        if (automatic && SuppressAutoRefresh) {
+            return;
+        }
+
+        DraftGroupings = Lobby.DraftState.DraftGroupings.Values.Select(value => value.clone()).ToList();
+        availableCharacters = Lobby.DraftState.AvailableCharacters.clone();
+        StateHasChanged();
+    }
+}

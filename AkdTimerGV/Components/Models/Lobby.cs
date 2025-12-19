@@ -1,4 +1,6 @@
-﻿namespace AkdTimerGV.Components.Models {
+﻿using AkdTimerGV.Components.Draft;
+
+namespace AkdTimerGV.Components.Models {
     /// <summary>
     /// A Lobby which has one or more people racing in it.
     /// 
@@ -262,6 +264,11 @@
         /// <returns></returns>
         public User? GetUserWithName(String name) { 
             return UserTeamMapping.Keys.Where(v => v.Name.Equals(name)).FirstOrDefault();
+        }
+
+        public void RestartDraft() {
+            this.DraftState = new DraftState();
+            DraftState.FlowState = DraftFlowState.START;
         }
     }
 }

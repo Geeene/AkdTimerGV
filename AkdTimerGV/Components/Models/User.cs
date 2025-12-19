@@ -26,6 +26,11 @@
         public bool HasTeamPermission { get; set; }
 
         /// <summary>
+        /// True the User was redirected to the drafting process when it was started.
+        /// </summary>
+        public bool wasRedirectedToDraft { get; set; } = false;
+
+        /// <summary>
         /// Returns true if the User is in a Team and is the creator of that team
         /// </summary>
         /// <returns></returns>

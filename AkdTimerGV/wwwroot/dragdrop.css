@@ -5,7 +5,12 @@
 
 /*dropzone style style*/
 .plk-dd-dropzone {
-    min-height: 50px;
+    width: 960px;
+    min-width: 960px;
+    min-height: 64px;
+    display:flex;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
 /*drag drop styles*/
@@ -89,4 +94,26 @@
     -ms-user-select: none; /* Internet Explorer/Edge */
     user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
+}
+
+.draft-label {
+    min-width: 56px;
+    max-width: 128px;
+    font-size: 16px;
+    line-height: 16px;
+    text-align: center;
+    border: none;
+    font-weight: 600;
+    margin: 0;
+    display: inline-block;
+    padding: 4px;
+    overflow-wrap: break-word;
+}
+
+.draft-label-holder {
+    text-align: center;
+    font-weight: 600;
+    line-height: 16px;
+    overflow-wrap: break-word;
+    border-right: 3px solid black;
 }
