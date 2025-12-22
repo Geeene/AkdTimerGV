@@ -267,8 +267,6 @@ namespace AkdTimerGV.Components.Models {
         }
 
         public void RestartDraft() {
-            this.DraftState = new DraftState();
-            DraftState.FlowState = DraftFlowState.START;
         }
     }
 }

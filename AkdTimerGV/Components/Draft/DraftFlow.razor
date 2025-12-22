@@ -10,7 +10,7 @@
 <div class="d-flex flex-column">
 
     <div style="width: 100%">
-        <input type="button" value="Reset Drafting Process" onclick="@(() => Lobby.RestartDraft())" />
+        <input type="button" value="Reset Drafting Process" onclick="@(() => Lobby.DraftState.Reset())" />
     </div>
 
 
@@ -26,31 +26,52 @@
             }
 
             <input type="button" value="Reroll" onclick="@(() => Lobby.DraftState.RerollOrder())" />
-            <input type="button" value="Continue" onclick="@(() => StartDrafting())" />
+            <input type="button" value="Continue" onclick="@(() => ConfirmOrderRandomization())" />
         } else if (DraftFlowState.CHOOSE_GAME == Lobby.DraftState.FlowState) {
             <span>Choose games to add</span>
-            <input type="button" value="Load selected Rosters" onclick="@(() => ChooseGame())" />
+
+            <div class="d-grid">
+                @foreach (DraftGrouping grouping in Lobby.DraftState.ChosenGameDict.Keys) {
+                    <div style="grid-row: @grouping.Row; grid-column: @grouping.Column">
+                        <input type="checkbox" @bind="Lobby.DraftState.ChosenGameDict[grouping]" @bind:after="(() => Lobby.DraftState.NotifySubscribers())" /> @grouping.Name
+                    </div>
+                }
+            </div>
+                
+            <input type="button" value="Unselect all" onclick="@(() => Lobby.DraftState.ResetSelectedGames())" />
+            <input type="button" value="Load selected Rosters" onclick="@(() => ConfirmGameSelection())" />
+
+            <hr />
+            <h1>OR</h1>
+            <hr />
+            <textarea @bind="TiermakerCode" rows="5"/>
+            <input type="button" value="Load via code" onclick="@(() => LoadTiermakerCode())" />
 
         } else if (DraftFlowState.DRAFTING_STARTED == Lobby.DraftState.FlowState) {
             <div class="d-flex flex-column">
                 <div style="background-color: #1A1A1A; margin: 30px auto 30px auto">
+                    <table>
+
                     @foreach (DraftGrouping draftGrouping in DraftGroupings) {
-                        <div class="d-flex flex-row" style="border: 3px solid black;">
-                            <div class="draft-label-holder" contenteditable="true">
+                        <tr class="flex-container" style="border: 3px solid black;">
+                            <td class="draft-label-holder" contenteditable="true">
                                 <span class="draft-label">@draftGrouping.Name</span>
-                            </div>
-                            <div style="width: 640px; height: 64px;">
-                                <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(false))">
-                                    <ChildContent><img src="@context.ImagePath" style="height: 64px; width: 64px"/></ChildContent>
+                            </td>
+
+                            <td style="width: 640px; height: 64px;">
+                                    <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
+                                    <Dropzone ItemWrapperClass="@(item => "grid-item")" Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                                    <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
                                 </Dropzone>
-                            </div>
-                        </div>
+                            </td>
+                        </tr>
                     }
+                    </table>
                 </div>
 
-                <div class="d-flex flex-row" style="margin: 10px auto; width: 1024px;">
-                    <Dropzone Items="availableCharacters.Characters" TItem="DraftCharacter">
-                        <ChildContent><img src="@context.ImagePath" style="height: 64px; width: 64px" /></ChildContent>
+                <div class="d-flex flex-row" style="margin: 10px auto 40px; width: 1024px;">
+                    <Dropzone ItemWrapperClass="@(item => "grid-item")" Items="availableCharacters.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                        <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
                     </Dropzone>
                 </div>
                 <input type="button" value="Commit changes" onclick="@(() => CommitChanges(false))" />
@@ -71,12 +92,16 @@
     private List<DraftGrouping> DraftGroupings = [];
     private DraftGrouping availableCharacters;
     private bool AutoCommit = true;
-    public bool SuppressAutoRefresh = false;
+    private bool SuppressAutoRefresh = false;
+    private string TiermakerCode;
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
-            if (Lobby.DraftState.FlowState == DraftFlowState.DRAFTING_FINISHED) {
-                NavigationManager.NavigateTo("/timer/lobby");
+            if (Lobby != null) {
+                if (Lobby.DraftState.FlowState == DraftFlowState.DRAFTING_FINISHED) {
+                    NavigationManager.NavigateTo("/timer/lobby");
+                }
+                Lobby.DraftState.Subscribe(this);
             }
             return;
         }
@@ -88,7 +113,6 @@
             return;
         }
 
-        Lobby.DraftState.Subscribe(this);
         refreshFromDraftState(false);
         StateHasChanged();
     }
@@ -125,26 +149,60 @@
         return UserHolder.GetUserById((Guid)currentUser);
     }
 
-    <!-- TODO: Actually make it chooseable -->
-    private void ChooseGame() {
-        List<DraftCharacter> draftCharacters = [];
-        for (int i = 0; i < 20; i++) {
-            draftCharacters.Add(new DraftCharacter("Test", "/images/favicon.png"));
-        }
-        Lobby.DraftState.AddMoreCharacters(draftCharacters);
-        Lobby.DraftState.FlowState = DraftFlowState.DRAFTING_STARTED;
-    }
 
-    private void StartDrafting() {
-        Lobby.DraftState.FlowState = DraftFlowState.CHOOSE_GAME;
+    private void ConfirmOrderRandomization() {
+        Lobby.DraftState.AdvanceState();
         foreach (String team in Lobby.DraftState.RandomizedDraftOrder) {
-            Lobby.DraftState.DraftGroupings.Add(team, new DraftGrouping(team));
+            DraftGrouping teamGrouping = new DraftGrouping(team);
+            teamGrouping.IsPlayer = true;
+            Lobby.DraftState.DraftGroupings.Add(team, teamGrouping);
         }
         refreshFromDraftState(false);
     }
 
+    private void ConfirmGameSelection() {
+        List<DraftCharacter> draftCharacters = [];
+
+        foreach (KeyValuePair<DraftGrouping, Boolean> game in Lobby.DraftState.ChosenGameDict) {
+            if (game.Value) {
+                draftCharacters.AddRange(game.Key.Characters);
+            }
+        }
+
+        Lobby.DraftState.SetAvailableCharacters(draftCharacters);
+        foreach (DraftGrouping grouping in Lobby.DraftState.DraftGroupings.Values) {
+            grouping.Characters = [];
+
+        }
+        Lobby.DraftState.AdvanceState();
+    }
+
+    private void LoadTiermakerCode() {
+        if (!TiermakerCode.StartsWith("fe")) {
+            return;
+        }
+
+        // Example code: fe==Free|0|eng-6|eng-5==Banned|1|eng-7
+        // can ignore first FE== free
+        // After split by == so we have each tier in a separate string.
+        // Then split by |
+        // index = tier name, index = 1 color (can ignore), after character shortnames
+        String[] tiers = TiermakerCode.Substring(4).Split("==");
+        foreach (String tier in tiers) {
+            String[] Components = tier.Split("|");
+            DraftGrouping groupingToAdd = new DraftGrouping(Components[0]);
+            Lobby.DraftState.DraftGroupings.Add(Components[0], groupingToAdd);
+
+            for (int i = 2; i < Components.Length; i++) {
+                String ShortName = Components[i];
+                String GameShortName = ShortName.Split("-")[0];
+                String CharacterIndex = ShortName.Split("-")[1];
+            }
+        }
+    }
+
     private void FinishDraft() {
-        Lobby.DraftState.FlowState = DraftFlowState.DRAFTING_FINISHED;
+        Lobby.DraftState.AdvanceState();
     }
 
     public void CommitChanges(bool automatic) {
@@ -155,12 +213,20 @@
     }
 
     public void refreshFromDraftState(bool automatic) {
-        if (automatic && SuppressAutoRefresh) {
-            return;
-        }
+        InvokeAsync(() => {
+            if (automatic && SuppressAutoRefresh) {
+                return;
+            }
 
-        DraftGroupings = Lobby.DraftState.DraftGroupings.Values.Select(value => value.clone()).ToList();
-        availableCharacters = Lobby.DraftState.AvailableCharacters.clone();
-        StateHasChanged();
+            DraftGroupings = Lobby.DraftState.DraftGroupings.Values.Select(value => value.clone()).ToList();
+            availableCharacters = Lobby.DraftState.AvailableCharacters.clone();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose() {
+        if (Lobby != null) {
+            Lobby.DraftState.Unsubscribe(this);
+        }
     }
 }
