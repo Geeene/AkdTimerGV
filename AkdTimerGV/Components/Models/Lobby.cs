@@ -266,7 +266,5 @@ namespace AkdTimerGV.Components.Models {
             return UserTeamMapping.Keys.Where(v => v.Name.Equals(name)).FirstOrDefault();
         }
 
-        public void RestartDraft() {
-        }
     }
 }
