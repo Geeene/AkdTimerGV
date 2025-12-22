@@ -7,6 +7,14 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager;
 @inject ILogger<DraftFlow> Logger
+
+<!-- 
+    Screen for the Drafting Process, functions based on an internal State machine.
+    Current state is dictated by DraftState.FlowState.
+
+
+-->
+
 <div class="d-flex flex-column">
 
     <div style="width: 100%">
@@ -18,9 +26,11 @@
 
     } else {
         @if (DraftFlowState.START == Lobby.DraftState.FlowState) {
+        <!-- Start State, allow user to initially roll the Draft Order -->
             <input style="vertical-align:middle; font-size: 4em;" type="button" value="Randomize Order" onclick="@(() => Lobby.DraftState.InitializeDraftOrder(Lobby.GetParticipatingTeams()))" />
 
         } else if (DraftFlowState.ORDER_RANDOMIZED == Lobby.DraftState.FlowState) {
+            <!-- Second State, Draft Order has been rolled, Display it and allow them to re-roll or continue.-->
             @for (int i = 0; i < Lobby.DraftState.RandomizedDraftOrder.Count(); i++) {
                 <h2>@(i + 1 + " - " + Lobby.DraftState.RandomizedDraftOrder[i])</h2>
             }
@@ -28,8 +38,14 @@
             <input type="button" value="Reroll" onclick="@(() => Lobby.DraftState.RerollOrder())" />
             <input type="button" value="Continue" onclick="@(() => ConfirmOrderRandomization())" />
         } else if (DraftFlowState.CHOOSE_GAME == Lobby.DraftState.FlowState) {
+            <!-- 
+                Third State, Draft Order has been decided, Let the users choose the games to add to the draft, either via checkboxes, or via the tiermaker code system.
+                It's fully compatible with the code system from the FE Tier Maker
+            .-->
             <span>Choose games to add</span>
 
+
+            <!-- Option 1: Select via Checkboxes -->
             <div class="d-grid">
                 @foreach (String groupingKey in Lobby.DraftState.ChosenGameDict.Keys) {
                     var grouping = DraftCharacterCache.DraftGroupings[groupingKey];
@@ -43,38 +59,45 @@
             <input type="button" value="Load selected Rosters" onclick="@(() => ConfirmGameSelection())" />
 
             <hr />
+            <!-- Option 2: Load via Code -->
             <h1>OR</h1>
             <hr />
             <textarea @bind="TiermakerCode" rows="5"/>
             <input type="button" value="Load via code" onclick="@(() => LoadTiermakerCode())" />
 
         } else if (DraftFlowState.DRAFTING_STARTED == Lobby.DraftState.FlowState) {
+            <!--
+                Fourth State, the games have been chosen, so the draft can begin
+            .-->
             <div class="d-flex flex-column">
+                <!-- Table containing the Auto generated Draft Tiers -->
                 <div style="background-color: #1A1A1A; margin: 30px auto 30px auto">
                     <table>
+                        @foreach (DraftGrouping draftGrouping in DraftGroupings) {
+                            <tr class="flex-container" style="border: 3px solid black;">
+                                <td class="draft-label-holder" contenteditable="true">
+                                    <span class="draft-label">@draftGrouping.Name</span>
+                                </td>
 
-                    @foreach (DraftGrouping draftGrouping in DraftGroupings) {
-                        <tr class="flex-container" style="border: 3px solid black;">
-                            <td class="draft-label-holder" contenteditable="true">
-                                <span class="draft-label">@draftGrouping.Name</span>
-                            </td>
-
-                            <td style="width: 640px; height: 64px;">
-                                    <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
-                                    <Dropzone ItemWrapperClass="@(item => "grid-item")" Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
-                                    <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
-                                </Dropzone>
-                            </td>
-                        </tr>
-                    }
+                                <td style="width: 640px; height: 64px;">
+                                        <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
+                                        <Dropzone ItemWrapperClass="@(item => "grid-item")" Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                                        <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
+                                    </Dropzone>
+                                </td>
+                            </tr>
+                        }
                     </table>
                 </div>
 
+                <!-- Other available characters -->
                 <div class="d-flex flex-row" style="margin: 10px auto 40px; width: 1024px;">
                     <Dropzone ItemWrapperClass="@(item => "grid-item")" Items="availableCharacters.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
                         <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
                     </Dropzone>
                 </div>
+
+                <!-- Some other Controlls and options -->
                 <input type="button" value="Commit changes" onclick="@(() => CommitChanges(false))" />
                 <span><input type="checkbox" @bind="AutoCommit" /> Automatic Commit</span>
                 <span><input type="checkbox" @bind="SuppressAutoRefresh" /> Suppress refreshes</span>
@@ -91,8 +114,11 @@
     private User currentUser { get; set; }
     private bool namesSet = false;
     private Timer Timer;
+    // The Draft Groupings displayed to the user are always read from this local maps. These local values are ALWAYS clones, not references, from the ones in the Draft State.
+    // This is to facilitate the option to not auto-commit
     private List<DraftGrouping> DraftGroupings = [];
     private DraftGrouping availableCharacters;
+
     private bool AutoCommit = true;
     private bool SuppressAutoRefresh = false;
     private string TiermakerCode;
@@ -100,9 +126,13 @@
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
             if (Lobby != null) {
+                // Automatically redirect to the lobby page at the end of the draft
                 if (Lobby.DraftState.FlowState == DraftFlowState.DRAFTING_FINISHED) {
                     NavigationManager.NavigateTo("/timer/lobby");
+                    return;
                 }
+
+                // Subscribe to the Draft State, so that anytime changes are commited, the screen gets refreshed
                 Lobby.DraftState.Subscribe(this);
             }
             return;
@@ -151,7 +181,9 @@
         return UserHolder.GetUserById((Guid)currentUser);
     }
 
-
+    ///  <summary>
+    /// When user confirms the order, create the DraftGroupings
+    /// </summary>
     private void ConfirmOrderRandomization() {
         Lobby.DraftState.AdvanceState();
         foreach (String team in Lobby.DraftState.RandomizedDraftOrder) {
@@ -162,6 +194,9 @@
         refreshFromDraftState(false);
     }
 
+    /// <summary>
+    /// Confirm the game selection, this resets the List of available characters AND all the already drafted characters
+    /// </summary>
     private void ConfirmGameSelection() {
         List<DraftCharacter> draftCharacters = [];
 
@@ -172,19 +207,33 @@
         }
 
         Lobby.DraftState.SetAvailableCharacters(draftCharacters);
+
+        // Remove all the Characters from the DraftGroupings where the game is not in the Selected Games
+        List<String> SelectedGameShortNames = Lobby.DraftState.ChosenGameDict.Where(pair => pair.Value == false).Select(pair => pair.Key).ToList();
         foreach (DraftGrouping grouping in Lobby.DraftState.DraftGroupings.Values) {
-            grouping.Characters = [];
+            grouping.Characters.RemoveAll(chara => SelectedGameShortNames.Contains(chara.ShortName.Split("-")[0]));
 
         }
         Lobby.DraftState.AdvanceState();
     }
 
+    /// <summary>
+    /// Load the Tiermaker code, this shares the format with the original TierMaker
+    /// 
+    /// Always starts by fe==
+    /// 
+    /// Then following format:
+    /// TierName|ColorIndex (unused in this tool)|CharacterShortName|CharacterShortName|.....==
+    /// 
+    /// All Values are separated by |
+    /// A new Tier is started by an ==
+    /// 
+    /// </summary>
     private void LoadTiermakerCode() {
         if (!TiermakerCode.StartsWith("fe")) {
             return;
         }
 
-        Lobby.DraftState.ResetSelectedGames();
         // Example code: fe==Free|0|eng-6|eng-5==Banned|1|eng-7
         // can ignore first FE== free
         // After split by == so we have each tier in a separate string.
@@ -195,6 +244,15 @@
 
         List<DraftGrouping> NewGroupings = [];
 
+        // Step 1:
+        // Unselect all games to reset available characters / groupings to empty
+        Lobby.DraftState.ResetSelectedGames();
+        ConfirmGameSelection();
+
+        // Step 2:
+        // Iterate through the tiers from the code in the and build up the pre-made tiers to add after the player tiers.
+        // Initially they are only added to a local list, not to the draft state, as we are reusing the code for selecting a game to load the available characters
+        // Additionally track a List of characters that must be removed from the available characters.
         foreach (String tier in tiers) {
             String[] Components = tier.Split("|");
             DraftGrouping groupingToAdd = new DraftGrouping(Components[0]);
@@ -210,10 +268,12 @@
             }
         }
 
+        // Step 2:
+        // Trigger game selection logic again to build up available characters
         ConfirmGameSelection();
 
-
-
+        // Step 3:
+        // After game selection logic, add the newly created groupings, and remove the characters contained within those groupings from the available characters
         foreach (DraftGrouping draftGrouping in NewGroupings) {
             Lobby.DraftState.DraftGroupings.Add(draftGrouping.Name, draftGrouping);
         }
@@ -221,6 +281,10 @@
         Lobby.DraftState.NotifySubscribers();
     }
 
+    /// <summary>
+    /// Finalize the draft.
+    /// Advances the FlowState to the final state. Also copies the draft to the TimerData
+    /// </summary>
     private void FinishDraft() {
         foreach (DraftGrouping dg in Lobby.DraftState.DraftGroupings.Values) {
             Team? team = Lobby.GetTeamByName(dg.Name);
@@ -232,6 +296,9 @@
         Lobby.DraftState.AdvanceState();
     }
 
+    /// <summary>
+    /// Commits the changes in the local representation of the 
+    /// </summary>
     public void CommitChanges(bool automatic) {
         if (automatic && !AutoCommit) {
             return;
@@ -239,6 +306,9 @@
         Lobby.DraftState.UpdateState(DraftGroupings, availableCharacters);
     }
 
+    /// <summary>
+    /// reload the local state from the shared state, unless it's an automatic refresh and this an automatically triggered refresh by the DraftState subscription.
+    /// </summary>
     public void refreshFromDraftState(bool automatic) {
         InvokeAsync(() => {
             if (automatic && SuppressAutoRefresh) {
@@ -251,6 +321,9 @@
         });
     }
 
+    ///  <summary>
+    /// When this object is disposed, unsubscribe from the DraftState
+    /// </summary>
     public void Dispose() {
         if (Lobby != null) {
             Lobby.DraftState.Unsubscribe(this);

@@ -63,6 +63,9 @@ namespace AkdTimerGV.Components.Models {
         /// </summary>
         public long PreviousTime { get; set; } = 0;
 
+        /// <summary>
+        /// The Characters this team drafted
+        /// </summary>
         public List<DraftCharacter> DraftedCharacters { get; set; } = [];
 
 

@@ -1,5 +1,9 @@
 ﻿@using AkdTimerGV.Components.Models
 
+<!--
+    Simple component chosing an icon to represent the current status of the parameter Team.
+-->
+
 @if (Team.TimerData.dnf) {
     <i class="bi bi-x-circle" style="color:lightblue"></i>
 } else if (Team.TimerData.Active && !Team.TimerData.Paused) {
