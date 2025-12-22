@@ -1,4 +1,5 @@
-﻿namespace AkdTimerGV.Components.Models {
+﻿using AkdTimerGV.Components.Draft;
+namespace AkdTimerGV.Components.Models {
     
     /// <summary>
     /// Timer for a Team. Does all the calculations of how much time has passed / break time is remaining etc.
@@ -61,6 +62,8 @@
         /// How much time the team has from a previous session of the race in SECONDS
         /// </summary>
         public long PreviousTime { get; set; } = 0;
+
+        public List<DraftCharacter> DraftedCharacters { get; set; } = [];
 
 
         /// <summary>

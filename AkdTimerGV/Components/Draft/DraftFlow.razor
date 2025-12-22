@@ -31,9 +31,10 @@
             <span>Choose games to add</span>
 
             <div class="d-grid">
-                @foreach (DraftGrouping grouping in Lobby.DraftState.ChosenGameDict.Keys) {
+                @foreach (String groupingKey in Lobby.DraftState.ChosenGameDict.Keys) {
+                    var grouping = DraftCharacterCache.DraftGroupings[groupingKey];
                     <div style="grid-row: @grouping.Row; grid-column: @grouping.Column">
-                        <input type="checkbox" @bind="Lobby.DraftState.ChosenGameDict[grouping]" @bind:after="(() => Lobby.DraftState.NotifySubscribers())" /> @grouping.Name
+                        <input type="checkbox" @bind="Lobby.DraftState.ChosenGameDict[grouping.ShortName]" @bind:after="(() => Lobby.DraftState.NotifySubscribers())" /> @grouping.Name
                     </div>
                 }
             </div>
@@ -78,6 +79,7 @@
                 <span><input type="checkbox" @bind="AutoCommit" /> Automatic Commit</span>
                 <span><input type="checkbox" @bind="SuppressAutoRefresh" /> Suppress refreshes</span>
                 <input type="button" value="Manual refresh" onclick="@(() => refreshFromDraftState(false))" />
+                <input type="button" value="End Draft" onclick="@(() => FinishDraft())" />
             </div>
 
         }
@@ -163,9 +165,9 @@
     private void ConfirmGameSelection() {
         List<DraftCharacter> draftCharacters = [];
 
-        foreach (KeyValuePair<DraftGrouping, Boolean> game in Lobby.DraftState.ChosenGameDict) {
+        foreach (KeyValuePair<String, Boolean> game in Lobby.DraftState.ChosenGameDict) {
             if (game.Value) {
-                draftCharacters.AddRange(game.Key.Characters);
+                draftCharacters.AddRange(DraftCharacterCache.DraftGroupings[game.Key].Characters);
             }
         }
 
@@ -182,26 +184,51 @@
             return;
         }
 
+        Lobby.DraftState.ResetSelectedGames();
         // Example code: fe==Free|0|eng-6|eng-5==Banned|1|eng-7
         // can ignore first FE== free
         // After split by == so we have each tier in a separate string.
         // Then split by |
         // index = tier name, index = 1 color (can ignore), after character shortnames
         String[] tiers = TiermakerCode.Substring(4).Split("==");
+        List<String> charactersToMove = [];
+
+        List<DraftGrouping> NewGroupings = [];
+
         foreach (String tier in tiers) {
             String[] Components = tier.Split("|");
             DraftGrouping groupingToAdd = new DraftGrouping(Components[0]);
-            Lobby.DraftState.DraftGroupings.Add(Components[0], groupingToAdd);
-
+            NewGroupings.Add(groupingToAdd);
             for (int i = 2; i < Components.Length; i++) {
                 String ShortName = Components[i];
                 String GameShortName = ShortName.Split("-")[0];
-                String CharacterIndex = ShortName.Split("-")[1];
+                int CharacterIndex = int.Parse(ShortName.Split("-")[1]);
+
+                Lobby.DraftState.ChosenGameDict[GameShortName] = true;
+                charactersToMove.Add(ShortName);
+                groupingToAdd.Characters.Add(DraftCharacterCache.DraftGroupings[GameShortName].Characters[CharacterIndex]);
             }
         }
+
+        ConfirmGameSelection();
+
+
+
+        foreach (DraftGrouping draftGrouping in NewGroupings) {
+            Lobby.DraftState.DraftGroupings.Add(draftGrouping.Name, draftGrouping);
+        }
+        Lobby.DraftState.AvailableCharacters.Characters.RemoveAll(dc => charactersToMove.Contains(dc.ShortName));
+        Lobby.DraftState.NotifySubscribers();
     }
 
     private void FinishDraft() {
+        foreach (DraftGrouping dg in Lobby.DraftState.DraftGroupings.Values) {
+            Team? team = Lobby.GetTeamByName(dg.Name);
+            if (dg.IsPlayer && team!=null) {
+                team.TimerData.DraftedCharacters = dg.Characters;
+            }
+        }
+
         Lobby.DraftState.AdvanceState();
     }
 

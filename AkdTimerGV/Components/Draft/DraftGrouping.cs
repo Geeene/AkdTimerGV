@@ -15,6 +15,7 @@
         public DraftGrouping clone() {
             var clone = new DraftGrouping(Name);
             clone.Characters = new List<DraftCharacter>(Characters);
+            clone.IsPlayer = this.IsPlayer;
             return clone;
         }
         

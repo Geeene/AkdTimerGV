@@ -5,7 +5,7 @@ namespace AkdTimerGV.Components.Draft {
         public DraftFlowState FlowState { get; set; } = DraftFlowState.NOT_STARTED;
 
         public Dictionary<String, DraftGrouping> DraftGroupings { get; set; } = [];
-        public Dictionary<DraftGrouping, bool> ChosenGameDict { get; set; } = [];
+        public Dictionary<String, bool> ChosenGameDict { get; set; } = [];
 
         public DraftGrouping AvailableCharacters { get; set; } = new DraftGrouping("Available");
 
@@ -86,8 +86,9 @@ namespace AkdTimerGV.Components.Draft {
 
         public void ResetSelectedGames() {
             foreach (var item in DraftCharacterCache.GetGroupingsOrdered()) {
-                ChosenGameDict[item] = false;
+                ChosenGameDict[item.ShortName] = false;
             }
+            AvailableCharacters = new DraftGrouping("Available");
         }
 
         public void AdvanceState() {
