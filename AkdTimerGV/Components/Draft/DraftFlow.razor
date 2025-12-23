@@ -1,4 +1,4 @@
-﻿@page "/timer/draft"
+﻿@page "/draft"
 @rendermode InteractiveServer
 @using AkdTimerGV.Components.Models
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
@@ -18,26 +18,30 @@
 <div class="d-flex flex-column">
 
     <div style="width: 100%">
-        <input type="button" value="Reset Drafting Process" onclick="@(() => Lobby.DraftState.Reset())" />
+        <input type="button" value="Reset Drafting Process" onclick="@(() => DraftStateHolder.GetDraftState().Reset())" />
     </div>
 
 
-    @if (Lobby == null) {
+    @if (DraftStateHolder == null) {
 
     } else {
-        @if (DraftFlowState.START == Lobby.DraftState.FlowState) {
-        <!-- Start State, allow user to initially roll the Draft Order -->
-            <input style="vertical-align:middle; font-size: 4em;" type="button" value="Randomize Order" onclick="@(() => Lobby.DraftState.InitializeDraftOrder(Lobby.GetParticipatingTeams()))" />
+        @if (DraftFlowState.ENTER_PARTICIPANTS == DraftStateHolder.GetDraftState().FlowState) {
+            <!-- Start , If using the non-timer version, must manually enter the participants.-->
+            <textarea @bind="EnteredParticipants"/>
+            <input type="button" value="Continue" onclick="@(() => ConfirmParticipants())" />
 
-        } else if (DraftFlowState.ORDER_RANDOMIZED == Lobby.DraftState.FlowState) {
+        } else if (DraftFlowState.INITIALIZE_DRAFT_ORDER == DraftStateHolder.GetDraftState().FlowState) {
+            <!-- Start State b, allow user to initially roll the Draft Order -->
+            <input style="vertical-align:middle; font-size: 4em;" type="button" value="Randomize Order" onclick="@(() => DraftStateHolder.GetDraftState().InitializeDraftOrder(DraftStateHolder.GetParticipants()))" />
+        } else if (DraftFlowState.ORDER_RANDOMIZED == DraftStateHolder.GetDraftState().FlowState) {
             <!-- Second State, Draft Order has been rolled, Display it and allow them to re-roll or continue.-->
-            @for (int i = 0; i < Lobby.DraftState.RandomizedDraftOrder.Count(); i++) {
-                <h2>@(i + 1 + " - " + Lobby.DraftState.RandomizedDraftOrder[i])</h2>
+            @for (int i = 0; i < DraftStateHolder.GetDraftState().RandomizedDraftOrder.Count(); i++) {
+                <h2>@(i + 1 + " - " + DraftStateHolder.GetDraftState().RandomizedDraftOrder[i])</h2>
             }
 
-            <input type="button" value="Reroll" onclick="@(() => Lobby.DraftState.RerollOrder())" />
+            <input type="button" value="Reroll" onclick="@(() => DraftStateHolder.GetDraftState().RerollOrder())" />
             <input type="button" value="Continue" onclick="@(() => ConfirmOrderRandomization())" />
-        } else if (DraftFlowState.CHOOSE_GAME == Lobby.DraftState.FlowState) {
+        } else if (DraftFlowState.CHOOSE_GAME == DraftStateHolder.GetDraftState().FlowState) {
             <!-- 
                 Third State, Draft Order has been decided, Let the users choose the games to add to the draft, either via checkboxes, or via the tiermaker code system.
                 It's fully compatible with the code system from the FE Tier Maker
@@ -47,15 +51,15 @@
 
             <!-- Option 1: Select via Checkboxes -->
             <div class="d-grid">
-                @foreach (String groupingKey in Lobby.DraftState.ChosenGameDict.Keys) {
+                @foreach (String groupingKey in DraftStateHolder.GetDraftState().ChosenGameDict.Keys) {
                     var grouping = DraftCharacterCache.DraftGroupings[groupingKey];
                     <div style="grid-row: @grouping.Row; grid-column: @grouping.Column">
-                        <input type="checkbox" @bind="Lobby.DraftState.ChosenGameDict[grouping.ShortName]" @bind:after="(() => Lobby.DraftState.NotifySubscribers())" /> @grouping.Name
+                        <input type="checkbox" @bind="DraftStateHolder.GetDraftState().ChosenGameDict[grouping.ShortName]" @bind:after="(() => DraftStateHolder.GetDraftState().NotifySubscribers())" /> @grouping.Name
                     </div>
                 }
             </div>
                 
-            <input type="button" value="Unselect all" onclick="@(() => Lobby.DraftState.ResetSelectedGames())" />
+            <input type="button" value="Unselect all" onclick="@(() => DraftStateHolder.GetDraftState().ResetSelectedGames())" />
             <input type="button" value="Load selected Rosters" onclick="@(() => ConfirmGameSelection())" />
 
             <hr />
@@ -65,7 +69,7 @@
             <textarea @bind="TiermakerCode" rows="5"/>
             <input type="button" value="Load via code" onclick="@(() => LoadTiermakerCode())" />
 
-        } else if (DraftFlowState.DRAFTING_STARTED == Lobby.DraftState.FlowState) {
+        } else if (DraftFlowState.DRAFTING_STARTED == DraftStateHolder.GetDraftState().FlowState) {
             <!--
                 Fourth State, the games have been chosen, so the draft can begin
             .-->
@@ -102,7 +106,11 @@
                 <span><input type="checkbox" @bind="AutoCommit" /> Automatic Commit</span>
                 <span><input type="checkbox" @bind="SuppressAutoRefresh" /> Suppress refreshes</span>
                 <input type="button" value="Manual refresh" onclick="@(() => refreshFromDraftState(false))" />
-                <input type="button" value="End Draft" onclick="@(() => FinishDraft())" />
+                @if (DraftStateHolder is Lobby) {
+                    <input type="button" value="End Draft" onclick="@(() => FinishDraft())" />
+                } else {
+                    <input type="button" value="End Draft" onclick="@(() => FinishDraft())" />
+                }
             </div>
 
         }
@@ -110,7 +118,7 @@
 </div>
 
 @code {
-    private Lobby Lobby { get; set; }
+    private IDraftStateHolder DraftStateHolder { get; set; }
     private User currentUser { get; set; }
     private bool namesSet = false;
     private Timer Timer;
@@ -122,27 +130,34 @@
     private bool AutoCommit = true;
     private bool SuppressAutoRefresh = false;
     private string TiermakerCode;
+    private string EnteredParticipants;
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
-            if (Lobby != null) {
+            if (DraftStateHolder != null) {
                 // Automatically redirect to the lobby page at the end of the draft
-                if (Lobby.DraftState.FlowState == DraftFlowState.DRAFTING_FINISHED) {
+                if (DraftStateHolder.GetDraftState().FlowState == DraftFlowState.DRAFTING_FINISHED  && DraftStateHolder is Lobby) {
                     NavigationManager.NavigateTo("/timer/lobby");
                     return;
                 }
 
                 // Subscribe to the Draft State, so that anytime changes are commited, the screen gets refreshed
-                Lobby.DraftState.Subscribe(this);
+                DraftStateHolder.GetDraftState().Subscribe(this);
             }
             return;
         }
 
-        Lobby = await getStoredLobby();
+        // First try to find if the user is currently already in a lobby for determining the DraftStateHolder
+        DraftStateHolder = await getStoredLobby();
         currentUser = await getStoredUser();
-        if (Lobby == null || currentUser == null) {
-            await BrowserStorage.DeleteAsync("currentLobby");
-            return;
+        if (DraftStateHolder == null) {
+            // Next try to find a stored IndependentDraftStateHolder
+            DraftStateHolder = await getStoredIndependentDraftState();
+            if (DraftStateHolder == null) {
+                BrowserStorage.DeleteAsync("IndependentDraftState");
+                DraftStateHolder = DraftLobbyHolder.Instance.CreateIndependentDraftStateHolder();
+                await BrowserStorage.SetAsync("IndependentDraftState", DraftStateHolder.GetId());
+            }
         }
 
         refreshFromDraftState(false);
@@ -166,6 +181,22 @@
     }
 
     /// <summary>
+    /// Get the LobbyId from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<DraftLobby?> getStoredIndependentDraftState() {
+        var storedDraftState = await BrowserStorage.GetAsync<Guid>("IndependentDraftState");
+        Guid? currentDraftStateId = storedDraftState.Value;
+        if (currentDraftStateId == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present,
+        // then remove the locally saved Lobby id and switch to the main page
+        return DraftLobbyHolder.Instance.GetById((Guid)currentDraftStateId);
+    }
+
+    /// <summary>
     /// Get the User from the Local Storage
     /// </summary>
     /// <returns></returns>
@@ -184,12 +215,20 @@
     ///  <summary>
     /// When user confirms the order, create the DraftGroupings
     /// </summary>
+    private void ConfirmParticipants() {
+        DraftStateHolder.GetDraftState().AdvanceState();
+        ((DraftLobby) DraftStateHolder).SetParticipants(EnteredParticipants.Split("\n"));
+    }
+
+    ///  <summary>
+    /// When user confirms the order, create the DraftGroupings
+    /// </summary>
     private void ConfirmOrderRandomization() {
-        Lobby.DraftState.AdvanceState();
-        foreach (String team in Lobby.DraftState.RandomizedDraftOrder) {
+        DraftStateHolder.GetDraftState().AdvanceState();
+        foreach (String team in DraftStateHolder.GetDraftState().RandomizedDraftOrder) {
             DraftGrouping teamGrouping = new DraftGrouping(team);
             teamGrouping.IsPlayer = true;
-            Lobby.DraftState.DraftGroupings.Add(team, teamGrouping);
+            DraftStateHolder.GetDraftState().DraftGroupings.Add(team, teamGrouping);
         }
         refreshFromDraftState(false);
     }
@@ -200,21 +239,21 @@
     private void ConfirmGameSelection() {
         List<DraftCharacter> draftCharacters = [];
 
-        foreach (KeyValuePair<String, Boolean> game in Lobby.DraftState.ChosenGameDict) {
+        foreach (KeyValuePair<String, Boolean> game in DraftStateHolder.GetDraftState().ChosenGameDict) {
             if (game.Value) {
                 draftCharacters.AddRange(DraftCharacterCache.DraftGroupings[game.Key].Characters);
             }
         }
 
-        Lobby.DraftState.SetAvailableCharacters(draftCharacters);
+        DraftStateHolder.GetDraftState().SetAvailableCharacters(draftCharacters);
 
         // Remove all the Characters from the DraftGroupings where the game is not in the Selected Games
-        List<String> SelectedGameShortNames = Lobby.DraftState.ChosenGameDict.Where(pair => pair.Value == false).Select(pair => pair.Key).ToList();
-        foreach (DraftGrouping grouping in Lobby.DraftState.DraftGroupings.Values) {
+        List<String> SelectedGameShortNames = DraftStateHolder.GetDraftState().ChosenGameDict.Where(pair => pair.Value == false).Select(pair => pair.Key).ToList();
+        foreach (DraftGrouping grouping in DraftStateHolder.GetDraftState().DraftGroupings.Values) {
             grouping.Characters.RemoveAll(chara => SelectedGameShortNames.Contains(chara.ShortName.Split("-")[0]));
 
         }
-        Lobby.DraftState.AdvanceState();
+        DraftStateHolder.GetDraftState().AdvanceState();
     }
 
     /// <summary>
@@ -246,7 +285,7 @@
 
         // Step 1:
         // Unselect all games to reset available characters / groupings to empty
-        Lobby.DraftState.ResetSelectedGames();
+        DraftStateHolder.GetDraftState().ResetSelectedGames();
         ConfirmGameSelection();
 
         // Step 2:
@@ -262,7 +301,7 @@
                 String GameShortName = ShortName.Split("-")[0];
                 int CharacterIndex = int.Parse(ShortName.Split("-")[1]);
 
-                Lobby.DraftState.ChosenGameDict[GameShortName] = true;
+                DraftStateHolder.GetDraftState().ChosenGameDict[GameShortName] = true;
                 charactersToMove.Add(ShortName);
                 groupingToAdd.Characters.Add(DraftCharacterCache.DraftGroupings[GameShortName].Characters[CharacterIndex]);
             }
@@ -275,25 +314,28 @@
         // Step 3:
         // After game selection logic, add the newly created groupings, and remove the characters contained within those groupings from the available characters
         foreach (DraftGrouping draftGrouping in NewGroupings) {
-            Lobby.DraftState.DraftGroupings.Add(draftGrouping.Name, draftGrouping);
+            DraftStateHolder.GetDraftState().DraftGroupings.Add(draftGrouping.Name, draftGrouping);
         }
-        Lobby.DraftState.AvailableCharacters.Characters.RemoveAll(dc => charactersToMove.Contains(dc.ShortName));
-        Lobby.DraftState.NotifySubscribers();
+        DraftStateHolder.GetDraftState().AvailableCharacters.Characters.RemoveAll(dc => charactersToMove.Contains(dc.ShortName));
+        DraftStateHolder.GetDraftState().NotifySubscribers();
     }
 
     /// <summary>
     /// Finalize the draft.
-    /// Advances the FlowState to the final state. Also copies the draft to the TimerData
+    /// Advances the FlowState to the final state. Also copies the draft to the TimerData if the draft is for a Timer Lobby
     /// </summary>
     private void FinishDraft() {
-        foreach (DraftGrouping dg in Lobby.DraftState.DraftGroupings.Values) {
-            Team? team = Lobby.GetTeamByName(dg.Name);
-            if (dg.IsPlayer && team!=null) {
-                team.TimerData.DraftedCharacters = dg.Characters;
+
+        if (DraftStateHolder is Lobby) {
+            foreach (DraftGrouping dg in DraftStateHolder.GetDraftState().DraftGroupings.Values) {
+                Team? team = ((Lobby) DraftStateHolder).GetTeamByName(dg.Name);
+                if (dg.IsPlayer && team!=null) {
+                    team.TimerData.DraftedCharacters = dg.Characters;
+                }
             }
         }
 
-        Lobby.DraftState.AdvanceState();
+        DraftStateHolder.GetDraftState().AdvanceState();
     }
 
     /// <summary>
@@ -303,7 +345,7 @@
         if (automatic && !AutoCommit) {
             return;
         }
-        Lobby.DraftState.UpdateState(DraftGroupings, availableCharacters);
+        DraftStateHolder.GetDraftState().UpdateState(DraftGroupings, availableCharacters);
     }
 
     /// <summary>
@@ -315,8 +357,8 @@
                 return;
             }
 
-            DraftGroupings = Lobby.DraftState.DraftGroupings.Values.Select(value => value.clone()).ToList();
-            availableCharacters = Lobby.DraftState.AvailableCharacters.clone();
+            DraftGroupings = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(value => value.clone()).ToList();
+            availableCharacters = DraftStateHolder.GetDraftState().AvailableCharacters.clone();
             StateHasChanged();
         });
     }
@@ -325,8 +367,8 @@
     /// When this object is disposed, unsubscribe from the DraftState
     /// </summary>
     public void Dispose() {
-        if (Lobby != null) {
-            Lobby.DraftState.Unsubscribe(this);
+        if (DraftStateHolder != null) {
+            DraftStateHolder.GetDraftState().Unsubscribe(this);
         }
     }
 }

@@ -94,6 +94,10 @@
     private TeamTimer TimerRef {
         set { TimerReferences.Add(value); }
     }
+
+    /// <summary>
+    /// Custom property getter used for encoding the order of timers into the OBS Link
+    /// </summary>
     private String CustomOrder {
         get {
             String a = "";
@@ -111,7 +115,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (Lobby != null && currentUser != null && !currentUser.wasRedirectedToDraft && 
         !(new List<DraftFlowState> { DraftFlowState.NOT_STARTED, DraftFlowState.DRAFTING_FINISHED }.Contains(Lobby.DraftState.FlowState))) {
-            NavigationManager.NavigateTo("/timer/draft");
+            NavigationManager.NavigateTo("/draft");
             currentUser.wasRedirectedToDraft = true;
             return;
         }

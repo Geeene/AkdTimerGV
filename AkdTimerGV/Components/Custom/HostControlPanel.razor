@@ -220,9 +220,6 @@
     }
 
     private void StartDrafting() {
-        if (Lobby.DraftState.FlowState == DraftFlowState.NOT_STARTED) {
-            Lobby.DraftState.FlowState = DraftFlowState.START;
-        }
-        NavigationManager.NavigateTo("/timer/draft");
+        NavigationManager.NavigateTo("/draft");
     }
 }

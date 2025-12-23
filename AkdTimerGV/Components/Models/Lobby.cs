@@ -6,7 +6,7 @@ namespace AkdTimerGV.Components.Models {
     /// 
     /// Can (must doesn't have to be) password protected.
     /// </summary>
-    public class Lobby(String Description, User Owner, String Password) {
+    public class Lobby(String Description, User Owner, String Password) : IDraftStateHolder {
         
         /// <summary>
         /// The Guids MUST have setter, otherwise the de-serialization from the Local storage would give a new Guid from construction :)
@@ -28,7 +28,7 @@ namespace AkdTimerGV.Components.Models {
         /// </summary>
         public string? Password { get; } = Password;
 
-        public DraftState DraftState { get; set; } = new DraftState();
+        public DraftState DraftState { get; set; } = new DraftState(DraftFlowState.INITIALIZE_DRAFT_ORDER);
 
         /// <summary>
         /// The Time Stamp when the lobby was created.
@@ -266,5 +266,16 @@ namespace AkdTimerGV.Components.Models {
             return UserTeamMapping.Keys.Where(v => v.Name.Equals(name)).FirstOrDefault();
         }
 
+        public string[] GetParticipants() {
+            return GetParticipatingTeams().Select(team => team.Name).ToArray();
+        }
+
+        public DraftState GetDraftState() {
+            return this.DraftState;
+        }
+
+        public Guid GetId() {
+            return this.LobbyId;
+        }
     }
 }

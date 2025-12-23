@@ -4,8 +4,9 @@ namespace AkdTimerGV.Components.Draft {
     /// <summary>
     /// All State logic for the Drafting Process
     /// </summary>
-    public class DraftState {
-        public DraftFlowState FlowState { get; set; } = DraftFlowState.NOT_STARTED;
+    public class DraftState(DraftFlowState InitialFlowState) {
+        public DraftFlowState FlowState { get; set; } = InitialFlowState;
+        public DraftFlowState InitialFlowState { get;} = InitialFlowState;
 
         /// <summary>
         /// All DraftGroupings, effectively representing tiers from the old tiermaker.
@@ -19,7 +20,7 @@ namespace AkdTimerGV.Components.Draft {
         ///  Key = Game ShortName
         ///  Value = If the games characters should be added to the available character pool
         /// </summary>
-        public Dictionary<String, bool> ChosenGameDict { get; set; } = [];
+        public Dictionary<String, bool> ChosenGameDict { get; set; } = InitializeChosenGameDict();
 
         /// <summary>
         /// The Draft Group containing all characters that are available, and not sorted in a tier yet
@@ -36,9 +37,10 @@ namespace AkdTimerGV.Components.Draft {
         /// </summary>
         public String[] RandomizedDraftOrder = [];
 
-        public DraftState() {
-            ResetSelectedGames();
-        }
+        /// <summary>
+        /// Last time the state has changed, used for cache cleanup
+        /// </summary>
+        public DateTime LastChange = DateTime.Now;
 
         /// <summary>
         /// Update the State for the given Groupings
@@ -73,6 +75,7 @@ namespace AkdTimerGV.Components.Draft {
         /// Inform each subscriber that the state has changed
         /// </summary>
         public void NotifySubscribers() {
+            this.LastChange = DateTime.Now;
             OnStateChange?.Invoke();
         }
 
@@ -88,9 +91,9 @@ namespace AkdTimerGV.Components.Draft {
         /// <summary>
         /// Perform the first roll of the Draft Order, this also initialized the List of Teams
         /// </summary>
-        public void InitializeDraftOrder(List<Team> teams) {
+        public void InitializeDraftOrder(String[] participants) {
             if (RandomizedDraftOrder.Count() == 0) {
-                RandomizedDraftOrder = new List<String>(teams.Select(currentTeam => currentTeam.Name)).ToArray();
+                RandomizedDraftOrder = new List<String>(participants).ToArray();
                 RerollOrder();
                 AdvanceState();
             }
@@ -110,7 +113,7 @@ namespace AkdTimerGV.Components.Draft {
         /// Reset the Draft to the original status
         /// </summary>
         public void Reset() {
-            FlowState = DraftFlowState.START;
+            FlowState = InitialFlowState;
             DraftGroupings = [];
             ResetSelectedGames();
             RandomizedDraftOrder = [];
@@ -122,10 +125,20 @@ namespace AkdTimerGV.Components.Draft {
         /// Used both for a full reset, and for loading from the tiermaker code
         /// </summary>
         public void ResetSelectedGames() {
-            foreach (var item in DraftCharacterCache.DraftGroupings.Values) {
-                ChosenGameDict[item.ShortName] = false;
-            }
+            ChosenGameDict = InitializeChosenGameDict();
             AvailableCharacters = new DraftGrouping("Available");
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private static Dictionary<String, bool> InitializeChosenGameDict() {
+            Dictionary<String, bool> dict = [];
+            foreach (var item in DraftCharacterCache.DraftGroupings.Values) {
+                dict[item.ShortName] = false;
+            }
+            return dict;
         }
 
         /// <summary>
@@ -133,10 +146,10 @@ namespace AkdTimerGV.Components.Draft {
         /// </summary>
         public void AdvanceState() {
             switch (this.FlowState) {
-                case DraftFlowState.NOT_STARTED:
-                    this.FlowState = DraftFlowState.START;
+                case DraftFlowState.ENTER_PARTICIPANTS:
+                    this.FlowState = DraftFlowState.INITIALIZE_DRAFT_ORDER;
                     break;
-                case DraftFlowState.START:
+                case DraftFlowState.INITIALIZE_DRAFT_ORDER:
                     this.FlowState = DraftFlowState.ORDER_RANDOMIZED;
                     break;
                 case DraftFlowState.ORDER_RANDOMIZED:
