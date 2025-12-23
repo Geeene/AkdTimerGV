@@ -3,6 +3,7 @@
 @using AkdTimerGV.Components.Models
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Threading
+@using System.Text
 @inject ProtectedLocalStorage BrowserStorage;
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager;
@@ -20,7 +21,6 @@
     <div style="width: 100%">
         <input type="button" value="Reset Drafting Process" onclick="@(() => DraftStateHolder.GetDraftState().Reset())" />
     </div>
-
 
     @if (DraftStateHolder == null) {
 
@@ -54,7 +54,7 @@
                 @foreach (String groupingKey in DraftStateHolder.GetDraftState().ChosenGameDict.Keys) {
                     var grouping = DraftCharacterCache.DraftGroupings[groupingKey];
                     <div style="grid-row: @grouping.Row; grid-column: @grouping.Column">
-                        <input type="checkbox" @bind="DraftStateHolder.GetDraftState().ChosenGameDict[grouping.ShortName]" @bind:after="(() => DraftStateHolder.GetDraftState().NotifySubscribers())" /> @grouping.Name
+                        <input type="checkbox" @bind="DraftStateHolder.GetDraftState().ChosenGameDict[grouping.InternalName]" @bind:after="(() => DraftStateHolder.GetDraftState().NotifySubscribers())" /> @grouping.Name
                     </div>
                 }
             </div>
@@ -79,8 +79,8 @@
                     <table>
                         @foreach (DraftGrouping draftGrouping in DraftGroupings) {
                             <tr class="flex-container" style="border: 3px solid black;">
-                                <td class="draft-label-holder" contenteditable="true">
-                                    <span class="draft-label">@draftGrouping.Name</span>
+                                <td class="draft-label-holder">
+                                    <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: auto; resize:none;" value="@draftGrouping.Name" />
                                 </td>
 
                                 <td style="width: 640px; height: 64px;">
@@ -111,6 +111,10 @@
                 } else {
                     <input type="button" value="End Draft" onclick="@(() => FinishDraft())" />
                 }
+                <div class="d-flex flex-column" style="margin-top: 10px">
+                    <span><input type="checkbox" @bind="ExportIncludingParticipants" /> Include Participants <input type="button" value="Generate Tiermaker Code" onclick="@(() => ExportToTiermakerCode())"/></span>
+                    <span><textarea @bind="TiermakerCode" cols="35"/></span>
+                </div>
             </div>
 
         }
@@ -131,6 +135,8 @@
     private bool SuppressAutoRefresh = false;
     private string TiermakerCode;
     private string EnteredParticipants;
+
+    private bool ExportIncludingParticipants = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
@@ -154,9 +160,9 @@
             // Next try to find a stored IndependentDraftStateHolder
             DraftStateHolder = await getStoredIndependentDraftState();
             if (DraftStateHolder == null) {
-                BrowserStorage.DeleteAsync("IndependentDraftState");
+                BrowserStorage.DeleteAsync("DraftLobby");
                 DraftStateHolder = DraftLobbyHolder.Instance.CreateIndependentDraftStateHolder();
-                await BrowserStorage.SetAsync("IndependentDraftState", DraftStateHolder.GetId());
+                await BrowserStorage.SetAsync("DraftLobby", DraftStateHolder.GetId());
             }
         }
 
@@ -185,7 +191,7 @@
     /// </summary>
     /// <returns></returns>
     private async Task<DraftLobby?> getStoredIndependentDraftState() {
-        var storedDraftState = await BrowserStorage.GetAsync<Guid>("IndependentDraftState");
+        var storedDraftState = await BrowserStorage.GetAsync<Guid>("DraftLobby");
         Guid? currentDraftStateId = storedDraftState.Value;
         if (currentDraftStateId == null) {
             return null;
@@ -318,6 +324,30 @@
         }
         DraftStateHolder.GetDraftState().AvailableCharacters.Characters.RemoveAll(dc => charactersToMove.Contains(dc.ShortName));
         DraftStateHolder.GetDraftState().NotifySubscribers();
+        TiermakerCode = "";
+    }
+
+    private void ExportToTiermakerCode() {
+        StringBuilder builder = new StringBuilder();
+        builder.Append("fe");
+        foreach (DraftGrouping grouping in DraftGroupings) {
+            // If user doesn't explicitly want to export the participants, just skip them.
+            if (grouping.IsPlayer && !ExportIncludingParticipants) {
+                continue;
+            }
+
+            builder.Append("==");
+            builder.Append(grouping.IsPlayer ?  grouping.InternalName : grouping.Name);
+            // Color unused, just always put 0
+            builder.Append("|0");
+            foreach (DraftCharacter chara in grouping.Characters) {
+                builder.Append("|").Append(chara.ShortName);
+            }
+
+        }
+
+        TiermakerCode = builder.ToString();
+        StateHasChanged();
     }
 
     /// <summary>
@@ -328,7 +358,7 @@
 
         if (DraftStateHolder is Lobby) {
             foreach (DraftGrouping dg in DraftStateHolder.GetDraftState().DraftGroupings.Values) {
-                Team? team = ((Lobby) DraftStateHolder).GetTeamByName(dg.Name);
+                Team? team = ((Lobby) DraftStateHolder).GetTeamByName(dg.InternalName);
                 if (dg.IsPlayer && team!=null) {
                     team.TimerData.DraftedCharacters = dg.Characters;
                 }

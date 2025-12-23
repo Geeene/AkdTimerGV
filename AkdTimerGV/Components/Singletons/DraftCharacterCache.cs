@@ -8,5 +8,5 @@ using System.Text.Json;
 /// Initialized once as a Immutable Dictionary, 
 /// </summary>
 public sealed class DraftCharacterCache {
-    public static readonly ImmutableDictionary<string, DraftGrouping> DraftGroupings = JsonSerializer.Deserialize<List<DraftGrouping>>(File.ReadAllText("wwwroot/DraftCharacters.json")).ToImmutableDictionary(e => e.ShortName);
+    public static readonly ImmutableDictionary<string, DraftGrouping> DraftGroupings = JsonSerializer.Deserialize<List<DraftGrouping>>(File.ReadAllText("wwwroot/DraftCharacters.json")).ToImmutableDictionary(e => e.InternalName);
 }

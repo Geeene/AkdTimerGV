@@ -110,6 +110,8 @@
     line-height: 16px;
     overflow-wrap: break-word;
     border-right: 3px solid black;
+    min-width: 64px;
+    padding: 5px;
 }
 
 .draft-character-image {

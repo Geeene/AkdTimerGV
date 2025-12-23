@@ -136,7 +136,7 @@ namespace AkdTimerGV.Components.Draft {
         private static Dictionary<String, bool> InitializeChosenGameDict() {
             Dictionary<String, bool> dict = [];
             foreach (var item in DraftCharacterCache.DraftGroupings.Values) {
-                dict[item.ShortName] = false;
+                dict[item.InternalName] = false;
             }
             return dict;
         }

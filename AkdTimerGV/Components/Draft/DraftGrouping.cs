@@ -12,7 +12,7 @@
         /// <summary>
         /// Short Name of the Game, this is primarily important for loading the characters from the JSON File
         /// </summary>
-        public String ShortName { get; set; } = Name;
+        public String InternalName { get; set; } = Name;
 
         /// <summary>
         /// Used for the Grid Layout on the Game selection screen

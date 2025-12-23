@@ -9,9 +9,9 @@
         public String Name { get; }
 
         /// <summary>
-        /// ShortName (e.g. awa-0 = chrom)
+        /// InternalName (e.g. awa-0 = chrom)
         /// </summary>
-        public String ShortName { get; } = ShortName;
+        public String InternalName { get; } = ShortName;
 
         /// <summary>
         /// Image path of where to find the picture to display
