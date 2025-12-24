@@ -4,21 +4,21 @@
     /// </summary>
     public class DraftLobby : IDraftStateHolder {
 
-        private Guid _id = new Guid();
+        private Guid _id = Guid.NewGuid();
 
         private DraftState _draftState = new DraftState(DraftFlowState.ENTER_PARTICIPANTS);
 
-        private String[] _participants = [];
+        private List<String> _participants = [];
 
         public DraftState GetDraftState() {
             return _draftState;
         }
 
-        public string[] GetParticipants() {
+        public List<String> GetParticipants() {
             return _participants;
         }
         
-        public void SetParticipants(String[] Participants) {
+        public void SetParticipants(List<String> Participants) {
             this._participants = Participants;
         }
 

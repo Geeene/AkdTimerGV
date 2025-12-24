@@ -4259,7 +4259,7 @@
     "Name": "Sacred Stones - Extra",
     "InternalName": "stoe",
     "Row": 8,
-    "Column": 1,
+    "Column": 2,
     "Characters": [
       {
         "Name": "",
@@ -5150,6 +5150,7 @@
     "InternalName": "awa",
     "Row": 13,
     "Column": 1,
+    "AdditionalRowNames": [ "Kids" ],
     "Characters": [
       {
         "Name": "",
@@ -5383,6 +5384,7 @@
     "InternalName": "awae",
     "Row": 13,
     "Column": 2,
+    "AdditionalRowNames": [ "Kids" ],
     "Characters": [
       {
         "Name": "",
@@ -5446,6 +5448,7 @@
     "InternalName": "frev",
     "Row": 14,
     "Column": 1,
+    "AdditionalRowNames": [ "Kids" ],
     "Characters": [
       {
         "Name": "",
@@ -5539,6 +5542,7 @@
     "InternalName": "fbr",
     "Row": 14,
     "Column": 2,
+    "AdditionalRowNames": [ "Kids" ],
     "Characters": [
       {
         "Name": "",
@@ -5682,6 +5686,7 @@
     "InternalName": "fcq",
     "Row": 14,
     "Column": 3,
+    "AdditionalRowNames": [ "Kids" ],
     "Characters": [
       {
         "Name": "",
@@ -5820,6 +5825,7 @@
     "InternalName": "fex",
     "Row": 14,
     "Column": 4,
+    "AdditionalRowNames": [ "Kids" ],
     "Characters": [
       {
         "Name": "",

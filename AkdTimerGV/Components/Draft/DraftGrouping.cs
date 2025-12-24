@@ -35,6 +35,11 @@
         public List<DraftCharacter> Characters { get; set; } = [];
 
         /// <summary>
+        /// For each of these names the participant will get an additional row
+        /// </summary>
+        public List<String> AdditionalRowNames = [];
+
+        /// <summary>
         /// Clone this Draft Grouping
         /// </summary>
         public DraftGrouping clone() {

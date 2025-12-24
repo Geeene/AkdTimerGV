@@ -6,7 +6,7 @@
 
         public Guid GetId();
 
-        public String[] GetParticipants();
+        public List<String> GetParticipants();
 
         public DraftState GetDraftState();
     }

@@ -31,7 +31,7 @@ public sealed class DraftLobbyHolder {
         }
     }
 
-    public DraftLobby CreateIndependentDraftStateHolder() {
+    public DraftLobby CreateDraftLobby() {
         DraftLobby newStateHolder = new DraftLobby();
         stateHolders.Add(newStateHolder.GetId(), newStateHolder);
         return newStateHolder; 

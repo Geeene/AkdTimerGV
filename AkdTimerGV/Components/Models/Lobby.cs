@@ -61,6 +61,8 @@ namespace AkdTimerGV.Components.Models {
         /// </summary>
         public int NextIndex { get; set; } = 0;
 
+        private List<String> _Participants = [];
+
         /// <summary>
         /// Switches the user to the Team with the given name, if there is no such Team yet, then it will be created.
         /// </summary>
@@ -266,8 +268,12 @@ namespace AkdTimerGV.Components.Models {
             return UserTeamMapping.Keys.Where(v => v.Name.Equals(name)).FirstOrDefault();
         }
 
-        public string[] GetParticipants() {
-            return GetParticipatingTeams().Select(team => team.Name).ToArray();
+        public List<String> GetParticipants() {
+            if (_Participants.Count == 0) {
+                _Participants = GetParticipatingTeams().Select(team => team.Name).ToList();
+            }
+
+            return _Participants;
         }
 
         public DraftState GetDraftState() {

@@ -5,7 +5,7 @@ namespace AkdTimerGV.Components.Draft {
     /// All State logic for the Drafting Process
     /// </summary>
     public class DraftState(DraftFlowState InitialFlowState) {
-        public DraftFlowState FlowState { get; set; } = InitialFlowState;
+        public DraftFlowState FlowState { get; set; } = DraftFlowState.NOT_STARTED;
         public DraftFlowState InitialFlowState { get;} = InitialFlowState;
 
         /// <summary>
@@ -91,10 +91,21 @@ namespace AkdTimerGV.Components.Draft {
         /// <summary>
         /// Perform the first roll of the Draft Order, this also initialized the List of Teams
         /// </summary>
-        public void InitializeDraftOrder(String[] participants) {
+        public void InitializeDraftOrder(List<String> participants) {
             if (RandomizedDraftOrder.Count() == 0) {
-                RandomizedDraftOrder = new List<String>(participants).ToArray();
+                RandomizedDraftOrder = participants.ToArray();
                 RerollOrder();
+                AdvanceState();
+            }
+
+            NotifySubscribers();
+        }
+        /// <summary>
+        /// Perform the first roll of the Draft Order, this also initialized the List of Teams
+        /// </summary>
+        public void SetDraftOrderManually(List<String> participants) {
+            if (RandomizedDraftOrder.Count() == 0) {
+                RandomizedDraftOrder = participants.ToArray();
                 AdvanceState();
             }
 
@@ -146,6 +157,9 @@ namespace AkdTimerGV.Components.Draft {
         /// </summary>
         public void AdvanceState() {
             switch (this.FlowState) {
+                case DraftFlowState.NOT_STARTED:
+                    this.FlowState = this.InitialFlowState;
+                    break;
                 case DraftFlowState.ENTER_PARTICIPANTS:
                     this.FlowState = DraftFlowState.INITIALIZE_DRAFT_ORDER;
                     break;
