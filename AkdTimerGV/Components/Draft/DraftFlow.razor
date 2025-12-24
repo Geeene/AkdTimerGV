@@ -191,7 +191,7 @@
                 // Next try to find a stored IndependentDraftStateHolder
                 DraftStateHolder = await GetStoredDraftLobby();
                 if (DraftStateHolder == null) {
-                    BrowserStorage.DeleteAsync("DraftLobby");
+                    await BrowserStorage.DeleteAsync("DraftLobby");
                     DraftStateHolder = DraftLobbyHolder.Instance.CreateDraftLobby();
                     DraftStateHolder.GetDraftState().AdvanceState();
                     await BrowserStorage.SetAsync("DraftLobby", DraftStateHolder.GetId());
@@ -287,7 +287,7 @@
             if (game.Value) {
                 DraftGrouping abc = DraftCharacterCache.DraftGroupings[game.Key];
                 draftCharacters.AddRange(abc.Characters);
-                if (AdditionalTiers == null) {
+                if (AdditionalTiers == null || AdditionalTiers.Length == 0) {
                     RowsToCreate.UnionWith(abc.AdditionalRowNames);
                 }
             }
@@ -296,14 +296,14 @@
         foreach (String participant in DraftStateHolder.GetParticipants()) {
             // First create basic 
             String tierName = participant;
-            DraftGrouping grouping = new DraftGrouping(participant);
-            grouping.Name = tierName;
+            DraftGrouping grouping = new DraftGrouping(participant, participant);
+            grouping.IsPlayer = true;
             DraftStateHolder.GetDraftState().DraftGroupings.Add(tierName, grouping);
 
             foreach (String s in RowsToCreate) {
                 tierName = participant + " - " + s;
-                grouping = new DraftGrouping(participant);
-                grouping.Name = tierName;
+                grouping = new DraftGrouping(tierName, participant);
+                grouping.IsPlayer = true;
                 DraftStateHolder.GetDraftState().DraftGroupings.Add(tierName, grouping);
             }
         }
@@ -358,7 +358,7 @@
         // Additionally track a List of characters that must be removed from the available characters.
         foreach (String tier in tiers) {
             String[] Components = tier.Split("|");
-            DraftGrouping groupingToAdd = new DraftGrouping(Components[0]);
+            DraftGrouping groupingToAdd = new DraftGrouping(Components[0], Components[0]);
             NewGroupings.Add(groupingToAdd);
             for (int i = 2; i < Components.Length; i++) {
                 String ShortName = Components[i];

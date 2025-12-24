@@ -25,7 +25,7 @@ namespace AkdTimerGV.Components.Draft {
         /// <summary>
         /// The Draft Group containing all characters that are available, and not sorted in a tier yet
         /// </summary>
-        public DraftGrouping AvailableCharacters { get; set; } = new DraftGrouping("Available");
+        public DraftGrouping AvailableCharacters { get; set; } = new DraftGrouping("Available", "Available");
 
         /// <summary>
         /// Action that will be used to notify subscribers of the state changes.
@@ -137,7 +137,7 @@ namespace AkdTimerGV.Components.Draft {
         /// </summary>
         public void ResetSelectedGames() {
             ChosenGameDict = InitializeChosenGameDict();
-            AvailableCharacters = new DraftGrouping("Available");
+            AvailableCharacters = new DraftGrouping("Available", "Available");
 
         }
 
