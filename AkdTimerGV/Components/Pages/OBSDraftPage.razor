@@ -1,0 +1,128 @@
+﻿@page "/timer/lobby/{LobbyId}/AllTeams/Orientation/{Orientation}/SlideShowSeconds/{SlideshowSeconds:int}"
+@page "/timer/lobby/{LobbyId}/SingleTeam/{TeamId}/Orientation/{Orientation}"
+@using AkdTimerGV.Components.Models
+@using AkdTimerGV.Components.Custom
+@using AkdTimerGV.Components.Layout
+@using AkdTimerGV.Components.Draft
+@using static AkdTimerGV.Components.Custom.OBSLinkPanel
+
+@*
+    This rendermode is needed to enable using OnAfterRenderAsync
+*@
+@rendermode InteractiveServer
+
+@*
+    Since this is intended to be the page which is used for OBS Browser capture, 
+    just use an empty layout without clutter to avoid cropping
+*@
+@layout EmptyLayout
+
+<style>
+    /*dropzone style style*/
+    .draft-tier {
+        max-width: 640px;
+        min-height: 64px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+</style>
+
+
+@if (Lobby != null) {
+    <div class="d-flex @(Orientation == ORIENTATION_HORZIONTAL ? "flex-column" : "flex-row")">
+
+        @foreach (Team team in GetTeamsToShow()) {
+            <div class="d-flex @(Orientation == ORIENTATION_HORZIONTAL ? "flex-row" : "flex-column")" style="margin-right: 5px;">
+                <div class="draft-label-holder" style="border: 3px solid black; background-color: #212529">
+                    @team.Name
+                </div>
+
+                <div style="max-width: 650px; height: 64px;">
+                    <div class="draft-tier @(Orientation == ORIENTATION_HORZIONTAL ? "flex-row" : "flex-column")">
+                        @foreach (DraftCharacter character in team.TimerData.DraftedCharacters) {
+                            <div class="draft-character-image" style="background-image:url('@character.ImagePath') !important;" />
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public String LobbyId { get; set; }
+
+    [Parameter]
+    public String? TeamId { get; set; }
+
+
+    [Parameter]
+    public String Orientation { get; set; }
+
+    public Lobby Lobby { get; set; }
+
+    private int CurrentDisplayedTeamIndex = 0;
+    public List<Team> Teams { get; set; } = [];
+
+
+    // Needed for Slideshow mode
+    [Parameter]
+    public int SlideshowSeconds { get; set; }
+    private Timer Timer;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            return;
+        }
+
+        // If we didn't receive a valid LobbyId somehow, then just do nothing
+        if (!Guid.TryParse(LobbyId, out Guid ParsedLobbyid)) {
+            return;
+        }
+
+        // Retrieve the reference to the Lobby from the LobbyHolder.Instance.
+        Lobby = LobbyHolder.Instance.getLobby(ParsedLobbyid);
+
+        if (TeamId != null) {
+            Teams.Add(Lobby.GetTeamByTeamId(Guid.Parse(TeamId)));
+        } else {
+            Teams.AddRange(Lobby.GetParticipatingTeams().Where(Team => Team.TimerData.DraftedCharacters.Count > 0));
+
+            if (SlideshowSeconds > 0) {
+                DetermineNextTeamForSlideshow();
+                Timer = new Timer(new TimerCallback(CurrentPageRef => {
+                    InvokeAsync(() => {
+                        DetermineNextTeamForSlideshow();
+                        ((OBSDraftPage)CurrentPageRef).NotifyStateHasChanged();
+                    });
+                }
+                ), this, SlideshowSeconds * 1000, SlideshowSeconds * 1000);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void NotifyStateHasChanged() {
+        StateHasChanged();
+    }
+
+    private void DetermineNextTeamForSlideshow() {
+        if (CurrentDisplayedTeamIndex >= Lobby.GetParticipatingTeams().Count - 1) {
+            CurrentDisplayedTeamIndex = 0;
+        } else {
+            CurrentDisplayedTeamIndex += 1;
+        }
+    }
+
+    private IEnumerable<Team> GetTeamsToShow() {
+        // If we are not in slideshow mode, we will alway just show all teams, either the single one we have, or all participating ones.
+        if (SlideshowSeconds <= 0) {
+            return Teams;
+        }
+        
+        // We are in slideshow mode, return a list containing only the current index
+        return new[] { Teams[CurrentDisplayedTeamIndex] };
+    }
+}

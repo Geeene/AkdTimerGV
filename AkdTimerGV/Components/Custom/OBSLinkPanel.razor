@@ -2,47 +2,93 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 
-<div class="d-flex flex-column PanelWithLeftBorder">
-    <span>Stream Link</span>
+<div class="d-flex flex-column Panel" style="min-width: 200px">
+    <span>Stream Link [@LinkType]</span>
         <div class="d-flex flex-row">
-            <input class="form-check-input" type="radio" @onchange="(() => AllTeams = true)" name="LinkTeamChoice" checked>
-            <label class="form-check-label">
-                All Teams
-            </label>
+            <span>
+                <input class="form-check-input" type="radio" @onchange="(() => AllTeams = true)" name="@LinkType-TeamChoice" checked>
+                <label class="form-check-label">
+                    All Teams
+                </label>
+            </span>
         </div>
     @foreach (Team team in Lobby.GetParticipatingTeams()) {
         <div class="d-flex flex-row">
-            <input class="form-check-input" id="StreamLinkTeamOption-@team.TeamId" type="radio" @onchange="(() => {ChosenTeam = team.TeamId; AllTeams = false;})" name="LinkTeamChoice">
-            <label class="form-check-label" for="StreamLinkTeamOption-@team.TeamId">
-                @team.Name
-            </label>
+            <span>
+                <input class="form-check-input" id="StreamLinkTeamOption-@team.TeamId" type="radio" @onchange="(() => { ChosenTeam = team.TeamId; AllTeams = false; })" name="@LinkType-TeamChoice">
+                <label class="form-check-label" for="StreamLinkTeamOption-@team.TeamId">
+                 @team.Name
+                </label>
+            </span>
         </div>
     }
-    <div class="d-flex flex-row">
-        <input class="form-check-input" type="checkbox" @bind="IncludeTable"/>
-        <label class="form-check-label form-check-label">
-            Include Table
-        </label>
-    </div>
+
+    @if (LINK_TYPE_TIMER == LinkType) {
+        <div class="d-flex flex-row">
+            <input class="form-check-input" type="checkbox" @bind="IncludeTable"/>
+            <label class="form-check-label form-check-label">
+                Include Table
+            </label>
+        </div>
+    } else {
+        <hr />
+        <span>
+            <input class="form-check-input" id="StreamLinkDraftDisplayOptionHorizontal" type="radio" @onchange="(() => { Orientation = ORIENTATION_HORZIONTAL; })" name="DraftOrientationChoice" checked>
+            <label class="form-check-label" for="StreamLinkDraftDisplayOptionHorizontal">
+                @ORIENTATION_HORZIONTAL
+            </label>
+        </span>
+
+        <span >
+            <input class="form-check-input" id="StreamLinkDraftDisplayOptionVertical" type="radio" @onchange="(() => { Orientation = ORIENTATION_VERTICAL; })" name="DraftOrientationChoice">
+            <label class="form-check-label" for="StreamLinkDraftDisplayOptionVertical">
+                @ORIENTATION_VERTICAL
+            </label>
+        </span>
+
+        <span>Slideshow seconds: <input type="number" @bind="SlideshowSeconds"/></span>
+    }
+
 
     <input type="button" class="btn btn-light" value="Generate Link" onclick="@(() => generateLink())"/>
 </div>
 
 @code {
+
+    public static readonly String LINK_TYPE_TIMER = "Timer";
+    public static readonly String LINK_TYPE_DRAFT = "Draft";
+    public static readonly String ORIENTATION_HORZIONTAL = "Horizontal";
+    public static readonly String ORIENTATION_VERTICAL = "Vertical";
+
     [Parameter]
     public Lobby Lobby { get; set; }
 
     [Parameter]
     public String CustomOrder { get; set; }
 
+    [Parameter]
+    public String LinkType { get; set; }
+
     private bool AllTeams { get; set; } = true;
 
     private bool IncludeTable { get; set; } = false;
+
+    private String Orientation { get; set; } = ORIENTATION_HORZIONTAL;
+    private int SlideshowSeconds { get; set; } = 0;
+
 
     Guid ChosenTeam { get; set; }
 
 
     public async void generateLink() {
+        if ("Timer" == LinkType) {
+            generateLinkForTimer();
+        } else {
+            generateLinkForDraft();
+        }
+    }
+
+    public async void generateLinkForTimer() {
         String link = NavigationManager.BaseUri+"timer/lobby/"+Lobby.LobbyId+"/";
 
         if (AllTeams) {
@@ -51,10 +97,23 @@
                 link += "CustomOrder/" + CustomOrder+"/";
             }
         } else {
-            link += "SingleTeam/"+(Lobby.GetTeamByTeamId(ChosenTeam)).TeamId+"/";
+            link += "SingleTeam/"+ChosenTeam+"/";
         }
 
         link += IncludeTable ? "true" : "false";
+        // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
+        await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
+    }
+
+
+    public async void generateLinkForDraft() {
+        String link = NavigationManager.BaseUri+"timer/lobby/"+Lobby.LobbyId+"/";
+
+        if (AllTeams) {
+            link += "AllTeams/Orientation/" + Orientation + "/SlideShowSeconds/" + SlideshowSeconds;
+        } else {
+            link += "SingleTeam/" + ChosenTeam + "/Orientation/" + Orientation;
+        }
         // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
         await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
     }

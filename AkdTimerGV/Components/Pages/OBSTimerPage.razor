@@ -70,9 +70,9 @@
         // Retrieve the reference to the Lobby from the LobbyHolder.Instance.
         Lobby = LobbyHolder.Instance.getLobby(ParsedLobbyid);
 
-        Timer = new Timer(new TimerCallback(LobbyRef => {
+        Timer = new Timer(new TimerCallback(CurrentPageRef => {
             InvokeAsync(() => {
-                ((OBSLink) LobbyRef).NotifyStateHasChanged();
+                ((OBSTimerPage) CurrentPageRef).NotifyStateHasChanged();
                 StateHasChanged();
             });
         }

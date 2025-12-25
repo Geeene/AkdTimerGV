@@ -121,6 +121,7 @@
     background-size: contain !important;
     background-repeat: no-repeat;
 }
+
 .draft-character-image-small {
     height: 40px;
     width: 40px;
@@ -129,6 +130,13 @@
     background-repeat: no-repeat;
 }
 
+.draft-character-image-large {
+    height: 96px;
+    width: 96px;
+    background-position: center bottom !important;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+}
 
 .arrowDown {
     width: 64px;
