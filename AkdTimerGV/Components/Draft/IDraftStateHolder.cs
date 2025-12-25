@@ -7,7 +7,11 @@
         public Guid GetId();
 
         public List<String> GetParticipants();
+        public void SetParticipants(List<String> Participants);
 
         public DraftState GetDraftState();
+
+        public void Reset();
+
     }
 }

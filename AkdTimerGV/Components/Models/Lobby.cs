@@ -276,12 +276,21 @@ namespace AkdTimerGV.Components.Models {
             return _Participants;
         }
 
+        public void SetParticipants(List<String> NewParticipants) {
+            this._Participants = NewParticipants;
+        }
+
         public DraftState GetDraftState() {
             return this.DraftState;
         }
 
         public Guid GetId() {
             return this.LobbyId;
+        }
+
+        public void Reset() {
+            DraftState.Reset();
+            _Participants = [];
         }
     }
 }

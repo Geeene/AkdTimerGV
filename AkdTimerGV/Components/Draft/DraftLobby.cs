@@ -25,5 +25,10 @@
         public Guid GetId() {
             return _id;
         }
+
+        public void Reset() {
+            _draftState.Reset();
+            this._participants = [];
+        }
     }
 }

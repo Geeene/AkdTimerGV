@@ -5,7 +5,7 @@
 
 /*dropzone style style*/
 .plk-dd-dropzone {
-    width: 960px;
+    width: 970px;
     min-width: 960px;
     min-height: 64px;
     display:flex;
@@ -127,4 +127,57 @@
     background-position: center bottom !important;
     background-size: contain !important;
     background-repeat: no-repeat;
+}
+
+
+.arrowDown {
+    width: 64px;
+    height: 32px;
+    background-color: white;
+    -webkit-mask: url("images/arrowDown.svg") no-repeat 50% 50%;
+    mask: url("images/arrowDown.svg") no-repeat 50% 50%;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+    background-position: center !important;
+    color: white;
+}
+
+.arrowUp {
+    width: 64px;
+    height: 32px;
+    background-color: white;
+    -webkit-mask: url("images/arrowUp.svg") no-repeat 50% 50%;
+    mask: url("images/arrowUp.svg") no-repeat 50% 50%;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+    background-position: center !important;
+    color: white;
+}
+
+.minus {
+    width: 64px;
+    height: 32px;
+    background-color: white;
+    -webkit-mask: url("images/minus.svg") no-repeat 50% 50%;
+    mask: url("images/minus.svg") no-repeat 50% 50%;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+    background-position: center !important;
+    color: white;
+}
+
+.plus {
+    width: 64px;
+    height: 32px;
+    background-color: white;
+    -webkit-mask: url("images/plus.svg") no-repeat 50% 50%;
+    mask: url("images/plus.svg") no-repeat 50% 50%;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+    background-position: center !important;
+    color: white;
+}
+
+.draft-label-holder textarea:disabled {
+    color: #FBFBFE;
 }

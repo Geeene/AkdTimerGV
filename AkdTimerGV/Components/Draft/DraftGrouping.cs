@@ -30,6 +30,11 @@
         public bool IsPlayer { get; set; } = false;
 
         /// <summary>
+        /// The order to display the Draft Groupings in the Tiermaker
+        /// </summary>
+        public int Order { get; set; }
+
+        /// <summary>
         /// The Characters grouped by this object
         /// </summary>
         public List<DraftCharacter> Characters { get; set; } = [];
@@ -46,6 +51,7 @@
             var clone = new DraftGrouping(Name, InternalName);
             clone.Characters = new List<DraftCharacter>(Characters);
             clone.IsPlayer = this.IsPlayer;
+            clone.Order = this.Order;
             return clone;
         }
         

@@ -49,6 +49,7 @@ namespace AkdTimerGV.Components.Draft {
         /// <param name="AvailableCharacters"></param>
         public void UpdateState(List<DraftGrouping> draftGroupings, DraftGrouping AvailableCharacters) {
             this.AvailableCharacters = AvailableCharacters.clone();
+            DraftGroupings.Clear();
             foreach (DraftGrouping grouping in draftGroupings) {
                 DraftGroupings[grouping.Name] = grouping.clone();
             }
@@ -150,6 +151,11 @@ namespace AkdTimerGV.Components.Draft {
                 dict[item.InternalName] = false;
             }
             return dict;
+        }
+
+        public void AddDraftGrouping(DraftGrouping grouping) {
+            grouping.Order = this.DraftGroupings.Count;
+            this.DraftGroupings.Add(grouping.Name, grouping);
         }
 
         /// <summary>

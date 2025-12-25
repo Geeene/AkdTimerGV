@@ -2,6 +2,7 @@
 @page "/draft/{draftId}"
 @rendermode InteractiveServer
 @using AkdTimerGV.Components.Models
+@using AkdTimerGV.Components.Custom
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Threading
 @using System.Text
@@ -18,18 +19,23 @@
 -->
 
 <div class="d-flex flex-column">
-
-    <div style="width: 100%; margin-bottom: 20px;">
-        <input type="button" value="Reset Drafting Process" onclick="@(() => DraftStateHolder.GetDraftState().Reset())" />
-        @if (DraftStateHolder is DraftLobby) {
-            <input type="button" value="Copy invite link" onclick="@(() => GenerateInviteLink())"/>
-            <input type="button" value="Quit" onclick="@(() => LeaveDraftLobby())"/>
-        }
-    </div>
-
     @if (DraftStateHolder == null) {
 
     } else {
+        <div style="width: 100%; margin-bottom: 20px;">
+            <input type="button" value="Reset Drafting Process" onclick="@(() => DraftStateHolder.Reset())" />
+            @if (DraftStateHolder is DraftLobby) {
+                <input type="button" value="Copy invite link" onclick="@(() => GenerateInviteLink())"/>
+                <input type="button" value="Quit" onclick="@(() => LeaveDraftLobby())"/>
+            }
+
+            @if (DraftStateHolder.GetDraftState().FlowState == DraftFlowState.DRAFTING_STARTED) {
+                <input style="float:right" type="button" value="End Draft" onclick="@(() => FinishDraft())" />
+            }
+
+        </div>
+
+
         @if (DraftFlowState.ENTER_PARTICIPANTS == DraftStateHolder.GetDraftState().FlowState) {
             <!-- Start , If using the non-timer version, must manually enter the participants.-->
             <textarea @bind="EnteredParticipants" rows="4" cols="50"/>
@@ -62,8 +68,8 @@
                 Third State, Draft Order has been decided, Let the users choose the games to add to the draft, either via checkboxes, or via the tiermaker code system.
                 It's fully compatible with the code system from the FE Tier Maker
             .-->
-            <hr />
             <span>Choose games to add</span>
+            <hr />
             <span>Additional Rows per Participant (comma separated): <input type="text" @bind="AdditionalTiers" /></span>
             <hr />
 
@@ -99,14 +105,26 @@
                         @foreach (DraftGrouping draftGrouping in DraftGroupings) {
                             <tr class="flex-container" style="border: 3px solid black;">
                                 <td class="draft-label-holder">
-                                    <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: auto; resize:none;" value="@draftGrouping.Name" />
+                                    <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: auto; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
                                 </td>
 
-                                <td style="width: 640px; height: 64px;">
+                                <td style="width: 650px; height: 64px;">
                                         <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
-                                    <Dropzone ItemWrapperClass="@(item => "grid-item")" Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                                    <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
                                         <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
                                     </Dropzone>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-row">
+                                        <div class="d-flex flex-column">
+                                            <input type="button" class="arrowUp" @onclick="(() => MoveUp(draftGrouping))"/>
+                                            <input type="button" class="arrowDown" @onclick="(() => MoveDown(draftGrouping))"/>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <input type="button" class="plus" @onclick="(() => AddGroupingBelow(draftGrouping))" />
+                                            <input type="button" class="minus" @onclick="(() => RemoveGrouping(draftGrouping))" />
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -115,7 +133,7 @@
 
                 <!-- Other available characters -->
                 <div class="d-flex flex-row" style="margin: 10px auto 40px; width: 1024px;">
-                    <Dropzone ItemWrapperClass="@(item => "grid-item")" Items="availableCharacters.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                    <Dropzone Items="availableCharacters.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
                         <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
                     </Dropzone>
                 </div>
@@ -125,11 +143,6 @@
                 <span><input type="checkbox" @bind="AutoCommit" /> Automatic Commit</span>
                 <span><input type="checkbox" @bind="SuppressAutoRefresh" /> Suppress refreshes</span>
                 <input type="button" value="Manual refresh" onclick="@(() => refreshFromDraftState(false))" />
-                @if (DraftStateHolder is Lobby) {
-                    <input type="button" value="End Draft" onclick="@(() => FinishDraft())" />
-                } else {
-                    <input type="button" value="End Draft" onclick="@(() => FinishDraft())" />
-                }
                 <div class="d-flex flex-column" style="margin-top: 10px">
                     <span><input type="checkbox" @bind="ExportIncludingParticipants" /> Include Participants <input type="button" value="Generate Tiermaker Code" onclick="@(() => ExportToTiermakerCode())"/></span>
                     <span><textarea @bind="TiermakerCode" cols="50" rows="5"/></span>
@@ -159,6 +172,9 @@
 
     private bool ExportIncludingParticipants = false;
     private String? AdditionalTiers;
+
+    private String ChosenTierName;
+    private ModalDialog TierAdditionDialog;
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
@@ -260,8 +276,13 @@
     /// When user confirms the order, create the DraftGroupings
     /// </summary>
     private void ConfirmParticipants() {
-        DraftStateHolder.GetDraftState().AdvanceState();
-        ((DraftLobby) DraftStateHolder).SetParticipants(new List<String>(EnteredParticipants.Split("\n")));
+        if (EnteredParticipants == null || EnteredParticipants.Length == 0) {
+            DraftStateHolder.GetDraftState().FlowState = DraftFlowState.CHOOSE_GAME;
+        } else {
+            DraftStateHolder.GetDraftState().AdvanceState();
+            ((DraftLobby) DraftStateHolder).SetParticipants(new List<String>(EnteredParticipants.Split("\n")));
+        }
+        DraftStateHolder.GetDraftState().NotifySubscribers();
     }
 
     ///  <summary>
@@ -293,19 +314,26 @@
             }
         }
 
+        int i = 0;
         foreach (String participant in DraftStateHolder.GetParticipants()) {
             // First create basic 
             String tierName = participant;
             DraftGrouping grouping = new DraftGrouping(participant, participant);
             grouping.IsPlayer = true;
+            grouping.Order = i++;
             DraftStateHolder.GetDraftState().DraftGroupings.Add(tierName, grouping);
 
             foreach (String s in RowsToCreate) {
                 tierName = participant + " - " + s;
                 grouping = new DraftGrouping(tierName, participant);
                 grouping.IsPlayer = true;
+                grouping.Order = i++;
                 DraftStateHolder.GetDraftState().DraftGroupings.Add(tierName, grouping);
             }
+        }
+
+        if (DraftStateHolder.GetParticipants().Count == 0) {
+            DraftStateHolder.GetDraftState().DraftGroupings.Add("NEW", new DraftGrouping("NEW", "NEW"));
         }
 
         DraftStateHolder.GetDraftState().SetAvailableCharacters(draftCharacters);
@@ -385,6 +413,9 @@
         TiermakerCode = "";
     }
 
+    /// <summary>
+    /// Export the current draft state as a tiermaker code to be copy pasted, 
+    /// </summary>
     private void ExportToTiermakerCode() {
         StringBuilder builder = new StringBuilder();
         builder.Append("fe");
@@ -395,7 +426,7 @@
             }
 
             builder.Append("==");
-            builder.Append(grouping.IsPlayer ?  grouping.InternalName : grouping.Name);
+            builder.Append(grouping.Name);
             // Color unused, just always put 0
             builder.Append("|0");
             foreach (DraftCharacter chara in grouping.Characters) {
@@ -413,7 +444,6 @@
     /// Advances the FlowState to the final state. Also copies the draft to the TimerData if the draft is for a Timer Lobby
     /// </summary>
     private async void FinishDraft() {
-
         if (DraftStateHolder is Lobby) {
             foreach (DraftGrouping dg in DraftStateHolder.GetDraftState().DraftGroupings.Values) {
                 Team? team = ((Lobby) DraftStateHolder).GetTeamByName(dg.InternalName);
@@ -445,7 +475,7 @@
                 return;
             }
 
-            DraftGroupings = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(value => value.clone()).ToList();
+            DraftGroupings = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(value => value.clone()).OrderBy(value => value.Order).ToList();
             availableCharacters = DraftStateHolder.GetDraftState().AvailableCharacters.clone();
             StateHasChanged();
         });
@@ -464,5 +494,89 @@
         String link = NavigationManager.BaseUri + "draft/" + DraftStateHolder.GetId() + "/";
         // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
         await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
+    }
+
+
+    /// <summary>
+    /// Move the given Gruping up one spot
+    /// </summary>
+    /// <param name="GroupingToMove"></param>
+    public void MoveUp(DraftGrouping GroupingToMove) {
+        if (GroupingToMove.Order == 0) {
+            return;
+        }
+
+        // increase order for element above
+        foreach (DraftGrouping draftGroup in DraftStateHolder.GetDraftState().DraftGroupings.Values.Where(dg => dg.Order == GroupingToMove.Order - 1)) {
+            draftGroup.Order++;
+        }
+
+        // Decrease Order for this element
+        DraftStateHolder.GetDraftState().DraftGroupings[GroupingToMove.Name].Order--;
+        DraftStateHolder.GetDraftState().NotifySubscribers();
+    }
+
+    /// <summary>
+    /// Move the given Gruping down one spot
+    /// </summary>
+    /// <param name="GroupingToMove"></param>
+    public void MoveDown(DraftGrouping GroupingToMove) {
+        if (GroupingToMove.Order == DraftStateHolder.GetDraftState().DraftGroupings.Count()) {
+            return;
+        }
+
+        // decrease order for element below
+        foreach (DraftGrouping draftGroup in DraftStateHolder.GetDraftState().DraftGroupings.Values.Where(dg => dg.Order == GroupingToMove.Order + 1)) {
+            draftGroup.Order--;
+        }
+
+        // Increase Order for this element
+        DraftStateHolder.GetDraftState().DraftGroupings[GroupingToMove.Name].Order++;
+        DraftStateHolder.GetDraftState().NotifySubscribers();
+    }
+
+    /// <summary>
+    /// Remove the given Gruping unless it's a participant
+    /// </summary>
+    public void RemoveGrouping(DraftGrouping GroupingToRemove) {
+        if (GroupingToRemove.IsPlayer || DraftStateHolder.GetDraftState().DraftGroupings.Count == 0) {
+            // Disallow removing participant tiers and the final tier if no participant
+            return;
+        }
+
+        // Remove the grouping, and align the order t
+        DraftStateHolder.GetDraftState().DraftGroupings.Remove(GroupingToRemove.Name);
+        foreach (DraftGrouping draftGroup in DraftStateHolder.GetDraftState().DraftGroupings.Values.Where(dg => dg.Order > GroupingToRemove.Order)) {
+            draftGroup.Order--;
+        }
+        // Make the characters that were in the tier available again
+        DraftStateHolder.GetDraftState().AvailableCharacters.Characters.AddRange(GroupingToRemove.Characters);
+        DraftStateHolder.GetDraftState().NotifySubscribers();
+    }
+
+    public void AddGroupingBelow(DraftGrouping GroupingToGoBelow) {
+        // increase order for groupings below by one more
+        foreach (DraftGrouping draftGroup in DraftStateHolder.GetDraftState().DraftGroupings.Values.Where(dg => dg.Order > GroupingToGoBelow.Order)) {
+            draftGroup.Order++;
+        }
+
+        // Get a new unique name
+        String TierName;
+        int i = 0;
+        while (true) {
+            TierName = "NEW"+ (i == 0 ? "" : " "+i);
+            if (!DraftStateHolder.GetDraftState().DraftGroupings.ContainsKey(TierName)) {
+                break;
+            }
+
+            i++;
+        }
+
+        // Create the new Grouping
+        DraftGrouping newGrouping = new DraftGrouping(TierName, TierName);
+        newGrouping.Order = GroupingToGoBelow.Order + 1;
+        DraftStateHolder.GetDraftState().DraftGroupings.Add(TierName, newGrouping);
+
+        DraftStateHolder.GetDraftState().NotifySubscribers();
     }
 }
