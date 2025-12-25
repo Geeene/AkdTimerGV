@@ -1,4 +1,6 @@
 ﻿using AkdTimerGV.Components.Draft;
+using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace AkdTimerGV.Components.Models {
     /// <summary>
@@ -62,6 +64,8 @@ namespace AkdTimerGV.Components.Models {
         public int NextIndex { get; set; } = 0;
 
         private List<String> _Participants = [];
+
+        public Timer Timer = new Timer(100);
 
         /// <summary>
         /// Switches the user to the Team with the given name, if there is no such Team yet, then it will be created.

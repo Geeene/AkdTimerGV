@@ -25,10 +25,12 @@
 
     @if (LINK_TYPE_TIMER == LinkType) {
         <div class="d-flex flex-row">
-            <input class="form-check-input" type="checkbox" @bind="IncludeTable"/>
-            <label class="form-check-label form-check-label">
-                Include Table
-            </label>
+            <span>
+                <input class="form-check-input" type="checkbox" @bind="IncludeTable"/>
+                <label class="form-check-label form-check-label">
+                     Include Table
+                </label>
+            </span>
         </div>
     } else {
         <hr />

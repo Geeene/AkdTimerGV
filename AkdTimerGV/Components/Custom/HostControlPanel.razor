@@ -180,6 +180,7 @@
                 if (((HostControlPanel) panel).Lobby.StartingPistolValue <= 0.1) {
                     ((HostControlPanel) panel).Lobby.StartingPistolValue = 0;
                     ((HostControlPanel) panel).Lobby.Started = true;
+                    ((HostControlPanel) panel).Lobby.Timer.Interval = 500;
                     ((HostControlPanel) panel).timer.Dispose();
                     Lobby.StartAllTimers();
                     return;

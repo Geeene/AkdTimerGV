@@ -90,7 +90,7 @@
                 }
         }
     </div>
-    @if (Team.TimerData.DraftedCharacters.Count >= 1) {
+    @if (Team.TimerData.DraftedCharacters.Count >= 1 && DisplayDraft) {
         <div class="d-flex flex-row" style="flex-wrap: wrap; max-width: 315px">
             @foreach (DraftCharacter character in Team.TimerData.DraftedCharacters) {
                 <div class="draft-character-image-small" style="background-image:url('@character.ImagePath') !important;" />
@@ -110,6 +110,9 @@
 
     [Parameter]
     public bool NoMargin { get; set; }
+
+    [Parameter]
+    public bool DisplayDraft { get; set; }
 
     protected string getTimeValueAsString(long value) {
         return TimeUtil.getTimeAsString(value);
