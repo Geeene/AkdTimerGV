@@ -28,7 +28,7 @@ namespace AkdTimerGV.Components.Models {
         /// <summary>
         /// The password a user has to enter when joining the Lobby, stored as plain text as it isn't exactly that relevant to be secure here
         /// </summary>
-        public string? Password { get; } = Password;
+        public string? Password { get; set; } = Password;
 
         public DraftState DraftState { get; set; } = new DraftState(DraftFlowState.INITIALIZE_DRAFT_ORDER);
 

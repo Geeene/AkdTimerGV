@@ -29,7 +29,6 @@
         <h6>
             <span><label style="float: left;">CurrentLobbyId: @Lobby.LobbyId</label><input type="button" style="margin-left: 10px" value="Invite Link" onclick="@(() => GenerateInviteLink())"/></span>
         </h6>
-        <span>Display draft: <input type="checkbox" @bind="DisplayDraft" /></span>
         <hr />
         <div class="flex-row d-flex justify-content-evenly w-100">
             <div class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
@@ -42,7 +41,10 @@
                     <b style="font-size:100pt">@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</b>
                 }
             </div>
-            <TeamTimerTable Lobby="@Lobby"/>
+            <div>
+                <TeamTimerTable Lobby="@Lobby"/>
+                <span>Display draft: <input type="checkbox" @bind="DisplayDraft" /></span>
+            </div>
             @if (userIsHost()) {
                 <div class="Panel">
                     <HostControlPanel Lobby="@Lobby"/>
@@ -135,6 +137,7 @@
             await BrowserStorage.DeleteAsync("currentLobby");
             return;
         }
+        ChosenTeamName = currentUser.Name;
         if (!Lobby.Timer.Enabled) {
             Lobby.Timer.Start();
         }
