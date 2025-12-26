@@ -405,7 +405,10 @@
 
         // Step 3:
         // After game selection logic, add the newly created groupings, and remove the characters contained within those groupings from the available characters
+        int NextIndex = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(dg => dg.Order).Max();
         foreach (DraftGrouping draftGrouping in NewGroupings) {
+            NextIndex++;
+            draftGrouping.Order = NextIndex;
             DraftStateHolder.GetDraftState().DraftGroupings.Add(draftGrouping.Name, draftGrouping);
         }
         DraftStateHolder.GetDraftState().AvailableCharacters.Characters.RemoveAll(dc => charactersToMove.Contains(dc.InternalName));
