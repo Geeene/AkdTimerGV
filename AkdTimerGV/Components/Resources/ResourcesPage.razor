@@ -56,7 +56,9 @@
                     Parent Cagegory:
                 <InputSelect @bind-Value="SelectedParentForEntry">
                         @foreach (var option in AvailableCategories) {
-                            if (option.Value != null) {
+                            @if (option.Value == null) {
+                                <option value="@option">None</option>
+                            } else {
                                 <option value="@option.Key">@option.Key</option>
                             }
                         }
@@ -175,6 +177,10 @@
     }
 
     private void AddEntry() {
+        if (SelectedParentForEntry == null) {
+            return;
+        }
+
         // Override duplicate entries
         AvailableCategories.GetValueOrDefault(SelectedParentForEntry, null).entries.RemoveAll(entry => entry.name == EnteredName);
 
