@@ -38,6 +38,7 @@
 
         @if (DraftFlowState.ENTER_PARTICIPANTS == DraftStateHolder.GetDraftState().FlowState) {
             <!-- Start , If using the non-timer version, must manually enter the participants.-->
+            <span>Enter Participants:</span>
             <textarea @bind="EnteredParticipants" rows="4" cols="50"/>
             <input type="button" value="Continue" onclick="@(() => ConfirmParticipants())" />
 
@@ -100,7 +101,7 @@
             .-->
             <div class="d-flex flex-column">
                 <!-- Table containing the Auto generated Draft Tiers -->
-                <div style="background-color: #1A1A1A; margin: 30px auto 30px auto">
+                <div id="DraftTierList" style="background-color: #1A1A1A; margin: 30px auto 30px auto">
                     <table>
                         @foreach (DraftGrouping draftGrouping in DraftGroupings) {
                             <tr class="flex-container" style="border: 3px solid black;">
@@ -114,7 +115,7 @@
                                         <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
                                     </Dropzone>
                                 </td>
-                                <td>
+                                <td class="TierFunctionButtons">
                                     <div class="d-flex flex-row">
                                         <div class="d-flex flex-column">
                                             <input type="button" class="arrowUp" @onclick="(() => MoveUp(draftGrouping))"/>
@@ -143,6 +144,8 @@
                 <span><input type="checkbox" @bind="AutoCommit" /> Automatic Commit</span>
                 <span><input type="checkbox" @bind="SuppressAutoRefresh" /> Suppress refreshes</span>
                 <input type="button" value="Manual refresh" onclick="@(() => refreshFromDraftState(false))" />
+                <input type="button" value="Take Screenshot" onclick="@(() => takeScreenshot())" />
+                <input type="button" value="Merge Lines per Participant" onclick="@(() => MergeForScreenshot())" />
                 <div class="d-flex flex-column" style="margin-top: 10px">
                     <span><input type="checkbox" @bind="ExportIncludingParticipants" /> Include Participants <input type="button" value="Generate Tiermaker Code" onclick="@(() => ExportToTiermakerCode())"/></span>
                     <span><textarea @bind="TiermakerCode" cols="50" rows="5"/></span>
@@ -538,11 +541,8 @@
         DraftStateHolder.GetDraftState().NotifySubscribers();
     }
 
-    /// <summary>
-    /// Remove the given Gruping unless it's a participant
-    /// </summary>
     public void RemoveGrouping(DraftGrouping GroupingToRemove) {
-        if (GroupingToRemove.IsPlayer || DraftStateHolder.GetDraftState().DraftGroupings.Count == 0) {
+        if (GroupingToRemove.IsPlayer || DraftStateHolder.GetDraftState().DraftGroupings.Count == 1) {
             // Disallow removing participant tiers and the final tier if no participant
             return;
         }
@@ -552,6 +552,7 @@
         foreach (DraftGrouping draftGroup in DraftStateHolder.GetDraftState().DraftGroupings.Values.Where(dg => dg.Order > GroupingToRemove.Order)) {
             draftGroup.Order--;
         }
+
         // Make the characters that were in the tier available again
         DraftStateHolder.GetDraftState().AvailableCharacters.Characters.AddRange(GroupingToRemove.Characters);
         DraftStateHolder.GetDraftState().NotifySubscribers();
@@ -581,5 +582,31 @@
         DraftStateHolder.GetDraftState().DraftGroupings.Add(TierName, newGrouping);
 
         DraftStateHolder.GetDraftState().NotifySubscribers();
+    }
+
+
+    private async void takeScreenshot() {
+        await JSRuntime.InvokeVoidAsync("window.takeScreenshot", "DraftTierList");
+    }
+
+    private void MergeForScreenshot() {
+        IOrderedEnumerable<DraftGrouping> SortedGroupings = DraftGroupings.Where(dg => dg.IsPlayer).OrderBy(dg => dg.Name);
+        DraftGrouping? Parent = null;
+        foreach (DraftGrouping draftGrouping in SortedGroupings) {
+            if (Parent == null || Parent.InternalName != draftGrouping.InternalName) {
+                Parent = draftGrouping;
+                continue;
+            }
+
+            Parent.Characters.AddRange(draftGrouping.Characters);
+            draftGrouping.Characters.Clear();
+
+            DraftGroupings.Remove(draftGrouping);
+            foreach (DraftGrouping draftGroup in DraftGroupings.Where(dg => dg.Order > draftGrouping.Order)) {
+                draftGroup.Order--;
+            }
+        }
+
+        StateHasChanged();
     }
 }

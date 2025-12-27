@@ -7,11 +7,13 @@
     <base href="/" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="lib/html2canvas.min.js"/></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="Drafting.css" />
     <link rel="stylesheet" href="AkdTimerGV.styles.css" />
     <link rel="icon" type="image/png" href="images/favicon.png" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <HeadOutlet />
 </head>
 
@@ -37,6 +39,27 @@
             }
         };
     </script>
+
+    // Source - https://stackoverflow.com/a
+    // Posted by Mahan Lamee, modified by community. See post 'Timeline' for change history
+    // Retrieved 2025-12-27, License - CC BY-SA 4.0
+
+    <script>
+        window.takeScreenshot = async function(id) {
+            var img = "";
+            $("td:last-of-type").css("display","none");
+            $("td:even").css("width","auto").css("min-width:64px");
+            await html2canvas(document.querySelector("#" + id)).then(canvas => img = canvas.toDataURL("image/png"));
+            var d = document.createElement("a");
+            d.href = img;
+            d.download = "image.png";
+            d.click();
+            $("td:last-of-type").css("display","table-cell");
+            return img;
+        }
+    </script>
+
+
 </body>
 
 </html>
