@@ -21,12 +21,21 @@
 
             return filters.GroupBy(tag => tag).ToDictionary(group => group.Key, group => group.Count());
         }
+
+        public List<Category> RecursivelyGetCategories() {
+            List<Category> result = [];
+            foreach (Category category in categories) { 
+                result.Add(category);
+                result.AddRange(category.RecursivelyGetCategories());
+            }
+            return result;
+        }
     }
 
-    public class Category {
+    public class Category(String CategoryName) {
         public string iconPath { get; set; }
         public List<Category> subCategories { get; set; } = [];
-        public String categoryName { get; set; }
+        public String categoryName { get; set; } = CategoryName;
         public List<CategoryEntry> entries { get; set; } = [];
 
         public List<String> recursivelyGetTags() {
@@ -72,6 +81,16 @@
 
         public bool hasAnyEntryToShow(Dictionary<String, bool> TagDisplayDict, Dictionary<String, bool> GameFilterDict) {
             return getAllEntries().Find(ce => ce.shouldBeShown(TagDisplayDict, GameFilterDict)) != null;
+        }
+
+        public List<Category> RecursivelyGetCategories() { 
+            List<Category> categories = new List<Category>();
+            foreach (Category category in subCategories) {
+                categories.Add(category);
+                category.RecursivelyGetCategories();
+            }
+
+            return categories;
         }
     }
 

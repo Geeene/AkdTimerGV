@@ -1,12 +1,13 @@
 ﻿@page "/resources"
 @rendermode InteractiveServer
 @using System.Text.Json;
+@using AkdTimerGV.Components.Custom
 
-<div>
-    <div style="width:79%; min-width:79%; float:left;">
+<div class="d-flex flex-row" style="width:100%">
+    <div style="width:75%; min-width:75%;">
         <ResourcesAccordion AccordionId="Main" categories="@configuredResources.categories" TagDisplayDict="TagDisplayDict" GameFilterDict="GameFilterDict"/>
     </div>
-    <div style=" width:20%; margin:5px; height:auto; padding:5px; float:left">
+    <div style="min-width: 21%; max-width:25%; margin:5px; height:100vh;position:sticky; right:0; top:0; padding:5px; float:left">
         <h5>Filters</h5>
         <hr />
         @foreach ((string key, int value) in GameFilters.OrderBy(tag => tag.Key)) {
@@ -16,8 +17,76 @@
         @foreach ((string key, int value) in Tags.OrderBy(tag => tag.Key)) {
             <span><input type="checkbox" class="btn" @bind="TagDisplayDict[key]" @bind:after="@(()=> StateHasChanged())" /> @key (@value)</span><br />
         }
+        <div>
+            <input type="button" value="Manage Resources" style="position:absolute; right: 0; bottom: 5px;" @onclick="(() => ResourceManagementDialog.showDialog())" />
+        </div>
     </div>
 </div>
+
+
+<ModalDialog @ref="ResourceManagementDialog">
+    @if (!Authorized) {
+        <span>Enter Password: <input type="text" @bind="EnteredPassword"/> <input type="button" value="confirm" @onclick="ConfirmPassword"/></span>
+    } else {
+
+        <div class="d-flex flex-row">
+            <div id="AddCategoryContainer" style="float:left">
+                <h5>Create a Category</h5>
+                <span>
+                    Parent Cagegory:
+                <InputSelect @bind-Value="SelectedParent">
+                    @foreach (var option in AvailableCategories) {
+                        @if (option.Value == null) {
+                            <option value="@option">None</option>
+                        } else {
+                            <option value="@option.Key">@option.Key</option>
+                        }
+                    }
+                </InputSelect>
+                </span>
+                <br />
+                <input type="text" @bind="EnteredCategoryName" />
+                <br />
+                <input type="button" value="Add Category" @onclick="AddCategory"/>
+            </div>
+
+            <div id="AddEntryContainer" style="margin-left: 10px;">
+                <h5>Create an Entry</h5>
+                <span>
+                    Parent Cagegory:
+                <InputSelect @bind-Value="SelectedParentForEntry">
+                        @foreach (var option in AvailableCategories) {
+                            if (option.Value != null) {
+                                <option value="@option.Key">@option.Key</option>
+                            }
+                        }
+                    }
+                </InputSelect>
+                </span>
+                <br />
+                <span>Name: <input type="text" @bind="EnteredName" /></span>
+                <br />
+                <span>Reference Link: <input type="text" @bind="EnteredReference" /></span>
+                <br />
+                <span>Credit: <input type="text" @bind="EnteredCredits" /></span>
+                <br />
+                
+                <span>Description: <br /><textarea @bind="EnteredDescription" /></span>
+                <br />
+
+                <span>Identifier system: Add any number identifiers comma separated</span>
+                <br />
+                <span>Games: <input type="text" @bind="EnteredGames" /></span>
+                <br />
+                <span>Tags: <input type="text" @bind="EnteredTags" /></span>
+                <br />
+                <input type="button" value="Add Entry" @onclick="AddEntry"/>
+            </div>
+        </div>
+
+        <input type="button" value="Update Resources" @onclick="SaveChanges" />
+    }
+</ModalDialog>
 
 @code {
     ResourcesJson configuredResources = JsonSerializer.Deserialize<ResourcesJson>(File.ReadAllText("wwwroot/resources.json"));
@@ -25,6 +94,29 @@
     Dictionary<string, bool> TagDisplayDict = new Dictionary<string, bool>();
     Dictionary<string, int> GameFilters = new Dictionary<string, int>();
     Dictionary<string, bool> GameFilterDict = new Dictionary<string, bool>();
+    private static readonly String ENVIRONMENT_VARIABLE_PASSCODE = "AkdTimerGVResourcesPasscode";
+
+    private ModalDialog ResourceManagementDialog { get; set; }
+
+    // For Authorization
+    private bool Authorized { get; set; } = false;
+    private String EnteredPassword { get; set; }
+
+    // Binding for Both Entry & Category Creation
+    private Dictionary<String, Category?> AvailableCategories { get; set; } = new Dictionary<String, Category?> { { "none", null } };
+    private String? SelectedParent { get; set; }
+    private String SelectedParentForEntry { get; set; }
+
+    // Bindings for Category Creation    
+    private String EnteredCategoryName { get; set; }
+
+    // Bindings for Entry Creation    
+    private String EnteredName { get; set; }
+    private String EnteredDescription { get; set; }
+    private String EnteredReference { get; set; }
+    private String EnteredCredits { get; set; }
+    private String EnteredGames { get; set; }
+    private String EnteredTags { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
@@ -40,6 +132,75 @@
             GameFilterDict[filter] = false;
         }
 
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// The authentication here isn't exactly important enough to warrant an actually secure password mechanism.
+    /// Just Check that the user entered the value which was configured as a Passscode in the environment properties
+    /// </summary>
+    private void ConfirmPassword() {
+        String? passcode = System.Environment.GetEnvironmentVariable(ENVIRONMENT_VARIABLE_PASSCODE);
+
+        if (passcode == null) {
+            passcode = "test";
+        }
+
+        Authorized = passcode == EnteredPassword;
+        var categories = configuredResources.RecursivelyGetCategories();
+        foreach (Category Category in categories) {
+            AvailableCategories.Add(Category.categoryName, Category);
+        }
+        StateHasChanged();
+    }
+
+    private void AddCategory() {
+        if (AvailableCategories.ContainsKey(EnteredCategoryName)) {
+            // Don't allow duplicate names
+            return;
+        }
+
+        Category CreatedCategory = new Category(EnteredCategoryName);
+        if (SelectedParent == null) {
+            configuredResources.categories.Add(CreatedCategory);
+        } else {
+            AvailableCategories.GetValueOrDefault(SelectedParent, null).subCategories.Add(CreatedCategory);
+        }
+        AvailableCategories.Add(CreatedCategory.categoryName, CreatedCategory);
+
+        SelectedParent = null;
+        EnteredCategoryName = "";
+
+        StateHasChanged();
+    }
+
+    private void AddEntry() {
+        // Override duplicate entries
+        AvailableCategories.GetValueOrDefault(SelectedParentForEntry, null).entries.RemoveAll(entry => entry.name == EnteredName);
+
+        CategoryEntry NewEntry = new CategoryEntry();
+        NewEntry.name = EnteredName;
+        NewEntry.description = EnteredDescription;
+        NewEntry.credit = EnteredCredits;
+        NewEntry.reference = EnteredReference;
+        NewEntry.tags = new List<String>(EnteredTags.Split(","));
+        NewEntry.games = new List<String>(EnteredGames.Split(","));
+        AvailableCategories.GetValueOrDefault(SelectedParentForEntry, null).entries.Add(NewEntry);
+        EnteredName = ""; ;
+        EnteredDescription = ""; ;
+        EnteredCredits = ""; ;
+        EnteredReference = ""; ;
+        EnteredTags = ""; ;
+        EnteredGames = ""; ;
+        StateHasChanged();
+    }
+
+    private async void SaveChanges() {
+        File.Move("wwwroot/resources.json", "wwwroot/backup/" + (DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString()).Replace(":", "_").Replace(".", "_") + "_resources.json", true);
+        FileStream stream = File.OpenWrite("wwwroot/resources.json");
+        await JsonSerializer.SerializeAsync<ResourcesJson>(stream, configuredResources);
+        stream.Close();
+        ResourceManagementDialog.closeDialog();
         StateHasChanged();
     }
 }
