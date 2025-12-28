@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using System.Text.Json;
 @using AkdTimerGV.Components.Custom
+@using System.Runtime.Serialization
 
 <div class="d-flex flex-row" style="width:100%">
     <div style="width:75%; min-width:75%;">
@@ -76,7 +77,7 @@
                 <span>Description: <br /><textarea @bind="EnteredDescription" /></span>
                 <br />
 
-                <span>Identifier system: Add any number identifiers comma separated</span>
+                <span>Identifier system: Add any number (min 1) identifiers comma separated</span>
                 <br />
                 <span>Games: <input type="text" @bind="EnteredGames" /></span>
                 <br />
@@ -84,7 +85,23 @@
                 <br />
                 <input type="button" value="Add Entry" @onclick="AddEntry"/>
             </div>
+
+            <div id="AddEntryContainer" style="margin-left: 10px;">
+                <h5>Delete by Name</h5>
+                <InputSelect @bind-Value="SelectedParentForDeletion">
+                    @foreach (var option in AvailableCategories) {
+                        @if (option.Value == null) {
+                            <option value="@option">None</option>
+                        } else {
+                            <option value="@option.Key">@option.Key</option>
+                        }
+                    }
+                </InputSelect><br />
+                <span>Name: <input type="text" @bind="EnteredNameForDeletion" /></span><br />
+                <input type="button" value="Delete Entry" @onclick="DeleteEntry"/>
+            </div>
         </div>
+
 
         <input type="button" value="Update Resources" @onclick="SaveChanges" />
     }
@@ -108,17 +125,21 @@
     private Dictionary<String, Category?> AvailableCategories { get; set; } = new Dictionary<String, Category?> { { "none", null } };
     private String? SelectedParent { get; set; }
     private String SelectedParentForEntry { get; set; }
+    private String SelectedParentForDeletion { get; set; }
 
     // Bindings for Category Creation    
-    private String EnteredCategoryName { get; set; }
+    private String EnteredCategoryName { get; set; } = "";
 
     // Bindings for Entry Creation    
-    private String EnteredName { get; set; }
-    private String EnteredDescription { get; set; }
-    private String EnteredReference { get; set; }
-    private String EnteredCredits { get; set; }
-    private String EnteredGames { get; set; }
-    private String EnteredTags { get; set; }
+    private String EnteredName { get; set; } = "";
+    private String EnteredDescription { get; set; } = "";
+    private String EnteredReference { get; set; } = "";
+    private String EnteredCredits { get; set; } = "";
+    private String EnteredGames { get; set; } = "";
+    private String EnteredTags { get; set; } = "";
+
+    // Bindings for Entry Creation    
+    private String EnteredNameForDeletion { get; set; } = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
@@ -177,7 +198,8 @@
     }
 
     private void AddEntry() {
-        if (SelectedParentForEntry == null) {
+    {
+        if (SelectedParentForEntry == null || EnteredTags.Length == 0 || EnteredGames.Length == 0)
             return;
         }
 
@@ -201,12 +223,24 @@
         StateHasChanged();
     }
 
+    private void DeleteEntry() {
+        if (SelectedParentForDeletion == null) {
+            return;
+        }
+
+        // Override duplicate entries
+        AvailableCategories.GetValueOrDefault(SelectedParentForDeletion, null).entries.RemoveAll(entry => entry.name == EnteredNameForDeletion);
+        StateHasChanged();
+    }
+
     private async void SaveChanges() {
-        File.Move("wwwroot/resources.json", "wwwroot/backup/" + (DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString()).Replace(":", "_").Replace(".", "_") + "_resources.json", true);
+        File.Move("wwwroot/resources.json", "wwwroot/backup/" + DateTime.Now.ToString("yyyy_MM_dd_mm_HH") + "_resources.json", true);
         FileStream stream = File.OpenWrite("wwwroot/resources.json");
         await JsonSerializer.SerializeAsync<ResourcesJson>(stream, configuredResources);
         stream.Close();
         ResourceManagementDialog.closeDialog();
         StateHasChanged();
     }
+
+    
 }

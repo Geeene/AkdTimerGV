@@ -42,3 +42,7 @@ h1:focus {
 .TimerLink.teamTimerContainer {
     margin: 0px 0px 0px 0px;
 }
+
+.modal-lg {
+    --bs-modal-width: 1000px;
+}
