@@ -34,7 +34,7 @@
             <div id="AddCategoryContainer" style="float:left">
                 <h5>Create a Category</h5>
                 <span>
-                    Parent Cagegory:
+                    Parent Category:
                 <InputSelect @bind-Value="SelectedParent">
                     @foreach (var option in AvailableCategories) {
                         @if (option.Value == null) {
@@ -54,7 +54,7 @@
             <div id="AddEntryContainer" style="margin-left: 10px;">
                 <h5>Create an Entry</h5>
                 <span>
-                    Parent Cagegory:
+                    Parent Category:
                 <InputSelect @bind-Value="SelectedParentForEntry">
                         @foreach (var option in AvailableCategories) {
                             @if (option.Value == null) {
