@@ -176,14 +176,14 @@
 
         // if the data of the Locally stored lobby is no longer present, 
         // then remove the locally saved Lobby id and switch to the main page
-        return UserHolder.GetUserById((Guid) currentUser);
+        return UserHolder.Instance.GetUserById((Guid) currentUser);
     }
 
 
     private async void leaveLobby() {
         Lobby? lobby = await getStoredLobby();
         var savedUser = await BrowserStorage.GetAsync<Guid>("user");
-        User? user = UserHolder.GetUserById(savedUser.Value);
+        User? user = UserHolder.Instance.GetUserById(savedUser.Value);
         if (lobby == null || user == null) {
             return;
         }

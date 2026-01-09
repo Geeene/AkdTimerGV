@@ -1,5 +1,4 @@
-﻿@page "/timer/lobby/{LobbyId}/AllTeams/CustomOrder/{CustomOrder}/{Table:bool}"
-@page "/timer/lobby/{LobbyId}/SingleTeam/{TeamName}/{Table:bool}"
+﻿@page "/link/timer/overlay/{ConfigId}"
 @using AkdTimerGV.Components.Models
 @using AkdTimerGV.Components.Custom
 @using AkdTimerGV.Components.Layout
@@ -20,11 +19,11 @@
         @if (Lobby.StartingPistolValue == 0) {
             @if (TeamName == null) {
                 @foreach (Team team in Lobby.GetParticipatingTeams(CustomOrder)) {
-                    <TeamTimer @ref="TimerRef" Team="team" AllTeams="TimerReferences" />
+                    <TeamTimer @ref="TimerRef" Team="team" AllTeams="TimerReferences" DisplayDraft="@ShowDraft" />
                 }
 
             } else {
-                <TeamTimer Team="Lobby.Teams[new(TeamName)]" NoMargin="true"/>
+                <TeamTimer Team="Lobby.Teams[(Guid)TeamName]" NoMargin="true" DisplayDraft="@ShowDraft" />
             }
         } else {
             <b style="font-size:75pt">@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</b>
@@ -37,20 +36,17 @@
 
 @code {
     [Parameter]
-    public String LobbyId { get; set; }
+    public String ConfigId { get; set; }
 
-    [Parameter]
-    public String? TeamName { get; set; }
+    private Guid? TeamName { get; set; }
 
-    [Parameter]
-    public bool Table { get; set; }
+    private bool Table { get; set; }
+    private bool ShowDraft { get; set; } = true;
 
-    [Parameter]
-    public String? CustomOrder { get; set; }
+    private String? CustomOrder { get; set; }
 
-    public Lobby Lobby { get; set; }
+    private Lobby Lobby { get; set; }
 
-    private Timer Timer;
     private List<TeamTimer> TimerReferences = new List<TeamTimer>();
     private TeamTimer TimerRef {
         set { TimerReferences.Add(value); }
@@ -61,25 +57,20 @@
         if (!firstRender) {
             return;
         }
-        
-        // If we didn't receive a valid LobbyId somehow, then just do nothing
-        if (!Guid.TryParse(LobbyId, out Guid ParsedLobbyid)) {
-            return;
-        }
+
+        OBSTimerOverlayConfiguration configuration = (OBSTimerOverlayConfiguration) LinkConfigurationHolder.Instance.GetConfiguration(Guid.Parse(ConfigId));
+
 
         // Retrieve the reference to the Lobby from the LobbyHolder.Instance.
-        Lobby = LobbyHolder.Instance.getLobby(ParsedLobbyid);
-
-        Timer = new Timer(new TimerCallback(CurrentPageRef => {
-            InvokeAsync(() => {
-                ((OBSTimerPage) CurrentPageRef).NotifyStateHasChanged();
-                StateHasChanged();
-            });
-        }
-        ), this, 100, 100);
+        Lobby = LobbyHolder.Instance.getLobby(configuration.LobbyId);
+        Table = configuration.DisplayTable;
+        CustomOrder = configuration.CustomOrder;
+        TeamName = configuration.TeamName;
+        ShowDraft = configuration.ShowDraft;
+        Lobby.Timer.Elapsed += ((source, e) => NotifyStateHasChanged());
     }
 
     private void NotifyStateHasChanged() {
-        StateHasChanged();
+        InvokeAsync(() => StateHasChanged());
     }
 }

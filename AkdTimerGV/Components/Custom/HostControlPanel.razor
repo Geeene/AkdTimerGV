@@ -223,7 +223,7 @@
             return;
         }
 
-        User? newHost = UserHolder.GetUserById(SelectedNewHost);
+        User? newHost = UserHolder.Instance.GetUserById(SelectedNewHost);
 
         if (newHost == null) {
             Logger.LogInformation("User {newHost} is Null, didn't find user for {SelectedNewHost}", newHost, SelectedNewHost);

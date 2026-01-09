@@ -25,7 +25,7 @@ public sealed class UserHolder {
     /// </summary>
     /// <param name="userId"></param>
     /// <returns></returns>
-    public static User createUser(String userId) {
+    public User createUser(String userId) {
         User user = new(userId);
         Users[user.UserId] = user;
         return user;
@@ -34,7 +34,7 @@ public sealed class UserHolder {
     /// <summary>
     /// Get the user with the given Id from the Dictionary
     /// </summary>
-    public static User? GetUserById(Guid userId) {
+    public User? GetUserById(Guid userId) {
         if (!Users.ContainsKey(userId)) {
             return null;
         }

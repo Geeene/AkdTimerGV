@@ -1,5 +1,4 @@
-﻿@page "/timer/lobby/{LobbyId}/AllTeams/Orientation/{Orientation}/SlideShowSeconds/{SlideshowSeconds:int}"
-@page "/timer/lobby/{LobbyId}/SingleTeam/{TeamId}/Orientation/{Orientation}"
+﻿@page "/link/draft/overlay/{ConfigId}"
 @using AkdTimerGV.Components.Models
 @using AkdTimerGV.Components.Custom
 @using AkdTimerGV.Components.Layout
@@ -51,14 +50,15 @@
 
 
 @code {
+
     [Parameter]
+    public String ConfigId { get; set; }
+
     public String LobbyId { get; set; }
 
-    [Parameter]
-    public String? TeamId { get; set; }
+    public Guid? TeamId { get; set; }
 
 
-    [Parameter]
     public String Orientation { get; set; }
 
     public Lobby Lobby { get; set; }
@@ -77,16 +77,19 @@
             return;
         }
 
-        // If we didn't receive a valid LobbyId somehow, then just do nothing
-        if (!Guid.TryParse(LobbyId, out Guid ParsedLobbyid)) {
-            return;
-        }
+
+        OBSDraftOverlayConfiguration configuration = (OBSDraftOverlayConfiguration) LinkConfigurationHolder.Instance.GetConfiguration(Guid.Parse(ConfigId));
+
+
+
 
         // Retrieve the reference to the Lobby from the LobbyHolder.Instance.
-        Lobby = LobbyHolder.Instance.getLobby(ParsedLobbyid);
+        Lobby = LobbyHolder.Instance.getLobby(configuration.LobbyId);
+        TeamId = configuration.TeamId;
+        Orientation = configuration.Orientation;
 
         if (TeamId != null) {
-            Teams.Add(Lobby.GetTeamByTeamId(Guid.Parse(TeamId)));
+            Teams.Add(Lobby.GetTeamByTeamId((Guid) TeamId));
         } else {
             Teams.AddRange(Lobby.GetParticipatingTeams().Where(Team => Team.TimerData.DraftedCharacters.Count > 0));
 
@@ -95,7 +98,7 @@
                 Timer = new Timer(new TimerCallback(CurrentPageRef => {
                     InvokeAsync(() => {
                         DetermineNextTeamForSlideshow();
-                        ((OBSDraftPage)CurrentPageRef).NotifyStateHasChanged();
+                        ((OBSDraftOverlay) CurrentPageRef).NotifyStateHasChanged();
                     });
                 }
                 ), this, SlideshowSeconds * 1000, SlideshowSeconds * 1000);

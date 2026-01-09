@@ -139,7 +139,7 @@ namespace AkdTimerGV.Components.Models {
             if (Paused) {
                 CurrentConsumedBreakTime += ((long)DateTime.Now.Subtract((DateTime) StartCurrentBreak).TotalSeconds);
             }
-            long remainingExtraTime = BreakTime + PenaltyTime - CurrentConsumedBreakTime;
+            long remainingExtraTime = BreakTime - CurrentConsumedBreakTime;
             // If the timer is currently paused, and we just reached no remaining time, then end the break automatically
             if (Paused && remainingExtraTime <= 0) EndBreak();
             return remainingExtraTime;
@@ -237,7 +237,7 @@ namespace AkdTimerGV.Components.Models {
         /// </summary>
         /// <returns></returns>
         public long GetExtraTime() {
-            return BreakTime + PenaltyTime;
+            return BreakTime;
         }
 
         /// <summary>

@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 @using AkdTimerGV.Components.Models
 @using AkdTimerGV.Components.Custom
+@using AkdTimerGV.Components.Pages.OBS
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Threading
 @using System.Text
@@ -24,6 +25,7 @@
     } else {
         <div style="width: 100%; margin-bottom: 20px;">
             <input type="button" value="Reset Drafting Process" onclick="@(() => DraftStateHolder.Reset())" />
+            <input type="button" value="Copy Stream link" onclick="@(() => GenerateStreamLink())" />
             @if (DraftStateHolder is DraftLobby) {
                 <input type="button" value="Copy invite link" onclick="@(() => GenerateInviteLink())"/>
                 <input type="button" value="Quit" onclick="@(() => LeaveDraftLobby())"/>
@@ -272,7 +274,7 @@
 
         // if the data of the Locally stored lobby is no longer present,
         // then remove the locally saved Lobby id and switch to the main page
-        return UserHolder.GetUserById((Guid)currentUser);
+        return UserHolder.Instance.GetUserById((Guid)currentUser);
     }
 
     ///  <summary>
@@ -498,6 +500,15 @@
 
     public async void GenerateInviteLink() {
         String link = NavigationManager.BaseUri + "draft/" + DraftStateHolder.GetId() + "/";
+        // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
+        await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
+    }
+
+    public async void GenerateStreamLink() {
+        OBSDraftProcessConfiguration configuration = new();
+        configuration.DraftId = DraftStateHolder.GetId();
+        Guid configId = LinkConfigurationHolder.Instance.RegisterConfiguration(configuration);
+        String link = NavigationManager.BaseUri + "link/draft/process/" + configId + "/";
         // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
         await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
     }
