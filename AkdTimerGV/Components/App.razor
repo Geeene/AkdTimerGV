@@ -45,6 +45,7 @@
             var img = "";
             $("td:last-of-type").css("display","none");
             $("td:even").css("width","auto");
+            $("#HostControlPanel").removeClass("d-flex");
             var max = 0;
             for (const dropzone of $("td .plk-dd-dropzone")) {
                 var current = 0;
@@ -60,6 +61,7 @@
             $("td .plk-dd-dropzone").css("min-width", "74px");
             const result = await snapdom(document.querySelector("#" + id));
             await result.download({format: 'png', filename: 'screenshot'});
+            $("#HostControlPanel").addClass("d-flex");
             $("td .plk-dd-dropzone").css("width", "1045px");
             $("td .plk-dd-dropzone").css("min-width", "1045px");
             $("td:last-of-type").css("display","table-cell");

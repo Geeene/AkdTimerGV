@@ -5,6 +5,6 @@
         public bool DisplayTable {  get; set; }
         public string? CustomOrder { get; set; }
         public bool ShowDraft { get; set; }
-
+        public bool TransparentBackground { get; set; }
     }
 }
