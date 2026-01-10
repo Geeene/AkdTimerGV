@@ -1,10 +1,14 @@
-﻿namespace AkdTimerGV.Components.Models {
+﻿using AkdTimerGV.Components.Draft;
+using System.Timers;
+using Timer = System.Timers.Timer;
+
+namespace AkdTimerGV.Components.Models {
     /// <summary>
     /// A Lobby which has one or more people racing in it.
     /// 
     /// Can (must doesn't have to be) password protected.
     /// </summary>
-    public class Lobby(String Description, User Owner, String Password) {
+    public class Lobby(String Description, User Owner, String Password) : IDraftStateHolder {
         
         /// <summary>
         /// The Guids MUST have setter, otherwise the de-serialization from the Local storage would give a new Guid from construction :)
@@ -24,7 +28,9 @@
         /// <summary>
         /// The password a user has to enter when joining the Lobby, stored as plain text as it isn't exactly that relevant to be secure here
         /// </summary>
-        public string? Password { get; } = Password;
+        public string? Password { get; set; } = Password;
+
+        public DraftState DraftState { get; set; } = new DraftState(DraftFlowState.INITIALIZE_DRAFT_ORDER);
 
         /// <summary>
         /// The Time Stamp when the lobby was created.
@@ -56,6 +62,10 @@
         /// Index of the next created team
         /// </summary>
         public int NextIndex { get; set; } = 0;
+
+        private List<String> _Participants = [];
+
+        public Timer Timer = new Timer(100);
 
         /// <summary>
         /// Switches the user to the Team with the given name, if there is no such Team yet, then it will be created.
@@ -260,6 +270,31 @@
         /// <returns></returns>
         public User? GetUserWithName(String name) { 
             return UserTeamMapping.Keys.Where(v => v.Name.Equals(name)).FirstOrDefault();
+        }
+
+        public List<String> GetParticipants() {
+            if (_Participants.Count == 0) {
+                _Participants = GetParticipatingTeams().Select(team => team.Name).ToList();
+            }
+
+            return _Participants;
+        }
+
+        public void SetParticipants(List<String> NewParticipants) {
+            this._Participants = NewParticipants;
+        }
+
+        public DraftState GetDraftState() {
+            return this.DraftState;
+        }
+
+        public Guid GetId() {
+            return this.LobbyId;
+        }
+
+        public void Reset() {
+            DraftState.Reset();
+            _Participants = [];
         }
     }
 }

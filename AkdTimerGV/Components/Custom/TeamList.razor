@@ -8,8 +8,17 @@
 </style>
 
 <div class="Panel TeamList">
-    <h6><b>@Team.Name</b></h6>
+    <span>
+        @if (!ChangeName || !RenderForTeamCreator) {
+            <b>@Team.Name</b>
+        } else {
+            <input type="text" style="width: 100px" @bind="Team.Name" />
+        }
+        @if (RenderForTeamCreator) {
+            <input type="checkbox" style="margin-left:5px" @bind="ChangeName" />
+        }
 
+    </span>
     <table>
         @foreach (var member in Team.members) {
             <tr>
@@ -90,6 +99,8 @@
     /// </summary>
     [Parameter]
     public TeamJoinType JoinType { get; set; }
+
+    private bool ChangeName;
 
     private void GrantPermission(User user) {
         user.HasTeamPermission = true;

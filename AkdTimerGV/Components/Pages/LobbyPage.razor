@@ -3,9 +3,11 @@
 <PageTitle>Lobby</PageTitle>
 @using AkdTimerGV.Components.Models
 @using AkdTimerGV.Components.Custom
+@using AkdTimerGV.Components.Draft
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
-@using System.Threading
+@using System.Timers
 @using static AkdTimerGV.Components.Custom.TeamList
+@using static AkdTimerGV.Components.Custom.OBSLinkPanel
 @inject ProtectedLocalStorage BrowserStorage;
 @inject NavigationManager NavigationManager;
 @inject ILogger<Home> Logger
@@ -25,22 +27,26 @@
             <input type="button" class="btn btn-warning btn-lg" style="float:right;" onclick="@leaveLobby" value="Leave lobby"/>
         </h1>
         <h6>
-            <span><label style="float: left;">CurrentLobbyId: @Lobby.LobbyId</label><input type="button" value="Invite Link" onclick="@(() => GenerateInviteLink())"/></span>
+            <span><label style="float: left;">CurrentLobbyId: @Lobby.LobbyId</label><input type="button" style="margin-left: 10px" value="Invite Link" onclick="@(() => GenerateInviteLink())"/></span>
         </h6>
-
         <hr />
         <div class="flex-row d-flex justify-content-evenly w-100">
-            <div class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
+            <div id="TeamTimersPanel" class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
                 @if (Lobby.StartingPistolValue == 0) {
                     @* Panel showing the actual timers *@
                     @foreach (var team in Lobby.GetParticipatingTeams()) {
-                        <TeamTimer @ref="TimerRef" Team="team" AllTeams="TimerReferences"/>
+                        <TeamTimer @ref="TimerRef" Team="team" AllTeams="TimerReferences" DisplayDraft="@DisplayDraft"/>
                     }
                 } else {
                     <b style="font-size:100pt">@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</b>
                 }
             </div>
-            <TeamTimerTable Lobby="@Lobby"/>
+            <div>
+                <TeamTimerTable Lobby="@Lobby"/>
+                <span>Display draft: <input type="checkbox" @bind="DisplayDraft" /></span>
+                <br />
+                <input value="Take Screenshot" type="button" @onclick="takeScreenshot" />
+            </div>
             @if (userIsHost()) {
                 <div class="Panel">
                     <HostControlPanel Lobby="@Lobby"/>
@@ -61,9 +67,12 @@
                 </div>
             } else {
                 <TeamList Team="@currentUser.Team" RenderForTeamCreator="@currentUser.IsCreatorOfTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" JoinType="TeamJoinType.LEAVE"/>
-                <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() =>Lobby.DetermineStandings())" ResumedRace="@Lobby.ResumedRace"/>
+                <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() => Lobby.DetermineStandings())" ResumedRace="@Lobby.ResumedRace"/>
             }
-            <OBSLinkPanel Lobby=@Lobby CustomOrder="@CustomOrder"/>
+            <div class="PanelWithLeftBorder d-flex flex-row" style="margin-right: 20px">
+                <OBSLinkPanel Lobby=@Lobby CustomOrder="@CustomOrder" LinkType="@LINK_TYPE_TIMER"/>
+                <OBSLinkPanel Lobby=@Lobby CustomOrder="@CustomOrder" LinkType="@LINK_TYPE_DRAFT" />
+            </div>
         </div>
 
         <hr/>
@@ -90,9 +99,14 @@
     protected String? ChosenTeamName;
     private Timer Timer;
     private List<TeamTimer> TimerReferences = new List<TeamTimer>();
+    private bool DisplayDraft = true;
     private TeamTimer TimerRef {
         set { TimerReferences.Add(value); }
     }
+
+    /// <summary>
+    /// Custom property getter used for encoding the order of timers into the OBS Link
+    /// </summary>
     private String CustomOrder {
         get {
             String a = "";
@@ -108,6 +122,13 @@
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (Lobby != null && currentUser != null && !currentUser.wasRedirectedToDraft &&
+        !(new List<DraftFlowState> { DraftFlowState.NOT_STARTED, DraftFlowState.DRAFTING_FINISHED }.Contains(Lobby.DraftState.FlowState))) {
+            NavigationManager.NavigateTo("/draft");
+            currentUser.wasRedirectedToDraft = true;
+            return;
+        }
+
         if (!firstRender) {
             return;
         }
@@ -116,25 +137,16 @@
         currentUser = await getStoredUser();
         if (Lobby == null || currentUser == null) {
             await BrowserStorage.DeleteAsync("currentLobby");
-            return;    
+            return;
         }
-
-        // Have the Page refresh every 100ms
-        // On Live I had some issues with the Timer being garbage collected, 
-        // so make sure the Instance has a reference to the timer && pass this page instance as a state to the timer, 
-        // without it still happened for some reason
-        Timer = new Timer(new TimerCallback(LobbyRef => {
-            InvokeAsync(() => {
-                ((LobbyPage) LobbyRef).NotifyStateHasChanged();
-                Logger.LogDebug("Refreshing for User {User}", currentUser.UserId);
-                StateHasChanged();
-            });
+        ChosenTeamName = currentUser.Name;
+        if (!Lobby.Timer.Enabled) {
+            Lobby.Timer.Start();
         }
-        ), this, 100, 100);
+        Lobby.Timer.Elapsed += ((source, e) => NotifyStateHasChanged());
     }
-
     private void NotifyStateHasChanged() {
-        StateHasChanged();
+        InvokeAsync(() => StateHasChanged());
     }
 
     /// <summary>
@@ -166,14 +178,14 @@
 
         // if the data of the Locally stored lobby is no longer present, 
         // then remove the locally saved Lobby id and switch to the main page
-        return UserHolder.GetUserById((Guid) currentUser);
+        return UserHolder.Instance.GetUserById((Guid) currentUser);
     }
 
 
     private async void leaveLobby() {
         Lobby? lobby = await getStoredLobby();
         var savedUser = await BrowserStorage.GetAsync<Guid>("user");
-        User? user = UserHolder.GetUserById(savedUser.Value);
+        User? user = UserHolder.Instance.GetUserById(savedUser.Value);
         if (lobby == null || user == null) {
             return;
         }
@@ -221,6 +233,10 @@
         String link = NavigationManager.BaseUri+"timer/lobby/"+Lobby.LobbyId+"/";
         // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
         await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
+    }
+
+    private async void takeScreenshot() {
+        await JSRuntime.InvokeVoidAsync("window.takeScreenshot", "TeamTimersPanel");
     }
 
 }

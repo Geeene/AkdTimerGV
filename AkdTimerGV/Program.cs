@@ -1,5 +1,6 @@
 using AkdTimerGV.Components;
 using Microsoft.AspNetCore.DataProtection;
+using Plk.Blazor.DragDrop;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo("/home/web/Apps/AkdTimerGV/Keys"));
-
+builder.Services.AddBlazorDragDrop();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

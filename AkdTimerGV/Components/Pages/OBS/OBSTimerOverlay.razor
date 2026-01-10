@@ -1,0 +1,87 @@
+﻿@page "/link/timer/overlay/{ConfigId}"
+@using AkdTimerGV.Components.Models
+@using AkdTimerGV.Components.Custom
+@using AkdTimerGV.Components.Layout
+
+@*
+    This rendermode is needed to enable using OnAfterRenderAsync
+*@
+@rendermode InteractiveServer
+
+@*
+    Since this is intended to be the page which is used for OBS Browser capture, 
+    just use an empty layout without clutter to avoid cropping
+*@
+@layout EmptyLayout
+
+@if (TransparentBackground) {
+    <style>
+        .teamTimerContainer {
+            background-color: rgba(0,0,0,0) !important;
+        }
+    </style>
+}
+
+
+<div class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
+    @if (Lobby != null) {
+        @if (Lobby.StartingPistolValue == 0) {
+            @if (TeamName == null) {
+                @foreach (Team team in Lobby.GetParticipatingTeams(CustomOrder)) {
+                    <TeamTimer @ref="TimerRef" Team="team" AllTeams="TimerReferences" DisplayDraft="@ShowDraft" />
+                }
+
+            } else {
+                <TeamTimer Team="Lobby.Teams[(Guid)TeamName]" NoMargin="true" DisplayDraft="@ShowDraft" />
+            }
+        } else {
+            <b style="font-size:75pt">@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</b>
+        }
+    }
+    @if (Table) {
+        <TeamTimerTable Lobby="@Lobby"/>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public String ConfigId { get; set; }
+
+    private Guid? TeamName { get; set; }
+
+    private bool Table { get; set; }
+    private bool ShowDraft { get; set; } = true;
+    private bool TransparentBackground { get; set; } = true;
+
+    private String? CustomOrder { get; set; }
+
+    private Lobby Lobby { get; set; }
+
+    private List<TeamTimer> TimerReferences = new List<TeamTimer>();
+    private TeamTimer TimerRef {
+        set { TimerReferences.Add(value); }
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            return;
+        }
+
+        OBSTimerOverlayConfiguration configuration = (OBSTimerOverlayConfiguration) LinkConfigurationHolder.Instance.GetConfiguration(Guid.Parse(ConfigId));
+
+
+        // Retrieve the reference to the Lobby from the LobbyHolder.Instance.
+        Lobby = LobbyHolder.Instance.getLobby(configuration.LobbyId);
+        Table = configuration.DisplayTable;
+        CustomOrder = configuration.CustomOrder;
+        TeamName = configuration.TeamName;
+        ShowDraft = configuration.ShowDraft;
+        TransparentBackground = configuration.TransparentBackground;
+        Lobby.Timer.Elapsed += ((source, e) => NotifyStateHasChanged());
+    }
+
+    private void NotifyStateHasChanged() {
+        InvokeAsync(() => StateHasChanged());
+    }
+}

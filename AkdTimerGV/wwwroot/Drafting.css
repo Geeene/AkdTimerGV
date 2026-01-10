@@ -1,0 +1,191 @@
+﻿/*add this to avoid flickering*/
+.plk-dd-inprogess > * {
+    pointer-events: none;
+}
+
+/*dropzone style style*/
+.plk-dd-dropzone {
+    width: 1045px;
+    min-width: 1045px;
+    min-height: 64px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+/*drag drop styles*/
+
+
+.plk-dd-spacing {
+    height: 5px;
+    width: 5px;
+}
+
+.plk-dd-spacing-dragged-over {
+    padding: 0px;
+}
+
+.plk-dd-dragged-over {
+    background-color: lightgray;
+    opacity: 0.6;
+}
+
+.plk-dd-dragged-over > div {
+    background-color: lightgray;
+    opacity: 0.6;
+}
+
+.plk-dd-dragged-over-denied {
+	background-color: red;
+	opacity: 0.6;
+}
+
+.plk-dd-in-transit {
+    opacity: 0;
+}
+
+.plk-dd-in-transit > div {
+     opacity: 0;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0;
+    }
+}
+
+.blink_me {
+    animation: blinker 1s linear infinite;
+}
+
+/*for flex demo*/
+
+.plk-flex .plk-dd-dragged-over {
+    background-color: lightgray;
+    opacity: 0.6;
+    animation: blinker 1s linear infinite;
+}
+
+.plk-flex .plk-dd-dragged-over > div {
+    background-color: lightgray;
+    opacity: 0.9;
+    animation: blinker 1s linear infinite;
+}
+
+.plk-flex .plk-dd-in-transit {
+    background-color: orangered;
+}
+
+.plk-flex .plk-dd-in-transit > div {
+    background-color: orangered;
+}
+
+.plk-dd-noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+
+.draft-label {
+    min-width: 56px;
+    max-width: 128px;
+    font-size: 16px;
+    line-height: 16px;
+    text-align: center;
+    border: none;
+    font-weight: 600;
+    margin: 0;
+    display: inline-block;
+    padding: 4px;
+    overflow-wrap: break-word;
+}
+
+.draft-label-holder {
+    text-align: center;
+    font-weight: 600;
+    line-height: 16px;
+    overflow-wrap: break-word;
+    border-right: 3px solid black;
+    min-width: 64px;
+    padding: 5px;
+}
+
+.draft-character-image {
+    height: 64px;
+    width: 64px;
+    background-position: center bottom !important;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+}
+
+.draft-character-image-small {
+    height: 40px;
+    width: 40px;
+    background-position: center bottom !important;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+}
+
+.draft-character-image-large {
+    height: 96px;
+    width: 96px;
+    background-position: center bottom !important;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+}
+
+.arrowDown {
+    width: 64px;
+    height: 32px;
+    background-color: white;
+    -webkit-mask: url("images/arrowDown.svg") no-repeat 50% 50%;
+    mask: url("images/arrowDown.svg") no-repeat 50% 50%;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+    background-position: center !important;
+    color: white;
+}
+
+.arrowUp {
+    width: 64px;
+    height: 32px;
+    background-color: white;
+    -webkit-mask: url("images/arrowUp.svg") no-repeat 50% 50%;
+    mask: url("images/arrowUp.svg") no-repeat 50% 50%;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+    background-position: center !important;
+    color: white;
+}
+
+.minus {
+    width: 64px;
+    height: 32px;
+    background-color: white;
+    -webkit-mask: url("images/minus.svg") no-repeat 50% 50%;
+    mask: url("images/minus.svg") no-repeat 50% 50%;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+    background-position: center !important;
+    color: white;
+}
+
+.plus {
+    width: 64px;
+    height: 32px;
+    background-color: white;
+    -webkit-mask: url("images/plus.svg") no-repeat 50% 50%;
+    mask: url("images/plus.svg") no-repeat 50% 50%;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+    background-position: center !important;
+    color: white;
+}
+
+.draft-label-holder textarea:disabled {
+    color: #FBFBFE;
+}

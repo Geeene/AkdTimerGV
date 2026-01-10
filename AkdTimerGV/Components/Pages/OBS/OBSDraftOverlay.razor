@@ -1,0 +1,134 @@
+﻿@page "/link/draft/overlay/{ConfigId}"
+@using AkdTimerGV.Components.Models
+@using AkdTimerGV.Components.Custom
+@using AkdTimerGV.Components.Layout
+@using AkdTimerGV.Components.Draft
+@using static AkdTimerGV.Components.Custom.OBSLinkPanel
+
+@*
+    This rendermode is needed to enable using OnAfterRenderAsync
+*@
+@rendermode InteractiveServer
+
+@*
+    Since this is intended to be the page which is used for OBS Browser capture, 
+    just use an empty layout without clutter to avoid cropping
+*@
+@layout EmptyLayout
+
+<style>
+    /*dropzone style style*/
+    .draft-tier {
+        max-width: 640px;
+        min-height: 64px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+</style>
+
+
+@if (Lobby != null) {
+    <div class="d-flex @(Orientation == ORIENTATION_HORZIONTAL ? "flex-column" : "flex-row")">
+        @{
+            var i = 0;
+        }
+        @foreach (Team team in GetTeamsToShow()) {
+            <div class="d-flex @(Orientation == ORIENTATION_HORZIONTAL ? "flex-row" : "flex-column")" style="margin-right: 5px;">
+                <div class="draft-label-holder" style="width: 200px; border: 3px solid black; border-collapse:collapse; background-color: #212529; @(i == 0 ? "" : "border-top: none")">
+                    @team.Name
+                </div>
+
+                <div style="max-width: 650px; height: 64px;">
+                    <div class="draft-tier @(Orientation == ORIENTATION_HORZIONTAL ? "flex-row" : "flex-column")">
+                        @foreach (DraftCharacter character in team.TimerData.DraftedCharacters) {
+                            <div class="draft-character-image" style="background-image:url('@character.ImagePath') !important;" />
+                        }
+                    </div>
+                </div>
+                @{i++;}
+            </div>
+        }
+    </div>
+}
+
+
+@code {
+
+    [Parameter]
+    public String ConfigId { get; set; }
+
+    public String LobbyId { get; set; }
+
+    public Guid? TeamId { get; set; }
+
+
+    public String Orientation { get; set; }
+
+    public Lobby Lobby { get; set; }
+
+    private int CurrentDisplayedTeamIndex = 0;
+    public List<Team> Teams { get; set; } = [];
+
+
+    // Needed for Slideshow mode
+    [Parameter]
+    public int SlideshowSeconds { get; set; }
+    private Timer Timer;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            return;
+        }
+
+
+        OBSDraftOverlayConfiguration configuration = (OBSDraftOverlayConfiguration) LinkConfigurationHolder.Instance.GetConfiguration(Guid.Parse(ConfigId));
+
+
+
+
+        // Retrieve the reference to the Lobby from the LobbyHolder.Instance.
+        Lobby = LobbyHolder.Instance.getLobby(configuration.LobbyId);
+        TeamId = configuration.TeamId;
+        Orientation = configuration.Orientation;
+
+        if (TeamId != null) {
+            Teams.Add(Lobby.GetTeamByTeamId((Guid) TeamId));
+        } else {
+            Teams.AddRange(Lobby.GetParticipatingTeams().Where(Team => Team.TimerData.DraftedCharacters.Count > 0));
+
+            if (SlideshowSeconds > 0) {
+                DetermineNextTeamForSlideshow();
+                Timer = new Timer(new TimerCallback(CurrentPageRef => {
+                    InvokeAsync(() => {
+                        DetermineNextTeamForSlideshow();
+                        ((OBSDraftOverlay) CurrentPageRef).NotifyStateHasChanged();
+                    });
+                }
+                ), this, SlideshowSeconds * 1000, SlideshowSeconds * 1000);
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void NotifyStateHasChanged() {
+        StateHasChanged();
+    }
+
+    private void DetermineNextTeamForSlideshow() {
+        if (CurrentDisplayedTeamIndex >= Lobby.GetParticipatingTeams().Count - 1) {
+            CurrentDisplayedTeamIndex = 0;
+        } else {
+            CurrentDisplayedTeamIndex += 1;
+        }
+    }
+
+    private IEnumerable<Team> GetTeamsToShow() {
+        // If we are not in slideshow mode, we will alway just show all teams, either the single one we have, or all participating ones.
+        if (SlideshowSeconds <= 0) {
+            return Teams;
+        }
+        
+        // We are in slideshow mode, return a list containing only the current index
+        return new[] { Teams[CurrentDisplayedTeamIndex] };
+    }
+}

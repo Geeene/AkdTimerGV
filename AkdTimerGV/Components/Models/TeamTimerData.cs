@@ -1,4 +1,5 @@
-﻿namespace AkdTimerGV.Components.Models {
+﻿using AkdTimerGV.Components.Draft;
+namespace AkdTimerGV.Components.Models {
     
     /// <summary>
     /// Timer for a Team. Does all the calculations of how much time has passed / break time is remaining etc.
@@ -61,6 +62,11 @@
         /// How much time the team has from a previous session of the race in SECONDS
         /// </summary>
         public long PreviousTime { get; set; } = 0;
+
+        /// <summary>
+        /// The Characters this team drafted
+        /// </summary>
+        public List<DraftCharacter> DraftedCharacters { get; set; } = [];
 
 
         /// <summary>
@@ -133,7 +139,7 @@
             if (Paused) {
                 CurrentConsumedBreakTime += ((long)DateTime.Now.Subtract((DateTime) StartCurrentBreak).TotalSeconds);
             }
-            long remainingExtraTime = BreakTime + PenaltyTime - CurrentConsumedBreakTime;
+            long remainingExtraTime = BreakTime - CurrentConsumedBreakTime;
             // If the timer is currently paused, and we just reached no remaining time, then end the break automatically
             if (Paused && remainingExtraTime <= 0) EndBreak();
             return remainingExtraTime;
@@ -231,7 +237,7 @@
         /// </summary>
         /// <returns></returns>
         public long GetExtraTime() {
-            return BreakTime + PenaltyTime;
+            return BreakTime;
         }
 
         /// <summary>

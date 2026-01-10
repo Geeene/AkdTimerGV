@@ -136,12 +136,12 @@
         var storedUser = await BrowserStorage.GetAsync<Guid?>("user");
         if ((!storedUser.Success || storedUser.Value == null)) {
             Logger.LogInformation("Need to create a new user, as nothing was stored");
-            User createdUser = UserHolder.createUser(userName);
+            User createdUser = UserHolder.Instance.createUser(userName);
             await BrowserStorage.SetAsync("user", createdUser.UserId);
             return createdUser;
         } else {
             Logger.LogInformation("User exists in local storage {}", storedUser.Value);
-            User? currentUser = UserHolder.GetUserById((Guid) storedUser.Value);
+            User? currentUser = UserHolder.Instance.GetUserById((Guid)storedUser.Value);
 
             // If there was a user cached, but that user no longer exists in memory, 
             // then delete the Guid from local storage and re-call the method so a new user is created.
@@ -157,7 +157,7 @@
     public async Task showModalToJoinLobby(Lobby lobby) {
         var storedUser = await BrowserStorage.GetAsync<Guid?>("user");
         if (storedUser.Value != null) {
-            User? currentUser = UserHolder.GetUserById((Guid) storedUser.Value);
+            User? currentUser = UserHolder.Instance.GetUserById((Guid)storedUser.Value);
 
             // User was already in the lobby previously, just skip past the modal dialog
             if (currentUser != null && lobby.IsUserInLobby(currentUser)) {

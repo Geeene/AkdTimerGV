@@ -8,44 +8,42 @@ Start / Stop Break
 Add Penalty
 *@
 
-<div class="TimerControlPanel d-flex flex-row justify-content-around" style="width:100%">
-    @*Allow team to start / stop their Timer / Break *@
-    <div class="d-flex flex-column Panel">
-        <span>Timer Control</span>
-        @if (!timerData.Active && !timerData.dnf) {
-            @if (timerData.FinishTime == null) {
-                <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Start" onclick="@(() => HandleStart())"/>
-            } else {
-                <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Undo Finish" onclick="@(() => ConfirmUndoFinishModal.showDialog())"/>
-            }
+@*Allow team to start / stop their Timer / Break *@
+<div class="d-flex flex-column Panel">
+    <span>Timer Control</span>
+    @if (!timerData.Active && !timerData.dnf) {
+        @if (timerData.FinishTime == null) {
+            <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Start" onclick="@(() => HandleStart())"/>
         } else {
-            <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Finish" onclick="@(() => HandleFinish())"/>
-            <input type="button" class="btn btn-danger" disabled="@(Disabled)" value="DNF" onclick="@(() => ConfirmDnfModal.showDialog())"/>
+            <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Undo Finish" onclick="@(() => ConfirmUndoFinishModal.showDialog())"/>
         }
-        <input type="button" class="btn btn-light" disabled="@(timerData.Paused || Disabled)" value="Start Break" onclick="@(() => timerData.StartBreak())"/>
-        <input type="button" class="btn btn-light" disabled="@(timerData.IsNotPaused() || Disabled)" value="End Break" onclick="@(() => timerData.EndBreak())"/>
-    </div>
-
-    @*Allow team to Add Penalty time *@
-    <div class="d-flex flex-column">
-        Add Penalty
-        <AddToTimer Disabled="@Disabled" TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
-    </div>
-
-    @if (ResumedRace) {
-        <div class="d-flex flex-column">
-            Add Previous Time
-            <AddToTimer Disabled="@Disabled" Simplified="false" TimerAdditionType="@TimerAdditionType.Previous" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
-        </div>
+    } else {
+        <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Finish" onclick="@(() => HandleFinish())"/>
+        <input type="button" class="btn btn-danger" disabled="@(Disabled)" value="DNF" onclick="@(() => ConfirmDnfModal.showDialog())"/>
     }
-
-        <ConfirmationModal @ref="ConfirmDnfModal"
-        ActionDescription="Are you sure you want to DNF? This action is not reversible!"
-        ActionRunnable="@(() => HandleDnf())"/>
-        <ConfirmationModal @ref="ConfirmUndoFinishModal"
-        ActionDescription="Are you sure you want to undo your finish? This will add the time that has passed since your last finish to your total time!"
-        ActionRunnable="@(() => HandleUndoFinish())"/>
+    <input type="button" class="btn btn-light" disabled="@(timerData.Paused || Disabled)" value="Start Break" onclick="@(() => timerData.StartBreak())"/>
+    <input type="button" class="btn btn-light" disabled="@(timerData.IsNotPaused() || Disabled)" value="End Break" onclick="@(() => timerData.EndBreak())"/>
 </div>
+
+@*Allow team to Add Penalty time *@
+<div class="d-flex flex-column">
+    Add Penalty
+    <AddToTimer Disabled="@Disabled" TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
+</div>
+
+@if (ResumedRace) {
+    <div class="d-flex flex-column">
+        Add Previous Time
+        <AddToTimer Disabled="@Disabled" Simplified="false" TimerAdditionType="@TimerAdditionType.Previous" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
+    </div>
+}
+
+    <ConfirmationModal @ref="ConfirmDnfModal"
+    ActionDescription="Are you sure you want to DNF? This action is not reversible!"
+    ActionRunnable="@(() => HandleDnf())"/>
+    <ConfirmationModal @ref="ConfirmUndoFinishModal"
+    ActionDescription="Are you sure you want to undo your finish? This will add the time that has passed since your last finish to your total time!"
+    ActionRunnable="@(() => HandleUndoFinish())"/>
 
 @code {
     [Parameter]

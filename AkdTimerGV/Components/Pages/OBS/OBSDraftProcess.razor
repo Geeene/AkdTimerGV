@@ -1,0 +1,80 @@
+﻿@page "/link/draft/process/{ConfigId}"
+@using AkdTimerGV.Components.Models
+@using AkdTimerGV.Components.Custom
+@using AkdTimerGV.Components.Layout
+@using AkdTimerGV.Components.Draft
+@using static AkdTimerGV.Components.Custom.OBSLinkPanel
+
+@*
+    This rendermode is needed to enable using OnAfterRenderAsync
+*@
+@rendermode InteractiveServer
+
+@*
+    Since this is intended to be the page which is used for OBS Browser capture, 
+    just use an empty layout without clutter to avoid cropping
+*@
+@layout EmptyLayout
+
+@if (DraftStateHolder != null) {
+    @if (DraftFlowState.ENTER_PARTICIPANTS == DraftStateHolder.GetDraftState().FlowState) {
+        <!-- Start , If using the non-timer version, must manually enter the participants.-->
+        <h1>Waiting for Participants to be confirmed...</h1>
+    } else if (DraftFlowState.INITIALIZE_DRAFT_ORDER == DraftStateHolder.GetDraftState().FlowState) {
+        <h1>Waiting for Draft Order to be randomized...</h1>
+    } else if (DraftFlowState.ORDER_RANDOMIZED == DraftStateHolder.GetDraftState().FlowState) {
+        <!-- Second State, Draft Order has been rolled, Display it and allow them to re-roll or continue.-->
+        @for (int i = 0; i < DraftStateHolder.GetDraftState().RandomizedDraftOrder.Count(); i++) {
+            <h2>@(i + 1 + " - " + DraftStateHolder.GetDraftState().RandomizedDraftOrder[i])</h2>
+        }
+    } else if (DraftFlowState.CHOOSE_GAME == DraftStateHolder.GetDraftState().FlowState) {
+        <h1>Waiting for Game Selection...</h1>
+    } else if (DraftFlowState.DRAFTING_STARTED == DraftStateHolder.GetDraftState().FlowState) {
+        <!-- Table containing the Auto generated Draft Tiers -->
+        <div id="DraftTierList" style="background-color: #1A1A1A; width:max-content; max-width: 100vw">
+            <table style="width:100vw">
+                @foreach (DraftGrouping draftGrouping in new List<DraftGrouping>(DraftStateHolder.GetDraftState().DraftGroupings.Values)) {
+                    <tr class="flex-container" style="border: 3px solid black;">
+                        <td class="draft-label-holder" style="width:10%">
+                            <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: auto; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
+                        </td>
+
+                        <td style="width: 650px; height: 64px;">
+                            <Dropzone Items="new List<DraftCharacter>(draftGrouping.Characters)" TItem="DraftCharacter">
+                                <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
+                            </Dropzone>
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+    } else {
+        <h1>Drafting Finished!</h1>
+    }
+}
+
+@code {
+    [Parameter]
+    public String ConfigId { get; set; }
+
+    private IDraftStateHolder DraftStateHolder;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            return;
+        }
+
+        OBSDraftProcessConfiguration configuration = (OBSDraftProcessConfiguration) LinkConfigurationHolder.Instance.GetConfiguration(Guid.Parse(ConfigId));
+
+        DraftStateHolder = LobbyHolder.Instance.getLobby(configuration.DraftId);
+        if (DraftStateHolder == null) {
+            DraftStateHolder = DraftLobbyHolder.Instance.GetById(configuration.DraftId);
+        }
+        DraftStateHolder.GetDraftState().OnStateChange += (() => NotifyStateHasChanged());
+        StateHasChanged();
+    }
+
+    private void NotifyStateHasChanged() {
+        InvokeAsync(() => StateHasChanged());
+    }
+}

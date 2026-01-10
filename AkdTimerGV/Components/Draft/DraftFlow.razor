@@ -1,0 +1,623 @@
+﻿@page "/draft"
+@page "/draft/{draftId}"
+@rendermode InteractiveServer
+@using AkdTimerGV.Components.Models
+@using AkdTimerGV.Components.Custom
+@using AkdTimerGV.Components.Pages.OBS
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Threading
+@using System.Text
+@inject ProtectedLocalStorage BrowserStorage;
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager;
+@inject ILogger<DraftFlow> Logger
+
+<!-- 
+    Screen for the Drafting Process, functions based on an internal State machine.
+    Current state is dictated by DraftState.FlowState.
+
+
+-->
+
+<div class="d-flex flex-column">
+    @if (DraftStateHolder == null) {
+
+    } else {
+        <div style="width: 100%; margin-bottom: 20px;">
+            <input type="button" value="Reset Drafting Process" onclick="@(() => DraftStateHolder.Reset())" />
+            <input type="button" value="Copy Stream link" onclick="@(() => GenerateStreamLink())" />
+            @if (DraftStateHolder is DraftLobby) {
+                <input type="button" value="Copy invite link" onclick="@(() => GenerateInviteLink())"/>
+                <input type="button" value="Quit" onclick="@(() => LeaveDraftLobby())"/>
+            }
+
+            @if (DraftStateHolder.GetDraftState().FlowState == DraftFlowState.DRAFTING_STARTED) {
+                <input style="float:right" type="button" value="End Draft" onclick="@(() => FinishDraft())" />
+            }
+
+        </div>
+
+
+        @if (DraftFlowState.ENTER_PARTICIPANTS == DraftStateHolder.GetDraftState().FlowState) {
+            <!-- Start , If using the non-timer version, must manually enter the participants.-->
+            <span>Enter Participants:</span>
+            <textarea @bind="EnteredParticipants" rows="4" cols="50"/>
+            <input type="button" value="Continue" onclick="@(() => ConfirmParticipants())" />
+
+        } else if (DraftFlowState.INITIALIZE_DRAFT_ORDER == DraftStateHolder.GetDraftState().FlowState) {
+            <!-- Start State b, allow user to initially roll the Draft Order -->
+            <input style="vertical-align:middle; font-size: 4em;" type="button" value="Randomize Order" onclick="@(() => DraftStateHolder.GetDraftState().InitializeDraftOrder(DraftStateHolder.GetParticipants()))" />
+
+            <hr />
+            <!-- Option 2: input order manually -->
+            <h1>OR</h1>
+            <hr />
+            <h3>Enter order manually</h3>
+            <Dropzone Items="DraftStateHolder.GetParticipants()" TItem="String" Class="flex-column" >
+                <ChildContent><h4 style="border: 2px solid black; padding: 5px; margin: 5px;">@context</h4></ChildContent>
+            </Dropzone>
+            <input type="button" value="Continue" onclick="@(() => DraftStateHolder.GetDraftState().SetDraftOrderManually(DraftStateHolder.GetParticipants()))" />
+        } else if (DraftFlowState.ORDER_RANDOMIZED == DraftStateHolder.GetDraftState().FlowState) {
+            <!-- Second State, Draft Order has been rolled, Display it and allow them to re-roll or continue.-->
+            @for (int i = 0; i < DraftStateHolder.GetDraftState().RandomizedDraftOrder.Count(); i++) {
+                <h2>@(i + 1 + " - " + DraftStateHolder.GetDraftState().RandomizedDraftOrder[i])</h2>
+            }
+
+            <input type="button" value="Reroll" onclick="@(() => DraftStateHolder.GetDraftState().RerollOrder())" />
+            <input type="button" value="Continue" onclick="@(() => ConfirmOrderRandomization())" />
+
+        } else if (DraftFlowState.CHOOSE_GAME == DraftStateHolder.GetDraftState().FlowState) {
+            <!-- 
+                Third State, Draft Order has been decided, Let the users choose the games to add to the draft, either via checkboxes, or via the tiermaker code system.
+                It's fully compatible with the code system from the FE Tier Maker
+            .-->
+            <span>Choose games to add</span>
+            <hr />
+            <span>Additional Rows per Participant (comma separated): <input type="text" @bind="AdditionalTiers" /></span>
+            <hr />
+
+
+            <!-- Option 1: Select via Checkboxes -->
+            <div class="d-grid">
+                @foreach (String groupingKey in DraftStateHolder.GetDraftState().ChosenGameDict.Keys) {
+                    var grouping = DraftCharacterCache.DraftGroupings[groupingKey];
+                    <div style="grid-row: @grouping.Row; grid-column: @grouping.Column">
+                        <input type="checkbox" @bind="DraftStateHolder.GetDraftState().ChosenGameDict[grouping.InternalName]" @bind:after="(() => DraftStateHolder.GetDraftState().NotifySubscribers())" /> @grouping.Name
+                    </div>
+                }
+            </div>
+                
+            <input type="button" value="Unselect all" onclick="@(() => DraftStateHolder.GetDraftState().ResetSelectedGames())" />
+            <input type="button" value="Load selected Rosters" onclick="@(() => ConfirmGameSelection())" />
+
+            <hr />
+            <!-- Option 2: Load via Code -->
+            <h1>OR</h1>
+            <hr />
+            <textarea @bind="TiermakerCode" rows="5" />
+            <input type="button" value="Load via code" onclick="@(() => LoadTiermakerCode())" />
+
+        } else if (DraftFlowState.DRAFTING_STARTED == DraftStateHolder.GetDraftState().FlowState) {
+            <!--
+                Fourth State, the games have been chosen, so the draft can begin
+            .-->
+            <div class="d-flex flex-column">
+                <!-- Table containing the Auto generated Draft Tiers -->
+                <div id="DraftTierList" style="background-color: #1A1A1A; margin: 30px auto 30px auto">
+                    <table>
+                        @foreach (DraftGrouping draftGrouping in DraftGroupings) {
+                            <tr class="flex-container" style="border: 3px solid black;">
+                                <td class="draft-label-holder">
+                                    <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: auto; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
+                                </td>
+
+                                <td style="height: 64px;">
+                                        <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
+                                    <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                                        <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
+                                    </Dropzone>
+                                </td>
+                                <td class="TierFunctionButtons">
+                                    <div class="d-flex flex-row">
+                                        <div class="d-flex flex-column">
+                                            <input type="button" class="arrowUp" @onclick="(() => MoveUp(draftGrouping))"/>
+                                            <input type="button" class="arrowDown" @onclick="(() => MoveDown(draftGrouping))"/>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <input type="button" class="plus" @onclick="(() => AddGroupingBelow(draftGrouping))" />
+                                            <input type="button" class="minus" @onclick="(() => RemoveGrouping(draftGrouping))" />
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+
+                <!-- Other available characters -->
+                <div class="d-flex flex-row" style="margin: 10px auto 40px; width: 1024px;">
+                    <Dropzone Items="availableCharacters.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                        <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
+                    </Dropzone>
+                </div>
+
+                <!-- Some other Controlls and options -->
+                <input type="button" value="Commit changes" onclick="@(() => CommitChanges(false))" />
+                <span><input type="checkbox" @bind="AutoCommit" /> Automatic Commit</span>
+                <span><input type="checkbox" @bind="SuppressAutoRefresh" /> Suppress refreshes</span>
+                <input type="button" value="Manual refresh" onclick="@(() => refreshFromDraftState(false))" />
+                <input type="button" value="Take Screenshot" onclick="@(() => takeScreenshot())" />
+                <input type="button" value="Merge Lines per Participant" onclick="@(() => MergeForScreenshot())" />
+                <div class="d-flex flex-column" style="margin-top: 10px">
+                    <span><input type="checkbox" @bind="ExportIncludingParticipants" /> Include Participants <input type="button" value="Generate Tiermaker Code" onclick="@(() => ExportToTiermakerCode())"/></span>
+                    <span><textarea @bind="TiermakerCode" cols="50" rows="5"/></span>
+                </div>
+            </div>
+
+        }
+    }
+</div>
+
+@code {
+    private IDraftStateHolder DraftStateHolder { get; set; }
+    private User currentUser { get; set; }
+    private bool namesSet = false;
+    private Timer Timer;
+    // The Draft Groupings displayed to the user are always read from this local maps. These local values are ALWAYS clones, not references, from the ones in the Draft State.
+    // This is to facilitate the option to not auto-commit
+    private List<DraftGrouping> DraftGroupings = [];
+    private DraftGrouping availableCharacters;
+
+    private bool AutoCommit = true;
+    private bool SuppressAutoRefresh = false;
+    private string TiermakerCode;
+    private string EnteredParticipants;
+    [Parameter]
+    public string? draftId { get; set; }
+
+    private bool ExportIncludingParticipants = false;
+    private String? AdditionalTiers;
+
+    private String ChosenTierName;
+    private ModalDialog TierAdditionDialog;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            if (DraftStateHolder != null) {
+                // Automatically redirect to the lobby page at the end of the draft
+                if (DraftStateHolder.GetDraftState().FlowState == DraftFlowState.DRAFTING_FINISHED) {
+                    if (DraftStateHolder is Lobby) {
+                        NavigationManager.NavigateTo("/timer/lobby");
+                    } else {
+                        LeaveDraftLobby();
+                    }
+                    return;
+                }
+
+                // Subscribe to the Draft State, so that anytime changes are commited, the screen gets refreshed
+                DraftStateHolder.GetDraftState().Subscribe(this);
+            }
+            return;
+        }
+
+        if (draftId != null && Guid.TryParse(draftId, out Guid ParsedDraftId)) {
+            DraftStateHolder = DraftLobbyHolder.Instance.GetById(ParsedDraftId);
+        }
+
+        if (DraftStateHolder == null) {
+            // First try to find if the user is currently already in a lobby for determining the DraftStateHolder
+            DraftStateHolder = await getStoredLobby();
+            currentUser = await getStoredUser();
+            if (DraftStateHolder == null) {
+                // Next try to find a stored IndependentDraftStateHolder
+                DraftStateHolder = await GetStoredDraftLobby();
+                if (DraftStateHolder == null) {
+                    await BrowserStorage.DeleteAsync("DraftLobby");
+                    DraftStateHolder = DraftLobbyHolder.Instance.CreateDraftLobby();
+                    DraftStateHolder.GetDraftState().AdvanceState();
+                    await BrowserStorage.SetAsync("DraftLobby", DraftStateHolder.GetId());
+                }
+            }
+        }
+
+        refreshFromDraftState(false);
+        StateHasChanged();
+    }
+
+    public async void LeaveDraftLobby() {
+        await BrowserStorage.DeleteAsync("DraftLobby");
+        NavigationManager.NavigateTo("/timer");
+    }
+
+    /// <summary>
+    /// Get the LobbyId from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<Lobby?> getStoredLobby() {
+        var storedLobby = await BrowserStorage.GetAsync<Guid>("currentLobby");
+        Guid? currentLobbyId = storedLobby.Value;
+        if (currentLobbyId == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present,
+        // then remove the locally saved Lobby id and switch to the main page
+        return LobbyHolder.Instance.getLobby((Guid)currentLobbyId);
+    }
+
+    /// <summary>
+    /// Get the LobbyId from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<DraftLobby?> GetStoredDraftLobby() {
+        var storedDraftState = await BrowserStorage.GetAsync<Guid>("DraftLobby");
+        Guid? currentDraftStateId = storedDraftState.Value;
+        if (currentDraftStateId == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present,
+        // then remove the locally saved Lobby id and switch to the main page
+        return DraftLobbyHolder.Instance.GetById((Guid)currentDraftStateId);
+    }
+
+    /// <summary>
+    /// Get the User from the Local Storage
+    /// </summary>
+    /// <returns></returns>
+    private async Task<User?> getStoredUser() {
+        var storedUser = await BrowserStorage.GetAsync<Guid>("user");
+        Guid? currentUser = storedUser.Value;
+        if (currentUser == null) {
+            return null;
+        }
+
+        // if the data of the Locally stored lobby is no longer present,
+        // then remove the locally saved Lobby id and switch to the main page
+        return UserHolder.Instance.GetUserById((Guid)currentUser);
+    }
+
+    ///  <summary>
+    /// When user confirms the order, create the DraftGroupings
+    /// </summary>
+    private void ConfirmParticipants() {
+        if (EnteredParticipants == null || EnteredParticipants.Length == 0) {
+            DraftStateHolder.GetDraftState().FlowState = DraftFlowState.CHOOSE_GAME;
+        } else {
+            DraftStateHolder.GetDraftState().AdvanceState();
+            ((DraftLobby) DraftStateHolder).SetParticipants(new List<String>(EnteredParticipants.Split("\n")));
+        }
+        DraftStateHolder.GetDraftState().NotifySubscribers();
+    }
+
+    ///  <summary>
+    /// When user confirms the order, create the DraftGroupings
+    /// </summary>
+    private void ConfirmOrderRandomization() {
+        DraftStateHolder.GetDraftState().AdvanceState();
+    }
+
+    /// <summary>
+    /// Confirm the game selection, this resets the List of available characters AND all the already drafted characters
+    /// </summary>
+    private void ConfirmGameSelection() {
+        List<DraftCharacter> draftCharacters = [];
+        DraftStateHolder.GetDraftState().DraftGroupings = [];
+        HashSet<String> RowsToCreate = new HashSet<String>();
+
+        if (AdditionalTiers != null) {
+            RowsToCreate.UnionWith(AdditionalTiers.Split(","));
+        }
+
+        foreach (KeyValuePair<String, Boolean> game in DraftStateHolder.GetDraftState().ChosenGameDict) {
+            if (game.Value) {
+                DraftGrouping abc = DraftCharacterCache.DraftGroupings[game.Key];
+                draftCharacters.AddRange(abc.Characters);
+                if (AdditionalTiers == null || AdditionalTiers.Length == 0) {
+                    RowsToCreate.UnionWith(abc.AdditionalRowNames);
+                }
+            }
+        }
+
+        int i = 0;
+        foreach (String participant in DraftStateHolder.GetParticipants()) {
+            // First create basic 
+            String tierName = participant;
+            DraftGrouping grouping = new DraftGrouping(participant, participant);
+            grouping.IsPlayer = true;
+            grouping.Order = i++;
+            DraftStateHolder.GetDraftState().DraftGroupings.Add(tierName, grouping);
+
+            foreach (String s in RowsToCreate) {
+                tierName = participant + " - " + s;
+                grouping = new DraftGrouping(tierName, participant);
+                grouping.IsPlayer = true;
+                grouping.Order = i++;
+                DraftStateHolder.GetDraftState().DraftGroupings.Add(tierName, grouping);
+            }
+        }
+
+        if (DraftStateHolder.GetParticipants().Count == 0) {
+            DraftStateHolder.GetDraftState().DraftGroupings.Add("NEW", new DraftGrouping("NEW", "NEW"));
+        }
+
+        DraftStateHolder.GetDraftState().SetAvailableCharacters(draftCharacters);
+
+        // Remove all the Characters from the DraftGroupings where the game is not in the Selected Games
+        List<String> SelectedGameShortNames = DraftStateHolder.GetDraftState().ChosenGameDict.Where(pair => pair.Value == false).Select(pair => pair.Key).ToList();
+        foreach (DraftGrouping grouping in DraftStateHolder.GetDraftState().DraftGroupings.Values) {
+            grouping.Characters.RemoveAll(chara => SelectedGameShortNames.Contains(chara.InternalName.Split("-")[0]));
+        }
+
+        if (DraftStateHolder.GetDraftState().FlowState == DraftFlowState.CHOOSE_GAME) {
+            DraftStateHolder.GetDraftState().AdvanceState();
+        }
+    }
+
+    /// <summary>
+    /// Load the Tiermaker code, this shares the format with the original TierMaker
+    /// 
+    /// Always starts by fe==
+    /// 
+    /// Then following format:
+    /// TierName|ColorIndex (unused in this tool)|CharacterShortName|CharacterShortName|.....==
+    /// 
+    /// All Values are separated by |
+    /// A new Tier is started by an ==
+    /// 
+    /// </summary>
+    private void LoadTiermakerCode() {
+        if (!TiermakerCode.StartsWith("fe")) {
+            return;
+        }
+
+        // Example code: fe==Free|0|eng-6|eng-5==Banned|1|eng-7
+        // can ignore first FE== free
+        // After split by == so we have each tier in a separate string.
+        // Then split by |
+        // index = tier name, index = 1 color (can ignore), after character shortnames
+        String[] tiers = TiermakerCode.Substring(4).Split("==");
+        List<String> charactersToMove = [];
+
+        List<DraftGrouping> NewGroupings = [];
+
+        // Step 1:
+        // Unselect all games to reset available characters / groupings to empty
+        DraftStateHolder.GetDraftState().ResetSelectedGames();
+
+        // Step 2:
+        // Iterate through the tiers from the code in the and build up the pre-made tiers to add after the player tiers.
+        // Initially they are only added to a local list, not to the draft state, as we are reusing the code for selecting a game to load the available characters
+        // Additionally track a List of characters that must be removed from the available characters.
+        foreach (String tier in tiers) {
+            String[] Components = tier.Split("|");
+            DraftGrouping groupingToAdd = new DraftGrouping(Components[0], Components[0]);
+            NewGroupings.Add(groupingToAdd);
+            for (int i = 2; i < Components.Length; i++) {
+                String ShortName = Components[i];
+                String GameShortName = ShortName.Split("-")[0];
+                int CharacterIndex = int.Parse(ShortName.Split("-")[1]);
+
+                DraftStateHolder.GetDraftState().ChosenGameDict[GameShortName] = true;
+                charactersToMove.Add(ShortName);
+                groupingToAdd.Characters.Add(DraftCharacterCache.DraftGroupings[GameShortName].Characters[CharacterIndex]);
+            }
+        }
+
+        // Step 2:
+        // Trigger game selection logic again to build up available characters
+        ConfirmGameSelection();
+
+        // Step 3:
+        // After game selection logic, add the newly created groupings, and remove the characters contained within those groupings from the available characters
+        int NextIndex = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(dg => dg.Order).Max();
+        foreach (DraftGrouping draftGrouping in NewGroupings) {
+            NextIndex++;
+            draftGrouping.Order = NextIndex;
+            DraftStateHolder.GetDraftState().DraftGroupings.Add(draftGrouping.Name, draftGrouping);
+        }
+        DraftStateHolder.GetDraftState().AvailableCharacters.Characters.RemoveAll(dc => charactersToMove.Contains(dc.InternalName));
+        DraftStateHolder.GetDraftState().NotifySubscribers();
+        TiermakerCode = "";
+    }
+
+    /// <summary>
+    /// Export the current draft state as a tiermaker code to be copy pasted, 
+    /// </summary>
+    private void ExportToTiermakerCode() {
+        StringBuilder builder = new StringBuilder();
+        builder.Append("fe");
+        foreach (DraftGrouping grouping in DraftGroupings) {
+            // If user doesn't explicitly want to export the participants, just skip them.
+            if (grouping.IsPlayer && !ExportIncludingParticipants) {
+                continue;
+            }
+
+            builder.Append("==");
+            builder.Append(grouping.Name);
+            // Color unused, just always put 0
+            builder.Append("|0");
+            foreach (DraftCharacter chara in grouping.Characters) {
+                builder.Append("|").Append(chara.InternalName);
+            }
+
+        }
+
+        TiermakerCode = builder.ToString();
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Finalize the draft.
+    /// Advances the FlowState to the final state. Also copies the draft to the TimerData if the draft is for a Timer Lobby
+    /// </summary>
+    private async void FinishDraft() {
+        if (DraftStateHolder is Lobby) {
+            foreach (DraftGrouping dg in DraftStateHolder.GetDraftState().DraftGroupings.Values) {
+                Team? team = ((Lobby) DraftStateHolder).GetTeamByName(dg.InternalName);
+                if (dg.IsPlayer && team != null) {
+                    team.TimerData.DraftedCharacters.AddRange(dg.Characters);
+                }
+            }
+        }
+
+        DraftStateHolder.GetDraftState().AdvanceState();
+    }
+
+    /// <summary>
+    /// Commits the changes in the local representation of the 
+    /// </summary>
+    public void CommitChanges(bool automatic) {
+        if (automatic && !AutoCommit) {
+            return;
+        }
+        DraftStateHolder.GetDraftState().UpdateState(DraftGroupings, availableCharacters);
+    }
+
+    /// <summary>
+    /// reload the local state from the shared state, unless it's an automatic refresh and this an automatically triggered refresh by the DraftState subscription.
+    /// </summary>
+    public void refreshFromDraftState(bool automatic) {
+        InvokeAsync(() => {
+            if (automatic && SuppressAutoRefresh) {
+                return;
+            }
+
+            DraftGroupings = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(value => value.clone()).OrderBy(value => value.Order).ToList();
+            availableCharacters = DraftStateHolder.GetDraftState().AvailableCharacters.clone();
+            StateHasChanged();
+        });
+    }
+
+    ///  <summary>
+    /// When this object is disposed, unsubscribe from the DraftState
+    /// </summary>
+    public void Dispose() {
+        if (DraftStateHolder != null) {
+            DraftStateHolder.GetDraftState().Unsubscribe(this);
+        }
+    }
+
+    public async void GenerateInviteLink() {
+        String link = NavigationManager.BaseUri + "draft/" + DraftStateHolder.GetId() + "/";
+        // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
+        await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
+    }
+
+    public async void GenerateStreamLink() {
+        OBSDraftProcessConfiguration configuration = new();
+        configuration.DraftId = DraftStateHolder.GetId();
+        Guid configId = LinkConfigurationHolder.Instance.RegisterConfiguration(configuration);
+        String link = NavigationManager.BaseUri + "link/draft/process/" + configId + "/";
+        // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
+        await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
+    }
+
+
+    /// <summary>
+    /// Move the given Gruping up one spot
+    /// </summary>
+    /// <param name="GroupingToMove"></param>
+    public void MoveUp(DraftGrouping GroupingToMove) {
+        if (GroupingToMove.Order == 0) {
+            return;
+        }
+
+        // increase order for element above
+        foreach (DraftGrouping draftGroup in DraftStateHolder.GetDraftState().DraftGroupings.Values.Where(dg => dg.Order == GroupingToMove.Order - 1)) {
+            draftGroup.Order++;
+        }
+
+        // Decrease Order for this element
+        DraftStateHolder.GetDraftState().DraftGroupings[GroupingToMove.Name].Order--;
+        DraftStateHolder.GetDraftState().NotifySubscribers();
+    }
+
+    /// <summary>
+    /// Move the given Gruping down one spot
+    /// </summary>
+    /// <param name="GroupingToMove"></param>
+    public void MoveDown(DraftGrouping GroupingToMove) {
+        if (GroupingToMove.Order == DraftStateHolder.GetDraftState().DraftGroupings.Count()) {
+            return;
+        }
+
+        // decrease order for element below
+        foreach (DraftGrouping draftGroup in DraftStateHolder.GetDraftState().DraftGroupings.Values.Where(dg => dg.Order == GroupingToMove.Order + 1)) {
+            draftGroup.Order--;
+        }
+
+        // Increase Order for this element
+        DraftStateHolder.GetDraftState().DraftGroupings[GroupingToMove.Name].Order++;
+        DraftStateHolder.GetDraftState().NotifySubscribers();
+    }
+
+    public void RemoveGrouping(DraftGrouping GroupingToRemove) {
+        if (GroupingToRemove.IsPlayer || DraftStateHolder.GetDraftState().DraftGroupings.Count == 1) {
+            // Disallow removing participant tiers and the final tier if no participant
+            return;
+        }
+
+        // Remove the grouping, and align the order t
+        DraftStateHolder.GetDraftState().DraftGroupings.Remove(GroupingToRemove.Name);
+        foreach (DraftGrouping draftGroup in DraftStateHolder.GetDraftState().DraftGroupings.Values.Where(dg => dg.Order > GroupingToRemove.Order)) {
+            draftGroup.Order--;
+        }
+
+        // Make the characters that were in the tier available again
+        DraftStateHolder.GetDraftState().AvailableCharacters.Characters.AddRange(GroupingToRemove.Characters);
+        DraftStateHolder.GetDraftState().NotifySubscribers();
+    }
+
+    public void AddGroupingBelow(DraftGrouping GroupingToGoBelow) {
+        // increase order for groupings below by one more
+        foreach (DraftGrouping draftGroup in DraftStateHolder.GetDraftState().DraftGroupings.Values.Where(dg => dg.Order > GroupingToGoBelow.Order)) {
+            draftGroup.Order++;
+        }
+
+        // Get a new unique name
+        String TierName;
+        int i = 0;
+        while (true) {
+            TierName = "NEW"+ (i == 0 ? "" : " "+i);
+            if (!DraftStateHolder.GetDraftState().DraftGroupings.ContainsKey(TierName)) {
+                break;
+            }
+
+            i++;
+        }
+
+        // Create the new Grouping
+        DraftGrouping newGrouping = new DraftGrouping(TierName, TierName);
+        newGrouping.Order = GroupingToGoBelow.Order + 1;
+        DraftStateHolder.GetDraftState().DraftGroupings.Add(TierName, newGrouping);
+
+        DraftStateHolder.GetDraftState().NotifySubscribers();
+    }
+
+
+    private async void takeScreenshot() {
+        await JSRuntime.InvokeVoidAsync("window.takeScreenshot", "DraftTierList");
+    }
+
+    private void MergeForScreenshot() {
+        IOrderedEnumerable<DraftGrouping> SortedGroupings = DraftGroupings.Where(dg => dg.IsPlayer).OrderBy(dg => dg.Name);
+        DraftGrouping? Parent = null;
+        foreach (DraftGrouping draftGrouping in SortedGroupings) {
+            if (Parent == null || Parent.InternalName != draftGrouping.InternalName) {
+                Parent = draftGrouping;
+                continue;
+            }
+
+            Parent.Characters.AddRange(draftGrouping.Characters);
+            draftGrouping.Characters.Clear();
+
+            DraftGroupings.Remove(draftGrouping);
+            foreach (DraftGrouping draftGroup in DraftGroupings.Where(dg => dg.Order > draftGrouping.Order)) {
+                draftGroup.Order--;
+            }
+        }
+
+        StateHasChanged();
+    }
+}

@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="blazor-dragdrop" Version="2.6.1" />
+  </ItemGroup>
+
 </Project>
