@@ -5,10 +5,10 @@
 
 /*dropzone style style*/
 .plk-dd-dropzone {
-    width: 970px;
-    min-width: 960px;
+    width: 1045px;
+    min-width: 1045px;
     min-height: 64px;
-    display:flex;
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
 }

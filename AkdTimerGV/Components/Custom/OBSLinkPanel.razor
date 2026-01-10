@@ -123,7 +123,7 @@
         config.SlideShowSeconds = AllTeams ? SlideshowSeconds : 0;
         Guid configId = LinkConfigurationHolder.Instance.RegisterConfiguration(config);
 
-        String link = NavigationManager.BaseUri+"link/draft/overlay/"+Lobby.LobbyId+"/";
+        String link = NavigationManager.BaseUri+"link/draft/overlay/"+configId;
 
         // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
         await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);

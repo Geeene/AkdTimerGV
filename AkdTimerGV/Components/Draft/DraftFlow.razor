@@ -111,7 +111,7 @@
                                     <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: auto; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
                                 </td>
 
-                                <td style="width: 650px; height: 64px;">
+                                <td style="height: 64px;">
                                         <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
                                     <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
                                         <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>

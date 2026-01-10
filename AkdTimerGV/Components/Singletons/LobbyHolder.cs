@@ -16,7 +16,7 @@ public sealed class LobbyHolder {
     }
 
     private void CleanupLobbies() {
-        DateTime timeToConsider = DateTime.Now.AddDays(-2);
+        DateTime timeToConsider = DateTime.Now.AddDays(-1);
 
         foreach (var item in lobbies) {
             // Check for each lobby if it has been open for more than 2 days, and remove the lobby if it is. 

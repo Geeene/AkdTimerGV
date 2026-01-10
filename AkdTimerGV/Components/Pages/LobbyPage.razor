@@ -31,7 +31,7 @@
         </h6>
         <hr />
         <div class="flex-row d-flex justify-content-evenly w-100">
-            <div class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
+            <div id="TeamTimersPanel" class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
                 @if (Lobby.StartingPistolValue == 0) {
                     @* Panel showing the actual timers *@
                     @foreach (var team in Lobby.GetParticipatingTeams()) {
@@ -44,6 +44,8 @@
             <div>
                 <TeamTimerTable Lobby="@Lobby"/>
                 <span>Display draft: <input type="checkbox" @bind="DisplayDraft" /></span>
+                <br />
+                <input value="Take Screenshot" type="button" @onclick="takeScreenshot" />
             </div>
             @if (userIsHost()) {
                 <div class="Panel">
@@ -231,6 +233,10 @@
         String link = NavigationManager.BaseUri+"timer/lobby/"+Lobby.LobbyId+"/";
         // Don't worry about the name of the JS Function, I could not get it to work any other way. This is dogshit
         await JSRuntime.InvokeVoidAsync("copyToClipboard.ShowMsg", link);
+    }
+
+    private async void takeScreenshot() {
+        await JSRuntime.InvokeVoidAsync("window.takeScreenshot", "TeamTimersPanel");
     }
 
 }

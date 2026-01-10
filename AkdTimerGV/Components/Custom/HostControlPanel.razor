@@ -193,6 +193,7 @@
         // Some more cursed tech, adds a timer on this class, but also passes this class as a parameter into the timer.
         // The Objective is to every 0.1 seconds set the Starting Pistol value on the Lobby Object, 
         // so that each client is updated, and then once the timer is done, we dispose of it.
+        Lobby.Timer.Interval = 100;
         timer = new Timer(new TimerCallback(panel => {
             InvokeAsync(() => {
                 if (((HostControlPanel) panel).Lobby.StartingPistolValue <= 0.1) {
