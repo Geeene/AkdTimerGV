@@ -28,7 +28,7 @@
         @if (Lobby.StartingPistolValue == 0) {
             @if (TeamName == null) {
                 @foreach (Team team in Lobby.GetParticipatingTeams(CustomOrder)) {
-                    <TeamTimer @ref="TimerRef" Team="team" AllTeams="TimerReferences" DisplayDraft="@ShowDraft" />
+                    <TeamTimer Team="team" DisplayDraft="@ShowDraft" />
                 }
 
             } else {
@@ -56,12 +56,6 @@
     private String? CustomOrder { get; set; }
 
     private Lobby Lobby { get; set; }
-
-    private List<TeamTimer> TimerReferences = new List<TeamTimer>();
-    private TeamTimer TimerRef {
-        set { TimerReferences.Add(value); }
-    }
-
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {

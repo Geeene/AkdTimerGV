@@ -4,8 +4,8 @@
 <style>
     .teamTimerContainer {
         border: 1px solid black;
-        min-width: 320px;
-        height: 180px;
+        min-width: 325px;
+        min-height: 180px;
         display:flex;
         flex-direction:column;
         justify-content:space-between;
@@ -48,7 +48,7 @@
 
 </style>
 
-<div id="teamTimer-@Team.Name" class="teamTimerContainer fw-bold" style="margin:@(NoMargin ? "0px" : "5px"); order:@(AllTeams == null ? 1 : AllTeams.IndexOf(this))">
+<div id="teamTimer-@Team.Name" class="teamTimerContainer fw-bold" style="margin:@(NoMargin ? "0px" : "5px");">
     <h5>
         <i class="bi bi-arrow-left-circle moveTimerLeft" onclick="@(() => moveLeft())" />
         <span class="teamTimerTeamName">@Team.Name</span>
@@ -91,9 +91,9 @@
         }
     </div>
     @if (Team.TimerData.DraftedCharacters.Count >= 1 && DisplayDraft) {
-        <div class="d-flex flex-row" style="flex-wrap: wrap; max-width: 315px">
+        <div class="" style="max-width: 320px">
             @foreach (DraftCharacter character in Team.TimerData.DraftedCharacters) {
-                <div class="draft-character-image-small" style="background-image:url('@character.ImagePath') !important;" />
+                <div class="draft-character-image-small" style="background-image:url('@character.ImagePath') !important;float:left" />
             }
         </div>
     }
@@ -106,7 +106,7 @@
     public Team Team { get; set; }
 
     [Parameter]
-    public List<TeamTimer> AllTeams { get; set; }
+    public List<Team> AllTeams { get; set; } = [];
 
     [Parameter]
     public bool NoMargin { get; set; }
@@ -119,22 +119,22 @@
     }
 
     protected void moveLeft() {
-        int currentPosition = AllTeams.IndexOf(this);
+        int currentPosition = AllTeams.IndexOf(Team);
         if (currentPosition == 0) {
             return;
         }
-        TeamTimer temp = AllTeams[currentPosition - 1];
+        Team temp = AllTeams[currentPosition - 1];
         AllTeams[currentPosition - 1] = AllTeams[currentPosition];
         AllTeams[currentPosition] = temp;
     }
 
     protected void moveRight() {
-        int currentPosition = AllTeams.IndexOf(this);
+        int currentPosition = AllTeams.IndexOf(Team);
         if (currentPosition == AllTeams.Count() - 1) {
             return;
         }
 
-        TeamTimer temp = AllTeams[currentPosition + 1];
+        Team temp = AllTeams[currentPosition + 1];
         AllTeams[currentPosition + 1] = AllTeams[currentPosition];
         AllTeams[currentPosition] = temp;
     }

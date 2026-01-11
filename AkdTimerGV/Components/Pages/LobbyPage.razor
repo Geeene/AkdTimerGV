@@ -31,11 +31,13 @@
         </h6>
         <hr />
         <div class="flex-row d-flex justify-content-evenly w-100">
-            <div id="TeamTimersPanel" class="d-flex flex-row TeamTimersPanel flex-wrap" style="max-width: 800px">
+            <div id="TeamTimersPanel" class="TeamTimersPanel" style="max-width: 800px; display:block">
                 @if (Lobby.StartingPistolValue == 0) {
                     @* Panel showing the actual timers *@
-                    @foreach (var team in Lobby.GetParticipatingTeams()) {
-                        <TeamTimer @ref="TimerRef" Team="team" AllTeams="TimerReferences" DisplayDraft="@DisplayDraft"/>
+                    @foreach (var team in GetTimersToDisplay()) {
+                        <div style="float:left">
+                            <TeamTimer Team="team" AllTeams="TimerReferences" DisplayDraft="@DisplayDraft"/>
+                        </div>
                     }
                 } else {
                     <b style="font-size:100pt">@(String.Format("{0:0.##}", Lobby.StartingPistolValue))</b>
@@ -98,26 +100,30 @@
     protected User? currentUser;
     protected String? ChosenTeamName;
     private Timer Timer;
-    private List<TeamTimer> TimerReferences = new List<TeamTimer>();
+    private List<Team> TimerReferences = new List<Team>();
     private bool DisplayDraft = true;
-    private TeamTimer TimerRef {
-        set { TimerReferences.Add(value); }
-    }
-
+    
     /// <summary>
     /// Custom property getter used for encoding the order of timers into the OBS Link
     /// </summary>
     private String CustomOrder {
         get {
             String a = "";
-            foreach (TeamTimer timer in TimerReferences) {
+            foreach (Team timer in TimerReferences) {
                 if (TimerReferences.IndexOf(timer) != 0) {
                     a += "-";
                 }
-                a += timer.Team.Index;
+                a += timer.Index;
             }
             return a;
         }
+    }
+
+    private List<Team> GetTimersToDisplay() {
+        if (TimerReferences.Count != Lobby.GetParticipatingTeams().Count()) {
+            TimerReferences = Lobby.GetParticipatingTeams();
+        }
+        return TimerReferences;
     }
 
 

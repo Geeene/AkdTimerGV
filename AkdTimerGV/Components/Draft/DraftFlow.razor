@@ -194,8 +194,6 @@
                     return;
                 }
 
-                // Subscribe to the Draft State, so that anytime changes are commited, the screen gets refreshed
-                DraftStateHolder.GetDraftState().Subscribe(this);
             }
             return;
         }
@@ -219,6 +217,8 @@
                 }
             }
         }
+        // Subscribe to the Draft State, so that anytime changes are commited, the screen gets refreshed
+        DraftStateHolder.GetDraftState().Subscribe(this);
 
         refreshFromDraftState(false);
         StateHasChanged();
@@ -285,7 +285,9 @@
             DraftStateHolder.GetDraftState().FlowState = DraftFlowState.CHOOSE_GAME;
         } else {
             DraftStateHolder.GetDraftState().AdvanceState();
-            ((DraftLobby) DraftStateHolder).SetParticipants(new List<String>(EnteredParticipants.Split("\n")));
+            List<String> enteredParticipants = new List<String>(EnteredParticipants.Split("\n"));
+            enteredParticipants.RemoveAll(p => "".Equals(p));
+            ((DraftLobby) DraftStateHolder).SetParticipants(enteredParticipants);
         }
         DraftStateHolder.GetDraftState().NotifySubscribers();
     }
@@ -320,7 +322,7 @@
         }
 
         int i = 0;
-        foreach (String participant in DraftStateHolder.GetParticipants()) {
+        foreach (String participant in DraftStateHolder.GetDraftState().RandomizedDraftOrder) {
             // First create basic 
             String tierName = participant;
             DraftGrouping grouping = new DraftGrouping(participant, participant);
