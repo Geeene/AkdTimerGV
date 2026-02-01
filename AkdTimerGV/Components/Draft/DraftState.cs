@@ -43,16 +43,28 @@ namespace AkdTimerGV.Components.Draft {
         public DateTime LastChange = DateTime.Now;
 
         /// <summary>
+        /// If Auction Mode is enabled
+        /// </summary>
+        public bool AuctionMode { get; set; } = false;
+
+        /// <summary>
+        /// Current Nomination for Auction Mode
+        /// </summary>
+        public DraftGrouping Nomination { get; set; } = new DraftGrouping("Nomination", "Nomination");
+
+        /// <summary>
         /// Update the State for the given Groupings
         /// </summary>
         /// <param name="draftGrouping"></param>
         /// <param name="AvailableCharacters"></param>
-        public void UpdateState(List<DraftGrouping> draftGroupings, DraftGrouping AvailableCharacters) {
+        public void UpdateState(List<DraftGrouping> draftGroupings, DraftGrouping AvailableCharacters, DraftGrouping Nomination) {
             this.AvailableCharacters = AvailableCharacters.clone();
             DraftGroupings.Clear();
             foreach (DraftGrouping grouping in draftGroupings) {
                 DraftGroupings[grouping.Name] = grouping.clone();
+                DraftGroupings[grouping.Name].RecalculateAuctionCost();
             }
+            this.Nomination = Nomination;
             NotifySubscribers();
         }
 
@@ -85,7 +97,7 @@ namespace AkdTimerGV.Components.Draft {
         /// </summary>
         /// <param name="NewCharacters"></param>
         public void SetAvailableCharacters(IEnumerable<DraftCharacter> NewCharacters) { 
-            AvailableCharacters.Characters = new List<DraftCharacter>(NewCharacters);
+            AvailableCharacters.Characters = new List<DraftCharacter>(NewCharacters.Select(chara => new DraftCharacter(chara.InternalName, chara.ImagePath)));
             NotifySubscribers();
         }
 
@@ -129,6 +141,7 @@ namespace AkdTimerGV.Components.Draft {
             DraftGroupings = [];
             ResetSelectedGames();
             RandomizedDraftOrder = [];
+            AuctionMode = false;
             NotifySubscribers();
         }
 

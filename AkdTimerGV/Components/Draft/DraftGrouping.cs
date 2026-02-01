@@ -45,6 +45,11 @@
         public List<String> AdditionalRowNames { get; set; } = [];
 
         /// <summary>
+        /// Remaining Amount for the Auction
+        /// </summary>
+        public int RemainingAuctionCurrency { get; set; } = 100;
+
+        /// <summary>
         /// Clone this Draft Grouping
         /// </summary>
         public DraftGrouping clone() {
@@ -52,8 +57,12 @@
             clone.Characters = new List<DraftCharacter>(Characters);
             clone.IsPlayer = this.IsPlayer;
             clone.Order = this.Order;
+            clone.RemainingAuctionCurrency = this.RemainingAuctionCurrency;
             return clone;
         }
-        
+
+        public void RecalculateAuctionCost() {
+            RemainingAuctionCurrency = 100 - Characters.Select(chara => chara.AuctionCost).Sum();
+        }
     }
 }

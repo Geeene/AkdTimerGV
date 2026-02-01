@@ -5,6 +5,15 @@
 
 /*dropzone style style*/
 .plk-dd-dropzone {
+    width: 700px;
+    min-width: 700px;
+    min-height: 64px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.plk-dd-dropzone-available-chars {
     width: 1045px;
     min-width: 1045px;
     min-height: 64px;
@@ -116,6 +125,22 @@
 
 .draft-character-image {
     height: 64px;
+    width: 64px;
+    background-position: center bottom !important;
+    background-size: contain !important;
+    background-repeat: no-repeat;
+}
+
+.draft-character-image-nomination {
+    height: 64px;
+    width: 64px;
+    background-position: center bottom !important;
+    background-size: cover !important;
+    background-repeat: no-repeat;
+}
+
+.draft-character-image-auction {
+    height: 100px;
     width: 64px;
     background-position: center bottom !important;
     background-size: contain !important;

@@ -24,7 +24,7 @@
 
     } else {
         <div style="width: 100%; margin-bottom: 20px;">
-            <input type="button" value="Reset Drafting Process" onclick="@(() => DraftStateHolder.Reset())" />
+            <input type="button" value="Reset Drafting Process" onclick="@(() => DraftStateHolder.GetDraftState().Reset())" />
             <input type="button" value="Copy Stream link" onclick="@(() => GenerateStreamLink())" />
             @if (DraftStateHolder is DraftLobby) {
                 <input type="button" value="Copy invite link" onclick="@(() => GenerateInviteLink())"/>
@@ -74,6 +74,7 @@
             <span>Choose games to add</span>
             <hr />
             <span>Additional Rows per Participant (comma separated): <input type="text" @bind="AdditionalTiers" /></span>
+            <span>Auction Mode: <input type="checkbox" @bind="AuctionMode" value="Auction Mode"/></span>
             <hr />
 
 
@@ -99,9 +100,24 @@
 
         } else if (DraftFlowState.DRAFTING_STARTED == DraftStateHolder.GetDraftState().FlowState) {
             <!--
-                Fourth State, the games have been chosen, so the draft can begin
+            Fourth State, the games have been chosen, so the draft can begin
             .-->
             <div class="d-flex flex-column">
+
+                @if (DraftStateHolder.GetDraftState().AuctionMode) {
+                    <div id="CurrentNomination">
+                        <Dropzone Items="nomination.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                            <ChildContent>
+                                <div style="align-self:">
+                                    Nomination
+                                    <div class="draft-character-image-nomination" style="background-image:url('@context.ImagePath')"/>
+                                </div>
+                                    
+                            </ChildContent>
+                        </Dropzone>
+                    </div>
+                }
+
                 <!-- Table containing the Auto generated Draft Tiers -->
                 <div id="DraftTierList" style="background-color: #1A1A1A; margin: 30px auto 30px auto">
                     <table>
@@ -114,11 +130,23 @@
                                 <td style="height: 64px;">
                                         <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
                                     <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
-                                        <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
+                                        <ChildContent>
+                                            <div class="@(DraftStateHolder.GetDraftState().AuctionMode ? "draft-character-image-auction" : "draft-character-image")">
+                                                @if (DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer) {
+                                                    <input @bind="@context.AuctionCost" @bind:after="(() => draftGrouping.RecalculateAuctionCost())" style="background-color: transparent; border-color:transparent;" />
+                                                }
+                                                <div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" />
+                                            </div>
+                                        </ChildContent>
                                     </Dropzone>
                                 </td>
                                 <td class="TierFunctionButtons">
                                     <div class="d-flex flex-row">
+                                        @if (DraftStateHolder.GetDraftState().AuctionMode) {
+                                            <div class="d-flex flex-column">
+                                                @draftGrouping.RemainingAuctionCurrency
+                                            </div>
+                                        }
                                         <div class="d-flex flex-column">
                                             <input type="button" class="arrowUp" @onclick="(() => MoveUp(draftGrouping))"/>
                                             <input type="button" class="arrowDown" @onclick="(() => MoveDown(draftGrouping))"/>
@@ -136,7 +164,7 @@
 
                 <!-- Other available characters -->
                 <div class="d-flex flex-row" style="margin: 10px auto 40px; width: 1024px;">
-                    <Dropzone Items="availableCharacters.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                    <Dropzone Class="plk-dd-dropzone-available-chars" Items="availableCharacters.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
                         <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
                     </Dropzone>
                 </div>
@@ -167,6 +195,7 @@
     // This is to facilitate the option to not auto-commit
     private List<DraftGrouping> DraftGroupings = [];
     private DraftGrouping availableCharacters;
+    private DraftGrouping nomination;
 
     private bool AutoCommit = true;
     private bool SuppressAutoRefresh = false;
@@ -177,6 +206,7 @@
 
     private bool ExportIncludingParticipants = false;
     private String? AdditionalTiers;
+    private bool AuctionMode { get; set; } = false;
 
     private String ChosenTierName;
     private ModalDialog TierAdditionDialog;
@@ -344,6 +374,7 @@
         }
 
         DraftStateHolder.GetDraftState().SetAvailableCharacters(draftCharacters);
+        DraftStateHolder.GetDraftState().AuctionMode = AuctionMode;
 
         // Remove all the Characters from the DraftGroupings where the game is not in the Selected Games
         List<String> SelectedGameShortNames = DraftStateHolder.GetDraftState().ChosenGameDict.Where(pair => pair.Value == false).Select(pair => pair.Key).ToList();
@@ -473,7 +504,7 @@
         if (automatic && !AutoCommit) {
             return;
         }
-        DraftStateHolder.GetDraftState().UpdateState(DraftGroupings, availableCharacters);
+        DraftStateHolder.GetDraftState().UpdateState(DraftGroupings, availableCharacters, nomination);
     }
 
     /// <summary>
@@ -487,6 +518,7 @@
 
             DraftGroupings = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(value => value.clone()).OrderBy(value => value.Order).ToList();
             availableCharacters = DraftStateHolder.GetDraftState().AvailableCharacters.clone();
+            nomination = DraftStateHolder.GetDraftState().Nomination.clone();
             StateHasChanged();
         });
     }
@@ -622,4 +654,5 @@
 
         StateHasChanged();
     }
+
 }

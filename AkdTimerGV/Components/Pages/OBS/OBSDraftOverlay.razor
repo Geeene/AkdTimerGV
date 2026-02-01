@@ -71,7 +71,6 @@
 
 
     // Needed for Slideshow mode
-    [Parameter]
     public int SlideshowSeconds { get; set; }
     private Timer Timer;
 
@@ -90,6 +89,7 @@
         Lobby = LobbyHolder.Instance.getLobby(configuration.LobbyId);
         TeamId = configuration.TeamId;
         Orientation = configuration.Orientation;
+        SlideshowSeconds = configuration.SlideShowSeconds;
 
         if (TeamId != null) {
             Teams.Add(Lobby.GetTeamByTeamId((Guid) TeamId));

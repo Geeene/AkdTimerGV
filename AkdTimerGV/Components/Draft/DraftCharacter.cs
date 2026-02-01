@@ -17,5 +17,10 @@
         /// Image path of where to find the picture to display
         /// </summary>
         public String ImagePath { get; } = ImagePath;
+
+        /// <summary>
+        /// Auction Cost
+        /// </summary>
+        public int AuctionCost { get; set; } = 0;
     }
 }
