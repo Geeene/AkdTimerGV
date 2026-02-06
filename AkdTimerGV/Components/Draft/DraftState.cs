@@ -139,6 +139,7 @@ namespace AkdTimerGV.Components.Draft {
         public void Reset() {
             FlowState = InitialFlowState;
             DraftGroupings = [];
+            Nomination = new DraftGrouping("Nomination", "Nomination");
             ResetSelectedGames();
             RandomizedDraftOrder = [];
             AuctionMode = false;

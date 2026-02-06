@@ -103,18 +103,27 @@
             Fourth State, the games have been chosen, so the draft can begin
             .-->
             <div class="d-flex flex-column">
-
                 @if (DraftStateHolder.GetDraftState().AuctionMode) {
-                    <div id="CurrentNomination">
-                        <Dropzone Items="nomination.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
-                            <ChildContent>
-                                <div style="align-self:">
-                                    Nomination
+                    <div class="d-flex flex-row" style="justify-content:center">
+                        <div id="CurrentNomination">
+                            <h4>Nomination</h4>
+                            <Dropzone class="NominationPedastal" Items="nomination.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                                <ChildContent>
                                     <div class="draft-character-image-nomination" style="background-image:url('@context.ImagePath')"/>
-                                </div>
-                                    
-                            </ChildContent>
-                        </Dropzone>
+                                </ChildContent>
+                            </Dropzone>
+                        </div>
+
+                        <div>
+                            <InputSelect name="RandomNominationelect" class="dropdown btn btn-dark dropdown-toggle" style="border:var(--bs-border-width) solid var(--bs-border-color);" @bind-value="SelectedRandomNominationTier">
+                                @foreach (var grouping in DraftGroupings)
+                                {
+                                    <option value="Available">Available</option>
+                                    <option value="@grouping.Name">@grouping.Name</option>
+                                }
+                            </InputSelect>
+                            <input type="button" value="Nominate randomly" @onclick="(() => RandomNomination())" />
+                        </div>
                     </div>
                 }
 
@@ -209,6 +218,7 @@
     private bool AuctionMode { get; set; } = false;
 
     private String ChosenTierName;
+    private String SelectedRandomNominationTier = "Available";
     private ModalDialog TierAdditionDialog;
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
@@ -653,6 +663,21 @@
         }
 
         StateHasChanged();
+    }
+
+    public void RandomNomination() {
+
+        if (nomination.Characters.Count() > 0) {
+            return;
+        }
+
+
+        DraftGrouping GroupingToTakeFrom = SelectedRandomNominationTier == "Available" ? availableCharacters : DraftGroupings.Where(grouping => grouping.Name == SelectedRandomNominationTier).First();
+        int RandomIndex = Random.Shared.Next(GroupingToTakeFrom.Characters.Count());
+        DraftCharacter NewNomination = GroupingToTakeFrom.Characters[RandomIndex];
+        GroupingToTakeFrom.Characters.Remove(NewNomination);
+        nomination.Characters.Add(NewNomination);
+        CommitChanges(true);
     }
 
 }

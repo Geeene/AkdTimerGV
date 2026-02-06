@@ -132,8 +132,8 @@
 }
 
 .draft-character-image-nomination {
-    height: 64px;
-    width: 64px;
+    height: 80px;
+    width: 80px;
     background-position: center bottom !important;
     background-size: cover !important;
     background-repeat: no-repeat;
@@ -213,4 +213,16 @@
 
 .draft-label-holder textarea:disabled {
     color: #FBFBFE;
+}
+
+.NominationPedastal {
+    width: 64px;
+    min-width: 64px;
+}
+
+#CurrentNomination {
+    align-self: center;
+    border: 2px solid lightgray;
+    padding: 25px;
+    align-content: center
 }
