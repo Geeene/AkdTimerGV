@@ -70,7 +70,7 @@
             <!-- 
                 Third State, Draft Order has been decided, Let the users choose the games to add to the draft, either via checkboxes, or via the tiermaker code system.
                 It's fully compatible with the code system from the FE Tier Maker
-            .-->
+            -->
             <span>Choose games to add</span>
             <hr />
             <span>Additional Rows per Participant (comma separated): <input type="text" @bind="AdditionalTiers" /></span>
@@ -141,8 +141,11 @@
                                     <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
                                         <ChildContent>
                                             <div class="@(DraftStateHolder.GetDraftState().AuctionMode ? "draft-character-image-auction" : "draft-character-image")">
-                                                @if (DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer) {
-                                                    <input @bind="@context.AuctionCost" @bind:after="(() => draftGrouping.RecalculateAuctionCost())" style="background-color: transparent; border-color:transparent;" />
+                                                @if (draftGrouping.IsPlayer && DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer) {
+                                                    <input @bind="@context.AuctionCost" @bind:after="(() => {
+                                                        draftGrouping.RecalculateAuctionCost(); 
+                                                        CommitChanges(true);
+                                                    })" style="background-color: transparent; border-color:transparent;" />
                                                 }
                                                 <div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" />
                                             </div>
@@ -151,7 +154,7 @@
                                 </td>
                                 <td class="TierFunctionButtons">
                                     <div class="d-flex flex-row">
-                                        @if (DraftStateHolder.GetDraftState().AuctionMode) {
+                                        @if (draftGrouping.IsPlayer && DraftStateHolder.GetDraftState().AuctionMode) {
                                             <div class="d-flex flex-column">
                                                 @draftGrouping.RemainingAuctionCurrency
                                             </div>
@@ -205,6 +208,7 @@
     private List<DraftGrouping> DraftGroupings = [];
     private DraftGrouping availableCharacters;
     private DraftGrouping nomination;
+    private int StateCounter;
 
     private bool AutoCommit = true;
     private bool SuppressAutoRefresh = false;
@@ -496,10 +500,18 @@
     /// </summary>
     private async void FinishDraft() {
         if (DraftStateHolder is Lobby) {
+            int LargestTeamSize = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(dg => dg.Characters.Count).Max();
+
             foreach (DraftGrouping dg in DraftStateHolder.GetDraftState().DraftGroupings.Values) {
-                Team? team = ((Lobby) DraftStateHolder).GetTeamByName(dg.InternalName);
+                Team? team = ((Lobby)DraftStateHolder).GetTeamByName(dg.InternalName);
                 if (dg.IsPlayer && team != null) {
                     team.TimerData.DraftedCharacters.AddRange(dg.Characters);
+                }
+
+                // It's pretty ugly to have differently formatted timers when displaying draft in timer if there 
+                // is an uneven number of Drafted Units. To avoid this, just fill each team to the same size with empty images
+                while (team.TimerData.DraftedCharacters.Count < LargestTeamSize) {
+                    team.TimerData.DraftedCharacters.Add(new DraftCharacter("Transparent", ""));
                 }
             }
         }
@@ -514,6 +526,13 @@
         if (automatic && !AutoCommit) {
             return;
         }
+
+        if (StateCounter != DraftStateHolder.GetDraftState().StateCounter) {
+            Logger.LogInformation("User tried to commit an action, but meanwhile the state has changed, force refresh the ");
+            refreshFromDraftState(false);
+            return;
+        }
+
         DraftStateHolder.GetDraftState().UpdateState(DraftGroupings, availableCharacters, nomination);
     }
 

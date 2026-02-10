@@ -52,6 +52,8 @@ namespace AkdTimerGV.Components.Draft {
         /// </summary>
         public DraftGrouping Nomination { get; set; } = new DraftGrouping("Nomination", "Nomination");
 
+        public int StateCounter { get; set; } = 0;
+
         /// <summary>
         /// Update the State for the given Groupings
         /// </summary>
@@ -65,6 +67,7 @@ namespace AkdTimerGV.Components.Draft {
                 DraftGroupings[grouping.Name].RecalculateAuctionCost();
             }
             this.Nomination = Nomination;
+            StateCounter++;
             NotifySubscribers();
         }
 
