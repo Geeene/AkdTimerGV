@@ -548,6 +548,7 @@
             DraftGroupings = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(value => value.clone()).OrderBy(value => value.Order).ToList();
             availableCharacters = DraftStateHolder.GetDraftState().AvailableCharacters.clone();
             nomination = DraftStateHolder.GetDraftState().Nomination.clone();
+            StateCounter = DraftStateHolder.GetDraftState().StateCounter;
             StateHasChanged();
         });
     }

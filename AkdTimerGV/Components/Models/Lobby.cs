@@ -179,7 +179,7 @@ namespace AkdTimerGV.Components.Models {
             if (teamToRemoveFrom != null) {
                 bool isSpectator = !teamToRemoveFrom.Participating;
                 teamToRemoveFrom.RemoveMember(user);
-                if (teamToRemoveFrom.members.Count == 0 && !isSpectator) {
+                if (teamToRemoveFrom.members.Count == 0 && !isSpectator && teamToRemoveFrom.TimerData.GetElapsedActiveTime() == 0) {
                     this.Teams.Remove(teamToRemoveFrom.TeamId);
                 }
             }
