@@ -4,6 +4,7 @@
 @using AkdTimerGV.Components.Models
 @using AkdTimerGV.Components.Custom
 @using AkdTimerGV.Components.Draft
+@using Microsoft.AspNetCore.Components.Server.Circuits
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using System.Timers
 @using static AkdTimerGV.Components.Custom.TeamList
@@ -12,6 +13,7 @@
 @inject NavigationManager NavigationManager;
 @inject ILogger<Home> Logger
 @inject IJSRuntime JSRuntime
+@implements IDisposable
 
 <style>
     .TeamTimersPanel {
@@ -102,7 +104,7 @@
     private Timer Timer;
     private List<Team> TimerReferences = new List<Team>();
     private bool DisplayDraft = true;
-    
+
     /// <summary>
     /// Custom property getter used for encoding the order of timers into the OBS Link
     /// </summary>
@@ -243,6 +245,12 @@
 
     private async void takeScreenshot() {
         await JSRuntime.InvokeVoidAsync("window.takeScreenshot", "TeamTimersPanel");
+    }
+
+    public void Dispose() {
+        if (Lobby != null) {
+            Lobby.Timer.Elapsed -= ((source, e) => NotifyStateHasChanged());
+        }
     }
 
 }

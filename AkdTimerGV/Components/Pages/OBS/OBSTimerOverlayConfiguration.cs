@@ -1,5 +1,5 @@
 ﻿namespace AkdTimerGV.Components.Pages.OBS {
-    public class OBSTimerOverlayConfiguration {
+    public class OBSTimerOverlayConfiguration : AbstractLinkConfiguration {
         public Guid LobbyId { get; set; }
         public Guid? TeamName { get; set; }
         public bool DisplayTable {  get; set; }
