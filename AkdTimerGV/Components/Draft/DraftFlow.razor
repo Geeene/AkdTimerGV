@@ -138,7 +138,7 @@
 
                                 <td style="height: 64px;">
                                         <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
-                                    <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                                    <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" DragStart="@((t) => DragActive = true)" DragEnd="@((t) => DragActive = false)">
                                         <ChildContent>
                                             <div class="@(DraftStateHolder.GetDraftState().AuctionMode ? "draft-character-image-auction" : "draft-character-image")">
                                                 @if (draftGrouping.IsPlayer && DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer) {
@@ -176,7 +176,8 @@
 
                 <!-- Other available characters -->
                 <div class="d-flex flex-row" style="margin: 10px auto 40px; width: 1024px;">
-                    <Dropzone Class="plk-dd-dropzone-available-chars" Items="availableCharacters.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
+                    <Dropzone Class="plk-dd-dropzone-available-chars" Items="availableCharacters.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" 
+                        DragStart="@((t) => DragActive = true)" DragEnd="@((t) => DragActive = false)">
                         <ChildContent><div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" /></ChildContent>
                     </Dropzone>
                 </div>
@@ -224,6 +225,8 @@
     private String ChosenTierName;
     private String SelectedRandomNominationTier = "Available";
     private ModalDialog TierAdditionDialog;
+    private bool DragActive = false;
+    private bool InterruptCommit = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (!firstRender) {
@@ -527,8 +530,9 @@
             return;
         }
 
-        if (StateCounter != DraftStateHolder.GetDraftState().StateCounter) {
-            Logger.LogInformation("User tried to commit an action, but meanwhile the state has changed, force refresh the ");
+        if (StateCounter != DraftStateHolder.GetDraftState().StateCounter || InterruptCommit) {
+            Logger.LogInformation("User tried to commit an action, but meanwhile the state has changed, force refresh the page instead");
+            InterruptCommit = false;
             refreshFromDraftState(false);
             return;
         }
@@ -549,6 +553,7 @@
             availableCharacters = DraftStateHolder.GetDraftState().AvailableCharacters.clone();
             nomination = DraftStateHolder.GetDraftState().Nomination.clone();
             StateCounter = DraftStateHolder.GetDraftState().StateCounter;
+            InterruptCommit = DragActive;
             StateHasChanged();
         });
     }

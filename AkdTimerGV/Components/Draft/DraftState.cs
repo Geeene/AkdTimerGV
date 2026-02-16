@@ -67,7 +67,6 @@ namespace AkdTimerGV.Components.Draft {
                 DraftGroupings[grouping.Name].RecalculateAuctionCost();
             }
             this.Nomination = Nomination;
-            StateCounter++;
             NotifySubscribers();
         }
 
