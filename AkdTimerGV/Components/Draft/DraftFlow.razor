@@ -105,17 +105,21 @@
             <div class="d-flex flex-column">
                 @if (DraftStateHolder.GetDraftState().AuctionMode) {
                     <div class="d-flex flex-row" style="justify-content:center">
-                        <div id="CurrentNomination">
+                        <div class="d-flex flex-column">
+
                             <h4>Nomination</h4>
-                            <Dropzone class="NominationPedastal" Items="nomination.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))">
-                                <ChildContent>
-                                    <div class="draft-character-image-nomination" style="background-image:url('@context.ImagePath')"/>
-                                </ChildContent>
-                            </Dropzone>
+                            <div id="CurrentNomination">
+                                <Dropzone class="NominationPedastal" Items="nomination.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))"
+                                 DragStart="@((t) => DragActive = true)">
+                                    <ChildContent>
+                                        <div class="draft-character-image-nomination" style="background-image:url('@context.ImagePath'); background-position:center;"/>
+                                    </ChildContent>
+                                </Dropzone>
+                            </div>
                         </div>
 
-                        <div>
-                            <InputSelect name="RandomNominationelect" class="dropdown btn btn-dark dropdown-toggle" style="border:var(--bs-border-width) solid var(--bs-border-color);" @bind-value="SelectedRandomNominationTier">
+                        <div style="margin-left: 50px;">
+                            <InputSelect name="RandomNominationSelect" class="dropdown btn btn-dark dropdown-toggle" style="border:var(--bs-border-width) solid var(--bs-border-color);" @bind-value="SelectedRandomNominationTier">
                                 @foreach (var grouping in DraftGroupings)
                                 {
                                     <option value="Available">Available</option>
@@ -140,25 +144,27 @@
                                         <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
                                     <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" DragStart="@((t) => DragActive = true)" DragEnd="@((t) => DragActive = false)">
                                         <ChildContent>
-                                            <div class="@(DraftStateHolder.GetDraftState().AuctionMode ? "draft-character-image-auction" : "draft-character-image")">
+                                            <div class="@(DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer ? "draft-character-image-auction" : "draft-character-image")">
                                                 @if (draftGrouping.IsPlayer && DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer) {
                                                     <input @bind="@context.AuctionCost" @bind:after="(() => {
                                                         draftGrouping.RecalculateAuctionCost(); 
                                                         CommitChanges(true);
-                                                    })" style="background-color: transparent; border-color:transparent;" />
+                                                    })" style="background-color: transparent; border-color:transparent; font-weight: bold" />
                                                 }
                                                 <div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" />
                                             </div>
                                         </ChildContent>
                                     </Dropzone>
                                 </td>
+                                <td>
+                                    @if (draftGrouping.IsPlayer && DraftStateHolder.GetDraftState().AuctionMode) {
+                                        <div class="d-flex flex-column" style="font-weight:bold; max-width:64px;">
+                                            @draftGrouping.RemainingAuctionCurrency
+                                        </div>
+                                    }
+                                </td>
                                 <td class="TierFunctionButtons">
                                     <div class="d-flex flex-row">
-                                        @if (draftGrouping.IsPlayer && DraftStateHolder.GetDraftState().AuctionMode) {
-                                            <div class="d-flex flex-column">
-                                                @draftGrouping.RemainingAuctionCurrency
-                                            </div>
-                                        }
                                         <div class="d-flex flex-column">
                                             <input type="button" class="arrowUp" @onclick="(() => MoveUp(draftGrouping))"/>
                                             <input type="button" class="arrowDown" @onclick="(() => MoveDown(draftGrouping))"/>
@@ -530,13 +536,13 @@
             return;
         }
 
+        DragActive = false;
         if (StateCounter != DraftStateHolder.GetDraftState().StateCounter || InterruptCommit) {
             Logger.LogInformation("User tried to commit an action, but meanwhile the state has changed, force refresh the page instead");
             InterruptCommit = false;
             refreshFromDraftState(false);
             return;
         }
-
         DraftStateHolder.GetDraftState().UpdateState(DraftGroupings, availableCharacters, nomination);
     }
 

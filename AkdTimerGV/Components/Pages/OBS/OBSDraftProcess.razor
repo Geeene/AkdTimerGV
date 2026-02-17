@@ -32,39 +32,47 @@
     } else if (DraftFlowState.DRAFTING_STARTED == DraftStateHolder.GetDraftState().FlowState) {
 
         @if (DraftStateHolder.GetDraftState().AuctionMode) {
-            <div class="d-flex flex-row" style="justify-content:center">
+            <div class="d-flex flex-column" style="justify-content:center; text-align:center">
+                <h4>Nomination</h4>
                 <div id="CurrentNomination">
-                    <h4>Nomination</h4>
                     <Dropzone class="NominationPedastal" Items="DraftStateHolder.GetDraftState().Nomination.Characters" TItem="DraftCharacter">
                         <ChildContent>
                             <div class="draft-character-image-nomination" style="background-image:url('@context.ImagePath')" />
                         </ChildContent>
                     </Dropzone>
                 </div>
+
             </div>
         }
 
         <!-- Table containing the Auto generated Draft Tiers -->
-        <div id="DraftTierList" style="background-color: #1A1A1A; width:max-content; max-width: 100vw">
-            <table style="width:100vw">
+        <div id="DraftTierList" style="background-color: #1A1A1A;">
+            <table>
                 @foreach (DraftGrouping draftGrouping in new List<DraftGrouping>(DraftStateHolder.GetDraftState().DraftGroupings.Values)) {
                     <tr class="flex-container" style="border: 3px solid black;">
                         <td class="draft-label-holder" style="width:10%">
-                            <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: auto; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
+                            <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: 200px; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
                         </td>
 
                         <td style="width: 650px; height: 64px;">
                             <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter">
                                 <ChildContent>
-                                    <div class="@(DraftStateHolder.GetDraftState().AuctionMode ? "draft-character-image-auction" : "draft-character-image")">
+                                    <div class="@(DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer ? "draft-character-image-auction" : "draft-character-image")">
                                         @if (DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer)
                                         {
-                                            <input @bind="@context.AuctionCost" @bind:after="(() => draftGrouping.RecalculateAuctionCost())" style="background-color: transparent; border-color:transparent;" />
+                                            <input @bind="@context.AuctionCost" @bind:after="(() => draftGrouping.RecalculateAuctionCost())" style="background-color: transparent; border-color:transparent; font-weight:bold" />
                                         }
                                         <div class="draft-character-image" style="background-image:url('@context.ImagePath') !important;" />
                                     </div>
                                 </ChildContent>
                             </Dropzone>
+                        </td>
+                        <td style="width: 64px;">
+                            @if (draftGrouping.IsPlayer && DraftStateHolder.GetDraftState().AuctionMode) {
+                                <div class="d-flex flex-column" style="font-weight:bold; max-width:64px;">
+                                    @draftGrouping.RemainingAuctionCurrency
+                                </div>
+                            }
                         </td>
                     </tr>
                 }

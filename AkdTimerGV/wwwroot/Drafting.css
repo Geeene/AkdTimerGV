@@ -132,10 +132,9 @@
 }
 
 .draft-character-image-nomination {
-    height: 80px;
-    width: 80px;
-    background-position: center bottom !important;
-    background-size: cover !important;
+    height: 120px;
+    width: 120px;
+    background-position: center;
     background-repeat: no-repeat;
 }
 
@@ -216,13 +215,14 @@
 }
 
 .NominationPedastal {
-    width: 64px;
-    min-width: 64px;
+    width: 120px;
+    min-width: 120px;
+    height: 120px;
 }
 
 #CurrentNomination {
     align-self: center;
     border: 2px solid lightgray;
-    padding: 25px;
-    align-content: center
+    align-content: center;
+    background-position:center;
 }
