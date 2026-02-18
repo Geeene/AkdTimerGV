@@ -52,7 +52,15 @@ namespace AkdTimerGV.Components.Draft {
         /// </summary>
         public DraftGrouping Nomination { get; set; } = new DraftGrouping("Nomination", "Nomination");
 
+        /// <summary>
+        /// State counter for deciding whether to reject an action by a user
+        /// </summary>
         public int StateCounter { get; set; } = 0;
+
+        /// <summary>
+        /// Utility for assigning the next Color from the default sequence
+        /// </summary>
+        public DraftGroupingColors DraftGroupingColors = new DraftGroupingColors();
 
         /// <summary>
         /// Update the State for the given Groupings
@@ -146,6 +154,7 @@ namespace AkdTimerGV.Components.Draft {
             RandomizedDraftOrder = [];
             AuctionMode = false;
             NotifySubscribers();
+            DraftGroupingColors = new DraftGroupingColors();
         }
 
         /// <summary>

@@ -112,7 +112,9 @@
                                 <Dropzone class="NominationPedastal" Items="nomination.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))"
                                  DragStart="@((t) => DragActive = true)">
                                     <ChildContent>
-                                        <div class="draft-character-image-nomination" style="background-image:url('@context.ImagePath'); background-position:center;"/>
+                                        <div class="draft-character-image-nomination">
+                                            <div class="draft-character-image-large" style="background-image:url('@context.ImagePath'); background-position:center;"/>
+                                        </div>
                                     </ChildContent>
                                 </Dropzone>
                             </div>
@@ -135,9 +137,10 @@
                 <div id="DraftTierList" style="background-color: #1A1A1A; margin: 30px auto 30px auto">
                     <table>
                         @foreach (DraftGrouping draftGrouping in DraftGroupings) {
-                            <tr class="flex-container" style="border: 3px solid black;">
-                                <td class="draft-label-holder">
-                                    <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: auto; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
+                            <tr class="flex-container" style="border: 5px solid black;">
+                                <td class="draft-label-holder" style="background-color: @draftGrouping.Color;">
+                                    <textarea style="border:none; background-color: @draftGrouping.Color; text-align: center; width: auto; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
+                                    <input class="ColorSelection" type="color" @bind="draftGrouping.Color" @bind:after="(() => CommitChanges(true))"/>
                                 </td>
 
                                 <td style="height: 64px;">
@@ -382,18 +385,23 @@
             grouping.IsPlayer = true;
             grouping.Order = i++;
             DraftStateHolder.GetDraftState().DraftGroupings.Add(tierName, grouping);
+            String Color = DraftStateHolder.GetDraftState().DraftGroupingColors.GetNextDefaultColor();
+            grouping.Color = Color;
 
             foreach (String s in RowsToCreate) {
                 tierName = participant + " - " + s;
                 grouping = new DraftGrouping(tierName, participant);
                 grouping.IsPlayer = true;
                 grouping.Order = i++;
+                grouping.Color = Color;
                 DraftStateHolder.GetDraftState().DraftGroupings.Add(tierName, grouping);
             }
         }
 
         if (DraftStateHolder.GetParticipants().Count == 0) {
-            DraftStateHolder.GetDraftState().DraftGroupings.Add("NEW", new DraftGrouping("NEW", "NEW"));
+            DraftGrouping DummyGrouping = new DraftGrouping("NEW", "NEW");
+            DraftStateHolder.GetDraftState().DraftGroupings.Add("NEW", DummyGrouping);
+            DummyGrouping.Color = DraftStateHolder.GetDraftState().DraftGroupingColors.GetNextDefaultColor();
         }
 
         DraftStateHolder.GetDraftState().SetAvailableCharacters(draftCharacters);
@@ -471,6 +479,7 @@
             NextIndex++;
             draftGrouping.Order = NextIndex;
             DraftStateHolder.GetDraftState().DraftGroupings.Add(draftGrouping.Name, draftGrouping);
+            draftGrouping.Color = DraftStateHolder.GetDraftState().DraftGroupingColors.GetNextDefaultColor();
         }
         DraftStateHolder.GetDraftState().AvailableCharacters.Characters.RemoveAll(dc => charactersToMove.Contains(dc.InternalName));
         DraftStateHolder.GetDraftState().NotifySubscribers();
@@ -665,6 +674,7 @@
         // Create the new Grouping
         DraftGrouping newGrouping = new DraftGrouping(TierName, TierName);
         newGrouping.Order = GroupingToGoBelow.Order + 1;
+        newGrouping.Color = DraftStateHolder.GetDraftState().DraftGroupingColors.GetNextDefaultColor();
         DraftStateHolder.GetDraftState().DraftGroupings.Add(TierName, newGrouping);
 
         DraftStateHolder.GetDraftState().NotifySubscribers();

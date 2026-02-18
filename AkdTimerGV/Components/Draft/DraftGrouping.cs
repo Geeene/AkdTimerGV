@@ -50,6 +50,11 @@
         public int RemainingAuctionCurrency { get; set; } = 100;
 
         /// <summary>
+        /// Hex Code for the Background color of the name plate
+        /// </summary>
+        public String Color { get; set; } = "#1A1A1A";
+
+        /// <summary>
         /// Clone this Draft Grouping
         /// </summary>
         public DraftGrouping clone() {
@@ -58,6 +63,7 @@
             clone.IsPlayer = this.IsPlayer;
             clone.Order = this.Order;
             clone.RemainingAuctionCurrency = this.RemainingAuctionCurrency;
+            clone.Color = this.Color;
             return clone;
         }
 
