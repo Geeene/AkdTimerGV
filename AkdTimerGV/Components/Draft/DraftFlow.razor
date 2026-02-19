@@ -524,13 +524,13 @@
                 Team? team = ((Lobby)DraftStateHolder).GetTeamByName(dg.InternalName);
                 if (dg.IsPlayer && team != null) {
                     team.TimerData.DraftedCharacters.AddRange(dg.Characters);
+                    // It's pretty ugly to have differently formatted timers when displaying draft in timer if there 
+                    // is an uneven number of Drafted Units. To avoid this, just fill each team to the same size with empty images
+                    while (team.TimerData.DraftedCharacters.Count < LargestTeamSize) {
+                        team.TimerData.DraftedCharacters.Add(new DraftCharacter("Transparent", ""));
+                    }
                 }
 
-                // It's pretty ugly to have differently formatted timers when displaying draft in timer if there 
-                // is an uneven number of Drafted Units. To avoid this, just fill each team to the same size with empty images
-                while (team.TimerData.DraftedCharacters.Count < LargestTeamSize) {
-                    team.TimerData.DraftedCharacters.Add(new DraftCharacter("Transparent", ""));
-                }
             }
         }
 
