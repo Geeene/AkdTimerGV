@@ -39,27 +39,27 @@ namespace AkdTimerGV.Components.Models {
         public DateTime? FinishTime { get; set; }
 
         /// <summary>
-        /// Total time in Seconds that the Team was actively running in SECONDS
+        /// Total that the Team was actively running in MILLISECONDS
         /// </summary>
-        private long ActiveSeconds { get; set; }
+        private long ActiveMilliseconds { get; set; }
 
         /// <summary>
-        /// how much of the break / penalty time has already been consumed in SECONDS
+        /// how much of the break / penalty time has already been consumed in MILLISECONDS
         /// </summary>
         public long ConsumedBreakTime { get; set; }
 
         /// <summary>
-        /// how much break time the team has in SECONDS
+        /// how much break time the team has in MILLISECONDS
         /// </summary>
         public long BreakTime { get; set; }
-        
+
         /// <summary>
-        /// How much penalty time the team has in SECONDS
+        /// How much penalty time the team has in MILLISECONDS
         /// </summary>
         public long PenaltyTime { get; set; }
 
         /// <summary>
-        /// How much time the team has from a previous session of the race in SECONDS
+        /// How much time the team has from a previous session of the race in MILLISECONDS
         /// </summary>
         public long PreviousTime { get; set; } = 0;
 
@@ -83,7 +83,7 @@ namespace AkdTimerGV.Components.Models {
 
             // Set makers for calculation
             StartCurrentBreak = DateTime.Now;
-            ActiveSeconds = GetElapsedActiveTime();
+            ActiveMilliseconds = GetElapsedActiveTime();
             Paused = true;
             StartTime = null;
         }
@@ -96,7 +96,7 @@ namespace AkdTimerGV.Components.Models {
                 return;
             }
             DateTime endOfBreak = DateTime.Now;
-            ConsumedBreakTime += ((long) endOfBreak.Subtract((DateTime) StartCurrentBreak).TotalSeconds);
+            ConsumedBreakTime += ((long) endOfBreak.Subtract((DateTime) StartCurrentBreak).TotalMilliseconds);
             Paused = false;
             StartCurrentBreak = null;
             StartTime = endOfBreak;
@@ -109,7 +109,7 @@ namespace AkdTimerGV.Components.Models {
         /// </summary>
         public long GetElapsedActiveTime() {
             if (!Active || Paused) {
-                return ActiveSeconds;
+                return ActiveMilliseconds;
             }
 
             if (StartTime == null) {
@@ -117,7 +117,7 @@ namespace AkdTimerGV.Components.Models {
             }
 
 
-            return ((long) DateTime.Now.Subtract((DateTime) StartTime).TotalSeconds) + ActiveSeconds + PreviousTime;
+            return ((long) DateTime.Now.Subtract((DateTime) StartTime).TotalMilliseconds) + ActiveMilliseconds + PreviousTime;
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace AkdTimerGV.Components.Models {
         public long GetRemainingExtraTime() {
             long CurrentConsumedBreakTime = ConsumedBreakTime;
             if (Paused) {
-                CurrentConsumedBreakTime += ((long)DateTime.Now.Subtract((DateTime) StartCurrentBreak).TotalSeconds);
+                CurrentConsumedBreakTime += ((long) DateTime.Now.Subtract((DateTime) StartCurrentBreak).TotalMilliseconds);
             }
             long remainingExtraTime = BreakTime - CurrentConsumedBreakTime;
             // If the timer is currently paused, and we just reached no remaining time, then end the break automatically
@@ -150,7 +150,7 @@ namespace AkdTimerGV.Components.Models {
         /// </summary>
         /// <param name="ActiveTimeToAdd"></param>
         public void AddActiveTime(long ActiveTimeToAdd) {
-            ActiveSeconds += ActiveTimeToAdd;
+            ActiveMilliseconds += ActiveTimeToAdd;
         }
 
         /// <summary>
@@ -190,8 +190,8 @@ namespace AkdTimerGV.Components.Models {
             StartTime = DateTime.Now;
             Active = true;
 
-            if (ActiveSeconds > 0 && PreviousTime > 0) {
-                ActiveSeconds -= PreviousTime;
+            if (ActiveMilliseconds > 0 && PreviousTime > 0) {
+                ActiveMilliseconds -= PreviousTime;
             }
         }
 
@@ -200,7 +200,7 @@ namespace AkdTimerGV.Components.Models {
         /// </summary>
         public void Finish() {
             EndBreak();
-            ActiveSeconds = GetElapsedActiveTime();
+            ActiveMilliseconds = GetElapsedActiveTime();
             Active = false;
             FinishTime = DateTime.Now;
         }
@@ -209,7 +209,7 @@ namespace AkdTimerGV.Components.Models {
         /// To be pressed when finishing the race
         /// </summary>
         public void UndoFinish() {
-            ActiveSeconds += ((long)DateTime.Now.Subtract((DateTime) FinishTime).TotalSeconds);
+            ActiveMilliseconds += ((long)DateTime.Now.Subtract((DateTime) FinishTime).TotalMilliseconds);
             Active = true;
             FinishTime = null;
         }
@@ -253,7 +253,7 @@ namespace AkdTimerGV.Components.Models {
         /// </summary>
         public void Reset() {
             Active = false;
-            ActiveSeconds = 0;
+            ActiveMilliseconds = 0;
             BreakTime = 0;
             PenaltyTime = 0;
             StartCurrentBreak = null;

@@ -112,6 +112,8 @@
         }
 
         ValueInSeconds *= multiplier;
+        // Convert to millis
+        ValueInSeconds *= 1000;
         foreach (TeamTimerData timer in TimerData()) {
             switch (TimerAdditionType) {
                 case TimerAdditionType.Active:

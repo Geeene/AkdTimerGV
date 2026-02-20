@@ -3,10 +3,11 @@
 namespace AkdTimerGV.Components.Models {
     public class TimeUtil {
 
-        public static String getTimeAsString(long timeAsLong) {
-            long numberSeconds = timeAsLong % 60;
+        public static String getTimeAsString(long timeInMillis) {
+            long timeInSeconds = timeInMillis / 1000;
+            long numberSeconds = timeInSeconds % 60;
 
-            long timeWithoutSeconds = timeAsLong - numberSeconds;
+            long timeWithoutSeconds = timeInSeconds - numberSeconds;
 
             long numberMinutes = (timeWithoutSeconds % (60 * 60)) / 60;
 
