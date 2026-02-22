@@ -65,7 +65,8 @@ namespace AkdTimerGV.Components.Models {
 
         private List<String> _Participants = [];
 
-        public Timer Timer = new Timer(100);
+        public Timer PeriodicalTimer = new Timer(100);
+        public Timer InstantRefreshTimer = CreateInstantRefreshTimer();
 
         public DateTime LastActivity = DateTime.Now;
 
@@ -222,6 +223,7 @@ namespace AkdTimerGV.Components.Models {
             foreach (var Team in GetParticipatingTeams()) {
                 Team.TimerData.Finish(true);
             }
+            TriggerInstantRefresh();
         }
 
         /// <summary>
@@ -232,13 +234,14 @@ namespace AkdTimerGV.Components.Models {
             foreach (var Team in GetParticipatingTeams()) {
                 Team.TimerData.Reset();
             }
+            TriggerInstantRefresh();
         }
 
         /// <summary>
         /// Sort all the tems by their final time (Active + Penalty, no break). Then their position into the Standings variable of the timer.
         /// </summary>
         /// <returns></returns>
-        public bool DetermineStandings() {
+        public void DetermineStandings() {
             List<Team> FinishedTeams = GetParticipatingTeams()
                 // Filter for teams that aren't active and have spent time playing
                 .Where(team => !team.TimerData.Active && !team.TimerData.dnf && team.TimerData.GetElapsedActiveTime() > 0)
@@ -254,7 +257,6 @@ namespace AkdTimerGV.Components.Models {
 
                 Teams[FinishedTeams[i].TeamId].TimerData.Standing = standing;
             }
-            return true;
         }
 
         /// <summary>
@@ -292,6 +294,28 @@ namespace AkdTimerGV.Components.Models {
 
         public Guid GetId() {
             return this.LobbyId;
+        }
+
+        /// <summary>
+        /// Creates a timer with Interval 1 (triggers right away) and only triggers once.
+        /// </summary>
+        /// <returns></returns>
+        private static Timer CreateInstantRefreshTimer() {
+            Timer instantRefresh = new Timer();
+            instantRefresh.AutoReset = false;
+            instantRefresh.Interval = 1;
+
+            return instantRefresh;
+        }
+
+        public void TriggerInstantRefresh() {
+            InstantRefreshTimer.Start();
+        }
+
+
+        public void Subscribe(ElapsedEventHandler handler) {
+            PeriodicalTimer.Elapsed += handler;
+            InstantRefreshTimer.Elapsed += handler;
         }
 
         public void Reset() {

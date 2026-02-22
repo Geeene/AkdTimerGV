@@ -72,7 +72,7 @@
         TeamName = configuration.TeamName;
         ShowDraft = configuration.ShowDraft;
         TransparentBackground = configuration.TransparentBackground;
-        Lobby.Timer.Elapsed += ((source, e) => NotifyStateHasChanged());
+        Lobby.PeriodicalTimer.Elapsed += ((source, e) => NotifyStateHasChanged());
     }
 
     private void NotifyStateHasChanged() {

@@ -74,7 +74,7 @@
 
             <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordion">
                 <div class="accordion-body">
-                    <AddToTimer Disabled="false" TimerAdditionType="@TimerAdditionType.Break" TimerData="@(() => GetRelevantTimerData())" />
+                    <AddToTimer Lobby="@Lobby" Disabled="false" TimerAdditionType="@TimerAdditionType.Break" TimerData="@(() => GetRelevantTimerData())" />
                 </div>
             </div>
         </div>
@@ -191,13 +191,13 @@
         // Some more cursed tech, adds a timer on this class, but also passes this class as a parameter into the timer.
         // The Objective is to every 0.1 seconds set the Starting Pistol value on the Lobby Object, 
         // so that each client is updated, and then once the timer is done, we dispose of it.
-        Lobby.Timer.Interval = 100;
+        Lobby.PeriodicalTimer.Interval = 100;
         timer = new Timer(new TimerCallback(panel => {
             InvokeAsync(() => {
                 if (((HostControlPanel) panel).Lobby.StartingPistolValue <= 0.1) {
                     ((HostControlPanel) panel).Lobby.StartingPistolValue = 0;
                     ((HostControlPanel) panel).Lobby.Started = true;
-                    ((HostControlPanel) panel).Lobby.Timer.Interval = 1000;
+                    ((HostControlPanel) panel).Lobby.PeriodicalTimer.Interval = 1000;
                     ((HostControlPanel) panel).timer.Dispose();
                     Lobby.StartAllTimers();
                     return;
@@ -214,6 +214,7 @@
         if (!Lobby.ResumedRace) {
             Lobby.GetParticipatingTeams().ForEach(team => team.TimerData.PreviousTime = 0);
         }
+        Lobby.TriggerInstantRefresh();
     }
 
     private void HandoverHostControls() {
@@ -230,7 +231,7 @@
         }
 
         Lobby.Owner = newHost;
-        StateHasChanged();
+        Lobby.TriggerInstantRefresh();
     }
 
     private List<TeamTimerData> GetTimersToChange() {

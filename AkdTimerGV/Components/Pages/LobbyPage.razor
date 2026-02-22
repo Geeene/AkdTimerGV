@@ -71,7 +71,7 @@
                 </div>
             } else {
                 <TeamList Team="@currentUser.Team" RenderForTeamCreator="@currentUser.IsCreatorOfTeam()" lambda="@(() => Lobby.SwitchTeam(currentUser, Team.SPECTATOR))" JoinType="TeamJoinType.LEAVE"/>
-                <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" TriggerStandingsCalculation="@(() => Lobby.DetermineStandings())" ResumedRace="@Lobby.ResumedRace"/>
+                <TimerControlPanel Disabled="@(!currentUser.HasTeamPermission)" timerData="@currentUser.Team.TimerData" Lobby="@Lobby"/>
             }
             <div class="PanelWithLeftBorder d-flex flex-row" style="margin-right: 20px">
                 <OBSLinkPanel Lobby=@Lobby CustomOrder="@CustomOrder" LinkType="@LINK_TYPE_TIMER"/>
@@ -152,10 +152,10 @@
             return;
         }
         ChosenTeamName = currentUser.Name;
-        if (!Lobby.Timer.Enabled) {
-            Lobby.Timer.Start();
+        if (!Lobby.PeriodicalTimer.Enabled) {
+            Lobby.PeriodicalTimer.Start();
         }
-        Lobby.Timer.Elapsed += ((source, e) => NotifyStateHasChanged());
+        Lobby.PeriodicalTimer.Elapsed += ((source, e) => NotifyStateHasChanged());
     }
     private void NotifyStateHasChanged() {
         InvokeAsync(() => StateHasChanged());
@@ -253,7 +253,7 @@
 
     public void Dispose() {
         if (Lobby != null) {
-            Lobby.Timer.Elapsed -= ((source, e) => NotifyStateHasChanged());
+            Lobby.PeriodicalTimer.Elapsed -= ((source, e) => NotifyStateHasChanged());
         }
     }
 

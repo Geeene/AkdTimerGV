@@ -75,6 +75,9 @@
     [Parameter]
     public String Origin { get; set; } = "TimerControlPanel";
 
+    [Parameter]
+    public Lobby Lobby { get; set; }
+
     private int HoursToAdd { get; set; }
     private int MinutesToAdd { get; set; }
     private int SecondsToAdd { get; set; }
@@ -131,6 +134,7 @@
             }
         }
 
+        Lobby.TriggerInstantRefresh();
 
     }
 }

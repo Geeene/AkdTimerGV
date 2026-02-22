@@ -21,24 +21,25 @@ Add Penalty
         } else {
             <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Undo Finish" onclick="@(() => ConfirmUndoFinishModal.showDialog())"/>
         }
+
     } else {
         <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Finish" onclick="@(() => HandleFinish())"/>
         <input type="button" class="btn btn-danger" disabled="@(Disabled)" value="DNF" onclick="@(() => ConfirmDnfModal.showDialog())"/>
     }
-    <input type="button" class="btn btn-light" disabled="@(timerData.Paused || Disabled)" value="Start Break" onclick="@(() => timerData.StartBreak())"/>
-    <input type="button" class="btn btn-light" disabled="@(timerData.IsNotPaused() || Disabled)" value="End Break" onclick="@(() => timerData.EndBreak())"/>
+    <input type="button" class="btn btn-light" disabled="@(timerData.Paused || Disabled)" value="Start Break" onclick="@(() => { timerData.StartBreak(); Lobby.TriggerInstantRefresh(); })"/>
+    <input type="button" class="btn btn-light" disabled="@(timerData.IsNotPaused() || Disabled)" value="End Break" onclick="@(() => { timerData.EndBreak(); Lobby.TriggerInstantRefresh(); })" />
 </div>
 
 @*Allow team to Add Penalty time *@
 <div class="d-flex flex-column">
     Add Penalty
-    <AddToTimer Disabled="@Disabled" TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
+    <AddToTimer Lobby="@Lobby" Disabled="@Disabled" TimerAdditionType="@TimerAdditionType.Penalty" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
 </div>
 
-@if (ResumedRace) {
+@if (Lobby.ResumedRace) {
     <div class="d-flex flex-column">
         Add Previous Time
-        <AddToTimer Disabled="@Disabled" Simplified="false" TimerAdditionType="@TimerAdditionType.Previous" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
+        <AddToTimer Lobby="@Lobby" Disabled="@Disabled" Simplified="false" TimerAdditionType="@TimerAdditionType.Previous" TimerData="@(() => new List<TeamTimerData>() { timerData })"/>
     </div>
 }
 
@@ -54,7 +55,7 @@ Add Penalty
     public bool Disabled { get; set; }
 
     [Parameter]
-    public bool ResumedRace { get; set; }
+    public Lobby Lobby { get; set; }
 
     [Parameter]
     public TeamTimerData timerData { get; set; }
@@ -62,33 +63,33 @@ Add Penalty
     private ConfirmationModal ConfirmDnfModal  { get; set; }
     private ConfirmationModal ConfirmUndoFinishModal  { get; set; }
 
-    /// <summary>
-    /// Lambda to re-calculate the standings for all teams
-    /// </summary>
-    [Parameter]
-    public Object TriggerStandingsCalculation { get; set; }
-
     public void HandleStart() {
         timerData.Start();
-        ((Func<bool>)TriggerStandingsCalculation).Invoke();
+        Lobby.DetermineStandings();
+        Lobby.TriggerInstantRefresh();
+
     }
     public void HandleUndoFinish() {
         timerData.UndoFinish();
-        ((Func<bool>)TriggerStandingsCalculation).Invoke();
+        Lobby.DetermineStandings();
+        Lobby.TriggerInstantRefresh();
     }
 
     public void ToggleReady() {
         timerData.Ready = !timerData.Ready;
+        Lobby.TriggerInstantRefresh();
     }
 
     public void HandleFinish() {
         timerData.Finish(false);
-        ((Func<bool>)TriggerStandingsCalculation).Invoke();
+        Lobby.DetermineStandings();
+        Lobby.TriggerInstantRefresh();
     }
 
     public void HandleDnf() {
         timerData.confirmDNF();
-        ((Func<bool>)TriggerStandingsCalculation).Invoke();
+        Lobby.DetermineStandings();
+        Lobby.TriggerInstantRefresh();
     }
 
 }
