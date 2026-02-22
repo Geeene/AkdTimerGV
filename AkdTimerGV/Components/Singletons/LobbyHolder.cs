@@ -16,11 +16,11 @@ public sealed class LobbyHolder {
     }
 
     private void CleanupLobbies() {
-        DateTime timeToConsider = DateTime.Now.AddDays(-1);
+        DateTime timeToConsider = DateTime.Now.AddHours(-6);
 
         foreach (var item in lobbies) {
-            // Check for each lobby if it has been open for more than 2 days, and remove the lobby if it is. 
-            if (timeToConsider > item.Value.Created) {
+            // Check for each lobby if the last time a page for the lobby has been viewed was 6 hours ago, and remove the lobby if it is. 
+            if (timeToConsider > item.Value.LastActivity) {
                 // Remove the Lobby from our dictionary so it is garbage collected.
                 // Within the lobbies, there are circular references between teams / users / lobby, but those don't matter.
                 // It's cleaned up regardless

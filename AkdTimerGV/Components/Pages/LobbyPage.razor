@@ -138,6 +138,10 @@
         }
 
         if (!firstRender) {
+            // To identify whether a lobby is still active, or I can deploy an update via the Lobby Selector page
+            if (Lobby != null) {
+                Lobby.LastActivity = DateTime.Now;
+            }
             return;
         }
 

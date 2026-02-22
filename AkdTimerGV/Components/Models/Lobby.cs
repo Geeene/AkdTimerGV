@@ -67,6 +67,8 @@ namespace AkdTimerGV.Components.Models {
 
         public Timer Timer = new Timer(100);
 
+        public DateTime LastActivity = DateTime.Now;
+
         /// <summary>
         /// Switches the user to the Team with the given name, if there is no such Team yet, then it will be created.
         /// </summary>
@@ -218,7 +220,7 @@ namespace AkdTimerGV.Components.Models {
         public void PauseAll() {
             Started = false;
             foreach (var Team in GetParticipatingTeams()) {
-                Team.TimerData.Finish();
+                Team.TimerData.Finish(true);
             }
         }
 

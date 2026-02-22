@@ -7,6 +7,11 @@ namespace AkdTimerGV.Components.Models {
     public class TeamTimerData {
 
         /// <summary>
+        /// if the team is ready
+        /// </summary>
+        public bool Ready = false;
+
+        /// <summary>
         /// Wether the timer is currently active
         /// </summary>
         public Boolean Active = false;
@@ -102,6 +107,12 @@ namespace AkdTimerGV.Components.Models {
             StartTime = endOfBreak;
         }
 
+        public void UpdateElapsedActiveTime() { 
+            if(!Active || Paused) {
+                return;
+            }
+        }
+
         /// <summary>
         /// The Total time spent while not paused.
         /// More specifically: 
@@ -120,13 +131,6 @@ namespace AkdTimerGV.Components.Models {
             return ((long) DateTime.Now.Subtract((DateTime) StartTime).TotalMilliseconds) + ActiveMilliseconds + PreviousTime;
         }
 
-        /// <summary>
-        /// Absolute total time, i.e. TIme actually raced + Break + Penalty
-        /// </summary>
-        /// <returns></returns>
-        public long GetTotalTime() {
-            return GetElapsedActiveTime() + BreakTime + PenaltyTime;
-        }
 
         /// <summary>
         /// The remaining time in seconds that the team still has for Breaks.
@@ -189,6 +193,7 @@ namespace AkdTimerGV.Components.Models {
         public void Start() {
             StartTime = DateTime.Now;
             Active = true;
+            Ready = true;
 
             if (ActiveMilliseconds > 0 && PreviousTime > 0) {
                 ActiveMilliseconds -= PreviousTime;
@@ -198,11 +203,14 @@ namespace AkdTimerGV.Components.Models {
         /// <summary>
         /// To be pressed when finishing the race
         /// </summary>
-        public void Finish() {
+        public void Finish(bool GlobalPause) {
             EndBreak();
             ActiveMilliseconds = GetElapsedActiveTime();
             Active = false;
-            FinishTime = DateTime.Now;
+            Ready = false;
+            if (!GlobalPause) { 
+                FinishTime = DateTime.Now;
+            }
         }
 
         /// <summary>
@@ -218,7 +226,7 @@ namespace AkdTimerGV.Components.Models {
         /// To be pressed when finishing the race
         /// </summary>
         public void confirmDNF() {
-            Finish();
+            Finish(false);
             dnf = true;
         }
 

@@ -45,6 +45,8 @@
         <tr>
             <th>Lobby Name</th>
             <th>Lobby Owner</th>
+            <th>Active Timers</th>
+            <th>Last Activity</th>
             <th></th>
         </tr>
     </thead>
@@ -54,6 +56,8 @@
             <tr>
                 <td>@lobby.Description</td>
                 <td>@lobby.Owner.Name</td>
+                <td>@lobby.Teams.Values.Where(team => team.TimerData.Active).Count()</td>
+                <td>@lobby.LastActivity</td>
                 <td><input type="button" class="btn btn-primary" value="Join Lobby" onclick="@(() => showModalToJoinLobby(lobby))"/> </td>
             </tr>
         }

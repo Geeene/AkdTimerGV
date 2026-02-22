@@ -11,6 +11,10 @@ Add Penalty
 @*Allow team to start / stop their Timer / Break *@
 <div class="d-flex flex-column Panel">
     <span>Timer Control</span>
+    @if (!timerData.Active && !timerData.Paused && timerData.FinishTime == null) {
+        <input type="button" class="btn btn-success" disabled="@(Disabled)" value="@(timerData.Ready ? "Not Ready" : "Ready")" onclick="@(() => ToggleReady())"/>
+    }
+
     @if (!timerData.Active && !timerData.dnf) {
         @if (timerData.FinishTime == null) {
             <input type="button" class="btn btn-success" disabled="@(Disabled)" value="Start" onclick="@(() => HandleStart())"/>
@@ -73,8 +77,12 @@ Add Penalty
         ((Func<bool>)TriggerStandingsCalculation).Invoke();
     }
 
+    public void ToggleReady() {
+        timerData.Ready = !timerData.Ready;
+    }
+
     public void HandleFinish() {
-        timerData.Finish();
+        timerData.Finish(false);
         ((Func<bool>)TriggerStandingsCalculation).Invoke();
     }
 

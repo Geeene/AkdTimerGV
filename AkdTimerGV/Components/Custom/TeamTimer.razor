@@ -62,7 +62,17 @@
         @if (Team.TimerData.dnf) {
             <span>DNF</span>
         } else {
-            @getTimeValueAsString(Team.TimerData.GetElapsedActiveTime())
+            @if (!Team.TimerData.Active && !Team.TimerData.Paused && Team.TimerData.FinishTime == null) {
+                @if (Team.TimerData.Ready) {
+                    <span>Ready</span>
+                }
+                else {
+                    <span style="font-size:35pt">Not Ready</span>
+                }
+            }
+            else {
+                @getTimeValueAsString(Team.TimerData.GetElapsedActiveTime())
+            }
         }
     </div>
     <div class="teamTimerSubtimers">
