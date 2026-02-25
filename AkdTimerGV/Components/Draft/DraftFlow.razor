@@ -145,7 +145,7 @@
 
                                 <td style="height: 64px;">
                                         <!--<Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" >-->
-                                    <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" DragStart="@((t) => DragActive = true)" DragEnd="@((t) => DragActive = false)">
+                                    <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" OnItemDrop="@(() => CommitChanges(true))" DragStart="@((t) => DragActive = true)" DragEnd="@((t) => DragActive = false)" Class="plk-dd-dropzone-draft-table">
                                         <ChildContent>
                                             <div class="@(DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer ? "draft-character-image-auction" : "draft-character-image")">
                                                 @if (draftGrouping.IsPlayer && DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer) {

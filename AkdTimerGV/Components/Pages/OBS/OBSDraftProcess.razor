@@ -55,7 +55,7 @@
                         </td>
 
                         <td style="width: 650px; height: 64px;">
-                            <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter">
+                            <Dropzone Items="draftGrouping.Characters" TItem="DraftCharacter" Class="plk-dd-dropzone-draft-table">
                                 <ChildContent>
                                     <div class="@(DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer ? "draft-character-image-auction" : "draft-character-image")">
                                         @if (DraftStateHolder.GetDraftState().AuctionMode && draftGrouping.IsPlayer)

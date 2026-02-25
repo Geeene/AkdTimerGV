@@ -145,7 +145,7 @@
                By Default the person that created the lobby is the host. Here the host can give over that role to a different user
         -->
         <div class="accordion-item">
-            <div class="accordion-header" id="headingSix">
+            <div class="accordion-header" id="headingSeven">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
                     Change Lobby Password
                 </button>
@@ -154,6 +154,26 @@
             <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven" data-bs-parent="#accordion">
                 <div class="accordion-body">
                     <input type="text" @bind="@Lobby.Password" />
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" id="headingEight">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+                    Enable Splits
+                </button>
+            </div>
+
+            <div id="collapseEight" class="accordion-collapse collapse" aria-labelledby="headingEight" data-bs-parent="#accordion">
+                <div class="accordion-body">
+                    <InputSelect name="CategorySelection" @bind-value="SelectedCategory">
+                        <option value="">Select Category</option>
+                        @foreach (var category in RaceCategoryCache.Categories) {
+                            <option value="@category.Value.Name">@category.Value.Name</option>
+                        }
+                    </InputSelect>
+                    <input type="button" value="Add Splits" onclick="@(() => AddSplits())" />
                 </div>
             </div>
         </div>
@@ -179,6 +199,7 @@
     private Guid SelectedNewHost { get; set; }
     private Guid? SelectedUserAddPenalty { get; set; } = Guid.Empty;
     private String[] RandomizedOrder { get; set; } = [];
+    private String SelectedCategory { get; set; } = "";
 
     private List<TeamTimerData> GetRelevantTimerData() {
         return new List<TeamTimerData>(Lobby.GetParticipatingTeams().Select(Team => Team.TimerData));
@@ -242,4 +263,15 @@
         NavigationManager.NavigateTo("/draft");
         Lobby.DraftState.AdvanceState();
     }
+
+    private void AddSplits() {
+        if (SelectedCategory == "") {
+            return;
+        }
+
+        foreach (Team team in Lobby.GetParticipatingTeams()) {
+            team.RaceCategory = RaceCategoryCache.Categories[SelectedCategory].clone();
+        }
+    }
+
 }

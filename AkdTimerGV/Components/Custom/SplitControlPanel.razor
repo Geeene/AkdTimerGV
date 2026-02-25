@@ -1,0 +1,71 @@
+﻿@using AkdTimerGV.Components.Models
+
+<style>
+    .plk-dd-dropzone-split-control {
+        width: 100%;
+    }
+</style>
+
+@if (Team != null && Team.RaceCategory != null) {
+    <div id="SplitControlPanel" class="Panel" style="margin-top: 20px; padding: 10px; border-top: 1px solid var(--bs-border-color);">
+
+        <span>Current Split: @Team.RaceCategory.GetCurrentSplit().Chapter - @Team.RaceCategory.GetCurrentSplit().Name</span>
+        <div>
+            <input type="button" id="DoSplitButton" value="End Split" onclick="@(() => Team.RaceCategory.DoSplit(Team.TimerData.GetElapsedActiveTime()))">
+            <input type="button" id="SkipSplitButton" value="Skip" onclick="@Team.RaceCategory.SkipSplit">
+            <input type="button" id="UndoSplitButton" value="Undo" onclick="@Team.RaceCategory.UndoSplit">
+            <input type="button" id="ShowOverview" value="Manage" onclick="@(() => ManageSplits())">
+        </div>
+    </div>
+
+    <ModalDialog @ref="ManageSplitsModal" Title="Manage Splits">
+        <span>Splits for Category: @Team.RaceCategory.Name</span>
+        <hr />
+        <div class="d-flex flex-row justify-content-between" style="width: 100%; border-bottom: 1px solid var(--bs-border-color);">
+            <span style="width:300px;">Chapter</span>
+            <span>Time of completion</span>
+            <span></span>
+            <span style="width: 150px">Duration</span>
+        </div>
+        <Dropzone Items="Team.RaceCategory.Splits" TItem="RaceSplit" AllowsDrag="(item) => Team.RaceCategory.AllowChanges" Class="plk-dd-dropzone-split-control">
+            <ChildContent>
+                <div class="d-flex flex-row justify-content-between" style="width: 100%">
+                    <span style="width:300px;">@context.Chapter - @context.Name</span>
+                    <ComplexTimeEntry @ref="TimeEntryMapping[context]" InitialValue="@context.SplitTimestamp"></ComplexTimeEntry>
+                    <div>
+                        <input type="button" value="Set Completion time" onclick="@(() => UpdateTimestamp(context, TimeEntryMapping[context]))" />
+                    </div>
+                    <span style="width: 150px">@TimeUtil.getTimeAsString(context.SplitDuration, true)</span>
+                </div>
+            </ChildContent>
+        </Dropzone>
+        @if (Team.RaceCategory.AllowChanges) {
+            <input type="button" />
+        }
+    </ModalDialog>
+}
+
+@code {
+    [Parameter]
+    public Team Team { get; set; }
+
+    private Dictionary<RaceSplit, ComplexTimeEntry> TimeEntryMapping = [];
+
+    private ModalDialog ManageSplitsModal { get; set; }
+
+    private RaceCategory RaceCategoryModal { get; set; }
+
+
+    private void ManageSplits() {
+        ManageSplitsModal.showDialog();
+        StateHasChanged();
+    }
+
+    private void UpdateTimestamp(RaceSplit split, ComplexTimeEntry timeEntry) {
+        int splitIndex = Team.RaceCategory.Splits.IndexOf(split);
+        Team.RaceCategory.DoSplit(splitIndex, timeEntry.WasChanged ? timeEntry.GetEnteredTimeAsSeconds() * 1000 : split.SplitTimestamp);
+
+        StateHasChanged();
+    }
+
+}

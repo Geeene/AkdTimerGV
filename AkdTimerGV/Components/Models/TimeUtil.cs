@@ -4,6 +4,9 @@ namespace AkdTimerGV.Components.Models {
     public class TimeUtil {
 
         public static String getTimeAsString(long timeInMillis) {
+            return getTimeAsString(timeInMillis, false);
+        }
+        public static String getTimeAsString(long timeInMillis, bool includingMillis) {
             long timeInSeconds = timeInMillis / 1000;
             long numberSeconds = timeInSeconds % 60;
 
@@ -34,6 +37,11 @@ namespace AkdTimerGV.Components.Models {
                 stringBuilder.Append('0');
             }
             stringBuilder.Append(numberSeconds);
+
+            if (includingMillis) {
+                stringBuilder.Append(".").Append((timeInMillis % 1000).ToString("000"));
+
+            }
 
             return stringBuilder.ToString();
         }

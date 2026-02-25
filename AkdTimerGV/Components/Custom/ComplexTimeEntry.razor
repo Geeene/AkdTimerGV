@@ -1,0 +1,53 @@
+﻿<div class="form-inline d-flex flex-row justify-content-between">
+    @if (InitialValue > 0 && !Initialized) {
+        long timeInSeconds = InitialValue / 1000;
+        SecondsToAdd = timeInSeconds % 60;
+
+        long timeWithoutSeconds = timeInSeconds - SecondsToAdd;
+
+        MinutesToAdd = (timeWithoutSeconds % (60 * 60)) / 60;
+
+        long timeHoursOnly = timeWithoutSeconds - (timeWithoutSeconds % (60 * 60));
+        HoursToAdd = timeHoursOnly / (60 * 60);
+        Initialized = true;
+    }
+
+    <div class="input-group mb-3">
+        <input type="number" style="width: 60px" class="form-control input-group-text" @bind="HoursToAdd" @bind:after="(() => WasChanged=true)" />
+        <span class="form-control input-group-text">h</span>
+    </div>
+
+    <div class="input-group mb-3 ms-2">
+        <input type="number" style="width: 60px" class="form-control input-group-text" @bind="MinutesToAdd" @bind:after="(() => WasChanged = true)" />
+        <span class="form-control input-group-text">m</span>
+    </div>
+
+    <div class="input-group mb-3 ms-2">
+        <input type="number" style="width: 60px" class="form-control input-group-text" @bind="SecondsToAdd" @bind:after="(() => WasChanged = true)" />
+        <span class="form-control input-group-text">s</span>
+    </div>
+</div>
+@code {
+    /// <summary>
+    /// Initial Value that the Entry should have in MILLISECONDS
+    /// </summary>
+    [Parameter]
+    public long InitialValue { get; set; } = 0;
+
+    private long HoursToAdd { get; set; } = 0;
+    private long MinutesToAdd { get; set; } = 0;
+    private long SecondsToAdd { get; set; } = 0;
+
+    private bool Initialized = false;
+
+    public bool WasChanged = false;
+
+
+    public long GetEnteredTimeAsSeconds() {
+        long ValueInSeconds = 0;
+        ValueInSeconds += HoursToAdd * 3600;
+        ValueInSeconds += MinutesToAdd * 60;
+        ValueInSeconds += SecondsToAdd;
+        return ValueInSeconds;
+    }
+}

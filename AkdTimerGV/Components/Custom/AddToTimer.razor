@@ -34,22 +34,7 @@
         </div>
     } else {
         @* "Complex" mode, have separate inputs for Hours / Minutes / Seconds *@
-        <div class="form-inline d-flex flex-row">
-            <div class="input-group mb-3">
-                <input type="number" style="width: 60px" class="form-control input-group-text" @bind="HoursToAdd"/>
-                <span class="form-control input-group-text">h</span>
-            </div>
-
-            <div class="input-group mb-3 ms-2">
-                <input type="number" style="width: 60px" class="form-control input-group-text" @bind="MinutesToAdd"/>
-                <span class="form-control input-group-text">m</span>
-            </div>
-
-            <div class="input-group mb-3 ms-2">
-                <input type="number" style="width: 60px" class="form-control input-group-text" @bind="SecondsToAdd"/>
-                <span class="form-control input-group-text">s</span>
-            </div>
-        </div>
+        <ComplexTimeEntry @ref="ComplexTimeEntry"/>
     }
 
     @**@
@@ -78,9 +63,8 @@
     [Parameter]
     public Lobby Lobby { get; set; }
 
-    private int HoursToAdd { get; set; }
-    private int MinutesToAdd { get; set; }
-    private int SecondsToAdd { get; set; }
+    private ComplexTimeEntry ComplexTimeEntry {get;set;}
+
 
     /// <summary>
     /// Amount in seconds that will be added to the timer
@@ -98,16 +82,14 @@
 
 
     private void AddTimeImpl(int multiplier) {
-        int ValueInSeconds = 0;
+        long ValueInSeconds = 0;
         if (Simplified) {
             ValueInSeconds = PenaltyToAdd;
             if (TimeUnit.MINUTES.Equals(CurrentTimeUnit)) {
                 ValueInSeconds *= 60;
             }
         } else {
-            ValueInSeconds += HoursToAdd * 3600;
-            ValueInSeconds += MinutesToAdd * 60;
-            ValueInSeconds += SecondsToAdd;
+            ValueInSeconds += ComplexTimeEntry.GetEnteredTimeAsSeconds();
         }
 
         if (TimerData().Count == 0) {

@@ -50,6 +50,8 @@
                 <span>Display draft: <input type="checkbox" @bind="DisplayDraft" /></span>
                 <br />
                 <input value="Take Screenshot" type="button" @onclick="takeScreenshot" />
+
+                <SplitControlPanel Team="@currentUser.Team"/>
             </div>
             @if (userIsHost()) {
                 <div class="Panel">

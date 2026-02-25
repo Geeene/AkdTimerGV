@@ -1,0 +1,104 @@
+[
+  {
+    "Name": "FE7 - Hector Normal",
+    "AllowChanges": false,
+    "Splits": [
+      {
+        "Chapter": "11",
+        "Name": "Another Journey"
+      },
+      {
+        "Chapter": "12",
+        "Name": "Birds of a Feather"
+      },
+      {
+        "Chapter": "13",
+        "Name": "In Search of Truth"
+      },
+      {
+        "Chapter": "14",
+        "Name": "False Friends"
+      },
+      {
+        "Chapter": "15",
+        "Name": "Talons Alight"
+      },
+      {
+        "Chapter": "16",
+        "Name": "Noble Lady of Caelin"
+      },
+      {
+        "Chapter": "17",
+        "Name": "Whereabouts Unknown"
+      },
+      {
+        "Chapter": "18",
+        "Name": "Pirate Ship"
+      },
+      {
+        "Chapter": "19",
+        "Name": "The Dread Isle"
+      },
+      {
+        "Chapter": "20",
+        "Name": "Dragon's Gate"
+      },
+      {
+        "Chapter": "21",
+        "Name": "New Resolve"
+      },
+      {
+        "Chapter": "22",
+        "Name": "Kinship's Bond"
+      },
+      {
+        "Chapter": "23",
+        "Name": "Living Legend"
+      },
+      {
+        "Chapter": "24",
+        "Name": "Four-Fanged Offense"
+      },
+      {
+        "Chapter": "25",
+        "Name": "Crazed Beast"
+      },
+      {
+        "Chapter": "26",
+        "Name": "Unfulfilled Heart"
+      },
+      {
+        "Chapter": "27",
+        "Name": "Pale Flower of Darkness"
+      },
+      {
+        "Chapter": "28",
+        "Name": "Battle before Dawn"
+      },
+      {
+        "Chapter": "29",
+        "Name": "Cog of Destiny"
+      },
+      {
+        "Chapter": "30",
+        "Name": "The Berserker"
+      },
+      {
+        "Chapter": "31",
+        "Name": "Sands of Time"
+      },
+      {
+        "Chapter": "32",
+        "Name": "Victory or Death"
+      },
+      {
+        "Chapter": "F1",
+        "Name": "Light (1)"
+      },
+      {
+        "Chapter": "F2",
+        "Name": "Light (2)"
+      }
+    ]
+  }
+]

@@ -50,6 +50,11 @@
         /// The order of teams joining the lobby
         /// </summary>
         public int Index { get; set; } = index;
+
+        /// <summary>
+        /// Race Category
+        /// </summary>
+        public RaceCategory RaceCategory { get; set; }
         
         /// <summary>
         /// Add the given user to the team
