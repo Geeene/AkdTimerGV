@@ -52,6 +52,9 @@
                 <input value="Take Screenshot" type="button" @onclick="takeScreenshot" />
 
                 <SplitControlPanel Team="@currentUser.Team"/>
+                @if (Lobby.RaceCategory != null) {
+                    <input type="button" value="Split Overview" onclick="@GoToSplitOverview"/>
+                }
             </div>
             @if (userIsHost()) {
                 <div class="Panel">
@@ -97,7 +100,33 @@
     } else {
         <h2>Not currently in a Lobby, try joining one :)</h2>
     }
+
 </div>
+
+<ModalDialog @ref="SplitOverviewModal" Title="Split Overview">
+    @if (Lobby != null) {
+        <div class="d-flex flex-row">
+            @foreach (Team Team in Lobby.GetParticipatingTeams().Where(Team => Team.RaceCategory != null)) {
+                <div class="d-flex flex-column" style="@(Lobby.GetParticipatingTeams().IndexOf(Team) > 0 ? "margin-left: 5px; padding-left: 5px; border-left: 1px solid var(--bs-border-color)" : "")">
+                    @Team.Name
+                    <hr />
+                    <div class="d-flex flex-row">
+                        <span style="width: 50px; text-align: start">Ch.</span>
+                        <span style="width: 150px; text-align: center">Completion Time</span>
+                        <span style="width: 80px; text-align: end">Duration</span>
+                    </div>
+                    @foreach (RaceSplit split in Team.RaceCategory.Splits) {
+                        <div class="d-flex flex-row">
+                            <span style="width: 50px; text-align: start">@split.Chapter</span>
+                            <span style="width: 150px; text-align: center">@TimeUtil.getTimeAsStringWithZeros(split.SplitTimestamp)</span>
+                            <span style="width: 80px; text-align: end">@TimeUtil.getTimeAsString(split.SplitDuration, true)</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</ModalDialog>
 
 @code {
     public Lobby? Lobby = null;
@@ -106,6 +135,7 @@
     private Timer Timer;
     private List<Team> TimerReferences = new List<Team>();
     private bool DisplayDraft = true;
+    private ModalDialog SplitOverviewModal;
 
     /// <summary>
     /// Custom property getter used for encoding the order of timers into the OBS Link
@@ -159,6 +189,7 @@
         }
         Lobby.PeriodicalTimer.Elapsed += ((source, e) => NotifyStateHasChanged());
     }
+
     private void NotifyStateHasChanged() {
         InvokeAsync(() => StateHasChanged());
     }
@@ -257,6 +288,10 @@
         if (Lobby != null) {
             Lobby.PeriodicalTimer.Elapsed -= ((source, e) => NotifyStateHasChanged());
         }
+    }
+
+    private void GoToSplitOverview() {
+        SplitOverviewModal.showDialog();
     }
 
 }

@@ -19,10 +19,10 @@
         /// <summary>
         /// Clone the current RaceCategory
         /// </summary>
-        public RaceCategory clone() { 
+        public RaceCategory clone() {
             RaceCategory clone = new RaceCategory();
             clone.AllowChanges = AllowChanges;
-            clone.Splits = Splits;
+            clone.Splits = new List<RaceSplit>(Splits);
             clone.Name = Name;
             return clone;
         }

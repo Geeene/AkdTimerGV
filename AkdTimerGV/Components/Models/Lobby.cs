@@ -69,6 +69,7 @@ namespace AkdTimerGV.Components.Models {
         public Timer InstantRefreshTimer = CreateInstantRefreshTimer();
 
         public DateTime LastActivity = DateTime.Now;
+        public RaceCategory RaceCategory { get; set; }
 
         /// <summary>
         /// Switches the user to the Team with the given name, if there is no such Team yet, then it will be created.

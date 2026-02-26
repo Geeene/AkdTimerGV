@@ -6,6 +6,21 @@ namespace AkdTimerGV.Components.Models {
         public static String getTimeAsString(long timeInMillis) {
             return getTimeAsString(timeInMillis, false);
         }
+
+        public static String getTimeAsStringWithZeros(long timeInMillis) {
+            long timeInSeconds = timeInMillis / 1000;
+            long numberSeconds = timeInSeconds % 60;
+
+            long timeWithoutSeconds = timeInSeconds - numberSeconds;
+
+            long numberMinutes = (timeWithoutSeconds % (60 * 60)) / 60;
+
+            long timeHoursOnly = timeWithoutSeconds - (timeWithoutSeconds % (60 * 60));
+            long numberHours = timeHoursOnly / (60 * 60);
+
+            return numberHours.ToString("00") + ":" + numberMinutes.ToString("00") + ":" + numberSeconds.ToString("00");
+        }
+
         public static String getTimeAsString(long timeInMillis, bool includingMillis) {
             long timeInSeconds = timeInMillis / 1000;
             long numberSeconds = timeInSeconds % 60;
