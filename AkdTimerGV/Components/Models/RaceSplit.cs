@@ -26,5 +26,13 @@
         /// Only Manually created Splits can be deleted by a user
         /// </summary>
         public bool ManuallyCreated { get; set; } = false;
+
+        public override bool Equals(object? obj) {
+            return obj is RaceSplit split &&
+                   Chapter == split.Chapter &&
+                   Name == split.Name;
+        }
+
+
     }
 }

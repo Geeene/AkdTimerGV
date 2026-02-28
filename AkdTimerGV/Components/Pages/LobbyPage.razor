@@ -30,6 +30,10 @@
         </h1>
         <h6>
             <span><label style="float: left;">CurrentLobbyId: @Lobby.LobbyId</label><input type="button" style="margin-left: 10px" value="Invite Link" onclick="@(() => GenerateInviteLink())"/></span>
+            <br />
+            @if (Lobby.RaceCategory != null) {
+                <a href="@("/lobby/"+Lobby.LobbyId+"/splits")" target="_blank">Splits Overview</a>
+            }
         </h6>
         <hr />
         <div class="flex-row d-flex justify-content-evenly w-100">
@@ -104,28 +108,7 @@
 </div>
 
 <ModalDialog @ref="SplitOverviewModal" Title="Split Overview">
-    @if (Lobby != null) {
-        <div class="d-flex flex-row">
-            @foreach (Team Team in Lobby.GetParticipatingTeams().Where(Team => Team.RaceCategory != null)) {
-                <div class="d-flex flex-column" style="@(Lobby.GetParticipatingTeams().IndexOf(Team) > 0 ? "margin-left: 5px; padding-left: 5px; border-left: 1px solid var(--bs-border-color)" : "")">
-                    @Team.Name
-                    <hr />
-                    <div class="d-flex flex-row">
-                        <span style="width: 50px; text-align: start">Ch.</span>
-                        <span style="width: 150px; text-align: center">Completion Time</span>
-                        <span style="width: 80px; text-align: end">Duration</span>
-                    </div>
-                    @foreach (RaceSplit split in Team.RaceCategory.Splits) {
-                        <div class="d-flex flex-row">
-                            <span style="width: 50px; text-align: start">@split.Chapter</span>
-                            <span style="width: 150px; text-align: center">@TimeUtil.getTimeAsStringWithZeros(split.SplitTimestamp)</span>
-                            <span style="width: 80px; text-align: end">@TimeUtil.getTimeAsString(split.SplitDuration, true)</span>
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-    }
+    <SplitOverview Lobby="Lobby"/>
 </ModalDialog>
 
 @code {

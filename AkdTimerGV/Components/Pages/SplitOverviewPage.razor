@@ -1,0 +1,64 @@
+﻿@page "/lobby/{LobbyId}/splits"
+@using AkdTimerGV.Components.Models
+@using AkdTimerGV.Components.Custom
+
+<SplitOverview Lobby="Lobby"/>
+
+<hr />
+<InputSelect name="AddPenaltySelect" class="dropdown btn btn-dark dropdown-toggle"
+             style="border:var(--bs-border-width) solid var(--bs-border-color);" @bind-value="SelectedChapter">
+    <option value="">Split to Compare</option>
+    @foreach (var Split in AvailableSplits) {
+        <option value="@Split.Chapter">@Split.Chapter - @Split.Name</option>
+    }
+</InputSelect>
+
+@if (SelectedChapter != "") {
+    <hr />
+    @foreach (KeyValuePair<Team, RaceSplit> team in GetTeamsForComparison()) {
+        <span style="width: 250px; text-align: start; margin-right: 30px">@team.Key.Name</span>
+        <span style="width: 80px; text-align: end">@TimeUtil.getTimeAsString(team.Value.SplitDuration, true)</span>
+    }
+}
+
+@code {
+    [Parameter]
+    public String LobbyId { get; set; }
+
+    private Lobby Lobby { get; set; }
+
+    private String SelectedChapter { get; set; } = "";
+
+    private HashSet<RaceSplit> AvailableSplits = [];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (!firstRender) {
+            return;
+        }
+
+        Lobby = LobbyHolder.Instance.getLobby(Guid.Parse(LobbyId));
+        ReloadAvailableSplits();
+        StateHasChanged();
+
+
+    }
+
+    private void ReloadAvailableSplits() {
+
+        AvailableSplits = [];
+        foreach (Team team in Lobby.GetParticipatingTeams()) {
+            AvailableSplits.UnionWith(team.RaceCategory.Splits);
+        }
+        StateHasChanged();
+    }
+
+    private IEnumerable<KeyValuePair<Team, RaceSplit>> GetTeamsForComparison() {
+        if (SelectedChapter == "") {
+            return [];
+        }
+
+        return Lobby.GetParticipatingTeams()
+            .Select(team => new KeyValuePair<Team, RaceSplit>(team, team.RaceCategory.Splits.Where(split => split.Chapter == SelectedChapter).First()))
+            .OrderBy(kvp => kvp.Value.SplitDuration);
+    }
+}
