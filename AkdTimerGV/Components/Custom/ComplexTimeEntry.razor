@@ -13,17 +13,17 @@
     }
 
     <div class="input-group mb-3">
-        <input type="number" style="width: 60px" class="form-control input-group-text" @bind="HoursToAdd" @bind:after="(() => WasChanged=true)" />
+        <input type="number" disabled="@Disabled" style="width: 60px" class="form-control input-group-text" @bind="HoursToAdd" @bind:after="(() => WasChanged = true)" />
         <span class="form-control input-group-text">h</span>
     </div>
 
     <div class="input-group mb-3 ms-2">
-        <input type="number" style="width: 60px" class="form-control input-group-text" @bind="MinutesToAdd" @bind:after="(() => WasChanged = true)" />
+        <input type="number" disabled="@Disabled" style="width: 60px" class="form-control input-group-text" @bind="MinutesToAdd" @bind:after="(() => WasChanged = true)" />
         <span class="form-control input-group-text">m</span>
     </div>
 
     <div class="input-group mb-3 ms-2">
-        <input type="number" style="width: 60px" class="form-control input-group-text" @bind="SecondsToAdd" @bind:after="(() => WasChanged = true)" />
+        <input type="number" disabled="@Disabled" style="width: 60px" class="form-control input-group-text" @bind="SecondsToAdd" @bind:after="(() => WasChanged = true)" />
         <span class="form-control input-group-text">s</span>
     </div>
 </div>
@@ -33,6 +33,9 @@
     /// </summary>
     [Parameter]
     public long InitialValue { get; set; } = 0;
+
+    [Parameter]
+    public bool Disabled { get; set; } = false;
 
     private long HoursToAdd { get; set; } = 0;
     private long MinutesToAdd { get; set; } = 0;

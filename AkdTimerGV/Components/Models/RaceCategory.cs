@@ -64,6 +64,10 @@
         }
 
         public void UndoSplit() {
+            if (CurrentSplit <= 0) {
+                return;
+            }
+
             CurrentSplit--;
             Splits[CurrentSplit].SplitTimestamp = 0;
             Splits[CurrentSplit].SplitDuration = 0;
@@ -71,6 +75,10 @@
         }
 
         public void SkipSplit() {
+            if (CurrentSplit > Splits.Count - 1) {
+                return;
+            }
+
             Splits[CurrentSplit].SplitTimestamp = 0;
             Splits[CurrentSplit].SplitDuration = 0;
             Splits[CurrentSplit].Skipped = true;

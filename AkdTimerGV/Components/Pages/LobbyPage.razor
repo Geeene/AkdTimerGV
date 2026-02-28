@@ -55,7 +55,7 @@
                 <br />
                 <input value="Take Screenshot" type="button" @onclick="takeScreenshot" />
 
-                <SplitControlPanel Team="@currentUser.Team"/>
+                <SplitControlPanel Team="@currentUser.Team" Disabled="@(!currentUser.HasTeamPermission)"/>
                 @if (Lobby.RaceCategory != null) {
                     <input type="button" value="Split Overview" onclick="@GoToSplitOverview"/>
                 }

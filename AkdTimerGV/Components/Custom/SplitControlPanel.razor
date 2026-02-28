@@ -11,9 +11,9 @@
 
         <span>Current Split: @Team.RaceCategory.GetCurrentSplit().Chapter - @Team.RaceCategory.GetCurrentSplit().Name</span>
         <div>
-            <input type="button" id="DoSplitButton" value="End Split" onclick="@(() => Team.RaceCategory.DoSplit(Team.TimerData.GetElapsedActiveTime()))">
-            <input type="button" id="SkipSplitButton" value="Skip" onclick="@Team.RaceCategory.SkipSplit">
-            <input type="button" id="UndoSplitButton" value="Undo" onclick="@Team.RaceCategory.UndoSplit">
+            <input type="button" disabled="@Disabled" id="DoSplitButton" value="End Split" onclick="@(() => Team.RaceCategory.DoSplit(Team.TimerData.GetElapsedActiveTime()))">
+            <input type="button" disabled="@Disabled" id="SkipSplitButton" value="Skip" onclick="@Team.RaceCategory.SkipSplit">
+            <input type="button" disabled="@Disabled" id="UndoSplitButton" value="Undo" onclick="@Team.RaceCategory.UndoSplit">
             <input type="button" id="ShowOverview" value="Manage" onclick="@(() => ManageSplits())">
         </div>
     </div>
@@ -31,9 +31,9 @@
             <ChildContent>
                 <div class="d-flex flex-row justify-content-between" style="width: 100%">
                     <span style="width:300px;">@context.Chapter - @context.Name</span>
-                    <ComplexTimeEntry @ref="TimeEntryMapping[context]" InitialValue="@context.SplitTimestamp"></ComplexTimeEntry>
+                    <ComplexTimeEntry @ref="TimeEntryMapping[context]" InitialValue="@context.SplitTimestamp" Disabled="@Disabled"/>
                     <div>
-                        <input type="button" value="Set Completion time" onclick="@(() => UpdateTimestamp(context, TimeEntryMapping[context]))" />
+                        <input type="button" value="Set Completion time" disabled="@Disabled" onclick="@(() => UpdateTimestamp(context, TimeEntryMapping[context]))" />
                     </div>
                     <span style="width: 150px">@TimeUtil.getTimeAsString(context.SplitDuration, true)</span>
                 </div>
@@ -48,6 +48,9 @@
 @code {
     [Parameter]
     public Team Team { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
 
     private Dictionary<RaceSplit, ComplexTimeEntry> TimeEntryMapping = [];
 
