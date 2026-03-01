@@ -170,7 +170,7 @@
         if (!Lobby.PeriodicalTimer.Enabled) {
             Lobby.PeriodicalTimer.Start();
         }
-        Lobby.PeriodicalTimer.Elapsed += ((source, e) => NotifyStateHasChanged());
+        Lobby.Subscribe((source, e) => NotifyStateHasChanged());
     }
 
     private void NotifyStateHasChanged() {
