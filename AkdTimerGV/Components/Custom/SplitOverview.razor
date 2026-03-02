@@ -3,8 +3,8 @@
 @if (Lobby != null) {
     <div class="d-flex flex-row">
         @foreach (Team Team in Lobby.GetParticipatingTeams().Where(Team => Team.RaceCategory != null)) {
-            <div class="d-flex flex-column" style="@(Lobby.GetParticipatingTeams().IndexOf(Team) > 0 ? "margin-left: 5px; padding-left: 5px; border-left: 1px solid var(--bs-border-color)" : "")">
-                @Team.Name
+            <div class="d-flex flex-column" style="@(Lobby.GetParticipatingTeams().IndexOf(Team) > 0 ? "margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--bs-border-color)" : "")">
+                <span style="text-align:center">@Team.Name</span>
                 <hr />
                 <div class="d-flex flex-row">
                     <span style="width: 50px; text-align: start">Ch.</span>
@@ -17,6 +17,7 @@
                         <span style="width: 150px; text-align: center">@TimeUtil.getTimeAsStringWithZeros(split.SplitTimestamp)</span>
                         <span style="width: 80px; text-align: end">@TimeUtil.getTimeAsString(split.SplitDuration, true)</span>
                     </div>
+                    <br />
                 }
             </div>
         }

@@ -11,10 +11,10 @@
 
         <span>Current Split: @Team.RaceCategory.GetCurrentSplit().Chapter - @Team.RaceCategory.GetCurrentSplit().Name</span>
         <div>
-            <input type="button" disabled="@Disabled" id="DoSplitButton" value="End Split" onclick="@(() => Team.RaceCategory.DoSplit(Team.TimerData.GetElapsedActiveTime()))">
-            <input type="button" disabled="@Disabled" id="SkipSplitButton" value="Skip" onclick="@Team.RaceCategory.SkipSplit">
-            <input type="button" disabled="@Disabled" id="UndoSplitButton" value="Undo" onclick="@Team.RaceCategory.UndoSplit">
-            <input type="button" id="ShowOverview" value="Manage" onclick="@(() => ManageSplits())">
+            <input type="button" disabled="@Disabled" id="DoSplitButton" value="End Split" onclick="@(() => {Team.RaceCategory.DoSplit(Team.TimerData.GetElapsedActiveTime()); Lobby.TriggerInstantRefresh();})">
+            <input type="button" disabled="@Disabled" id="SkipSplitButton" value="Skip" onclick="@(() => {Team.RaceCategory.SkipSplit(); Lobby.TriggerInstantRefresh();})">
+            <input type="button" disabled="@Disabled" id="UndoSplitButton" value="Undo" onclick="@(() => {Team.RaceCategory.UndoSplit(); Lobby.TriggerInstantRefresh();})">
+            <input type="button" id="ShowOverview" value="Manage" onclick="@(() => {ManageSplits(); StateHasChanged();})">
         </div>
     </div>
 
@@ -50,6 +50,9 @@
     public Team Team { get; set; }
 
     [Parameter]
+    public Lobby Lobby { get; set; }
+
+    [Parameter]
     public bool Disabled { get; set; }
 
     private Dictionary<RaceSplit, ComplexTimeEntry> TimeEntryMapping = [];
@@ -68,7 +71,7 @@
         int splitIndex = Team.RaceCategory.Splits.IndexOf(split);
         Team.RaceCategory.DoSplit(splitIndex, timeEntry.WasChanged ? timeEntry.GetEnteredTimeAsSeconds() * 1000 : split.SplitTimestamp);
 
-        StateHasChanged();
+        Lobby.TriggerInstantRefresh();
     }
 
 }

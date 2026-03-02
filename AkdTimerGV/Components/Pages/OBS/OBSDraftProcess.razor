@@ -33,7 +33,7 @@
 
         @if (DraftStateHolder.GetDraftState().AuctionMode) {
             <div class="d-flex flex-column" style="justify-content:center; text-align:center">
-                <h4>Nomination</h4>
+                <h2>Nomination</h2>
                 <div id="CurrentNomination">
                     <Dropzone class="NominationPedastal" Items="DraftStateHolder.GetDraftState().Nomination.Characters" TItem="DraftCharacter">
                         <ChildContent>
@@ -50,8 +50,8 @@
             <table>
                 @foreach (DraftGrouping draftGrouping in new List<DraftGrouping>(DraftStateHolder.GetDraftState().DraftGroupings.Values)) {
                     <tr class="flex-container" style="border: 3px solid black;">
-                        <td class="draft-label-holder" style="width:10%">
-                            <textarea style="border:none; background-color: #1A1A1A; text-align: center; width: 200px; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
+                        <td class="draft-label-holder" style="width:10%; background-color: @draftGrouping.Color;">
+                            <textarea style="border:none; background-color: @draftGrouping.Color;; text-align: center; width: 200px; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
                         </td>
 
                         <td style="width: 650px; height: 64px;">

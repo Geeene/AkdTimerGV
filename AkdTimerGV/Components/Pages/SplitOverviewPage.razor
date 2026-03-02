@@ -16,8 +16,9 @@
 @if (SelectedChapter != "") {
     <hr />
     @foreach (KeyValuePair<Team, RaceSplit> team in GetTeamsForComparison()) {
-        <span style="width: 250px; text-align: start; margin-right: 30px">@team.Key.Name</span>
-        <span style="width: 80px; text-align: end">@TimeUtil.getTimeAsString(team.Value.SplitDuration, true)</span>
+        <span style="display: inline-block; width: 200px; min-width: 200px; text-align: start; margin-right: 30px">@team.Key.Name</span>
+        <span style="display: inline-block; width: 80px; text-align: end">@TimeUtil.getTimeAsString(team.Value.SplitDuration, true)</span>
+        <br />
     }
 }
 
