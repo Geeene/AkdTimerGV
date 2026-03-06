@@ -59,7 +59,7 @@
         /// </summary>
         public DraftGrouping clone() {
             var clone = new DraftGrouping(Name, InternalName);
-            clone.Characters = new List<DraftCharacter>(Characters);
+            clone.Characters = Characters.Select(Chara => Chara.clone()).ToList();
             clone.IsPlayer = this.IsPlayer;
             clone.Order = this.Order;
             clone.RemainingAuctionCurrency = this.RemainingAuctionCurrency;

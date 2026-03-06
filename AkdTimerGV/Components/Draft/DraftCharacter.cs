@@ -22,5 +22,16 @@
         /// Auction Cost
         /// </summary>
         public int AuctionCost { get; set; } = 0;
+
+        /// <summary>
+        /// Clone the Current DraftCharacter
+        /// </summary>
+        /// <returns></returns>
+        public DraftCharacter clone() { 
+            DraftCharacter clone = new DraftCharacter(InternalName, ImagePath);
+            clone.AuctionCost = AuctionCost;
+            clone.Name = Name;
+            return clone;
+        }
     }
 }

@@ -369,7 +369,7 @@
 
         foreach (KeyValuePair<String, Boolean> game in DraftStateHolder.GetDraftState().ChosenGameDict) {
             if (game.Value) {
-                DraftGrouping abc = DraftCharacterCache.DraftGroupings[game.Key];
+                DraftGrouping abc = DraftCharacterCache.DraftGroupings[game.Key].clone();
                 draftCharacters.AddRange(abc.Characters);
                 if (AdditionalTiers == null || AdditionalTiers.Length == 0) {
                     RowsToCreate.UnionWith(abc.AdditionalRowNames);
