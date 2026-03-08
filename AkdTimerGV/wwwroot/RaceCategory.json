@@ -100,5 +100,413 @@
         "Name": "Light (2)"
       }
     ]
+  },
+  {
+    "Name": "FE12 - Any%",
+    "AllowChanges": false,
+    "Splits": [
+      {
+        "Chapter": "P1",
+        "Name": "Meeting"
+      },
+      {
+        "Chapter": "P2",
+        "Name": "Young Squires"
+      },
+      {
+        "Chapter": "P3",
+        "Name": "Training Begins"
+      },
+      {
+        "Chapter": "P4",
+        "Name": "New Companions"
+      },
+      {
+        "Chapter": "P5",
+        "Name": "March Duty"
+      },
+      {
+        "Chapter": "P6",
+        "Name": "Bonds"
+      },
+      {
+        "Chapter": "P7",
+        "Name": "The Final Test"
+      },
+      {
+        "Chapter": "P8",
+        "Name": "Assassination of the Hero-King"
+      },
+      {
+        "Chapter": "1",
+        "Name": "The Grustian Expedition"
+      },
+      {
+        "Chapter": "2",
+        "Name": "Rebellion at Macedon"
+      },
+      {
+        "Chapter": "3",
+        "Name": "Abducted Princess"
+      },
+      {
+        "Chapter": "4",
+        "Name": "Joy and Sorrow"
+      },
+      {
+        "Chapter": "5",
+        "Name": "Liberation of Grust"
+      },
+      {
+        "Chapter": "6",
+        "Name": "The Nest of Evil"
+      },
+      {
+        "Chapter": "7",
+        "Name": "The Scarlet Sword"
+      },
+      {
+        "Chapter": "8",
+        "Name": "Soulful Bridge"
+      },
+      {
+        "Chapter": "9",
+        "Name": "Sanctuary of Sorcery"
+      },
+      {
+        "Chapter": "10",
+        "Name": "Two Sorcerers"
+      },
+      {
+        "Chapter": "11",
+        "Name": "Anri's Way"
+      },
+      {
+        "Chapter": "12",
+        "Name": "Graveyard of Fire Dragons"
+      },
+      {
+        "Chapter": "13",
+        "Name": "Frozen Land"
+      },
+      {
+        "Chapter": "14",
+        "Name": "A Mystery Revealed"
+      },
+      {
+        "Chapter": "15",
+        "Name": "Return of the Prince"
+      },
+      {
+        "Chapter": "16",
+        "Name": "Regaining the Capital"
+      },
+      {
+        "Chapter": "17",
+        "Name": "Gra's Sun Sets"
+      },
+      {
+        "Chapter": "18",
+        "Name": "Battle of the Pass"
+      },
+      {
+        "Chapter": "19",
+        "Name": "The Last Decisive Battle"
+      },
+      {
+        "Chapter": "20",
+        "Name": "Dark Emperor"
+      }
+    ]
+  }, {
+    "Name": "FE12 - True End",
+    "AllowChanges": false,
+    "Splits": [
+      {
+        "Chapter": "P1",
+        "Name": "Meeting"
+      },
+      {
+        "Chapter": "P2",
+        "Name": "Young Squires"
+      },
+      {
+        "Chapter": "P3",
+        "Name": "Training Begins"
+      },
+      {
+        "Chapter": "P4",
+        "Name": "New Companions"
+      },
+      {
+        "Chapter": "P5",
+        "Name": "March Duty"
+      },
+      {
+        "Chapter": "P6",
+        "Name": "Bonds"
+      },
+      {
+        "Chapter": "P7",
+        "Name": "The Final Test"
+      },
+      {
+        "Chapter": "P8",
+        "Name": "Assassination of the Hero-King"
+      },
+      {
+        "Chapter": "1",
+        "Name": "The Grustian Expedition"
+      },
+      {
+        "Chapter": "2",
+        "Name": "Rebellion at Macedon"
+      },
+      {
+        "Chapter": "3",
+        "Name": "Abducted Princess"
+      },
+      {
+        "Chapter": "4",
+        "Name": "Joy and Sorrow"
+      },
+      {
+        "Chapter": "5",
+        "Name": "Liberation of Grust"
+      },
+      {
+        "Chapter": "6",
+        "Name": "The Nest of Evil"
+      },
+      {
+        "Chapter": "7",
+        "Name": "The Scarlet Sword"
+      },
+      {
+        "Chapter": "8",
+        "Name": "Soulful Bridge"
+      },
+      {
+        "Chapter": "9",
+        "Name": "Sanctuary of Sorcery"
+      },
+      {
+        "Chapter": "10",
+        "Name": "Two Sorcerers"
+      },
+      {
+        "Chapter": "11",
+        "Name": "Anri's Way"
+      },
+      {
+        "Chapter": "12",
+        "Name": "Graveyard of Fire Dragons"
+      },
+      {
+        "Chapter": "13",
+        "Name": "Frozen Land"
+      },
+      {
+        "Chapter": "14",
+        "Name": "A Mystery Revealed"
+      },
+      {
+        "Chapter": "15",
+        "Name": "Return of the Prince"
+      },
+      {
+        "Chapter": "16",
+        "Name": "Regaining the Capital"
+      },
+      {
+        "Chapter": "17",
+        "Name": "Gra's Sun Sets"
+      },
+      {
+        "Chapter": "18",
+        "Name": "Battle of the Pass"
+      },
+      {
+        "Chapter": "19",
+        "Name": "The Last Decisive Battle"
+      },
+      {
+        "Chapter": "20",
+        "Name": "Dark Emperor"
+      },
+      {
+        "Chapter": "21",
+        "Name": "The Wyvern's Dale"
+      },
+      {
+        "Chapter": "22",
+        "Name": "The Dragon Altar"
+      },
+      {
+        "Chapter": "23",
+        "Name": "The Dark Pontifex Lives"
+      },
+      {
+        "Chapter": "Endgame",
+        "Name": "Light and Shadow"
+      }
+    ]
+  },  {
+    "Name": "FE12 - All Chapters",
+    "AllowChanges": false,
+    "Splits": [
+      {
+        "Chapter": "P1",
+        "Name": "Meeting"
+      },
+      {
+        "Chapter": "P2",
+        "Name": "Young Squires"
+      },
+      {
+        "Chapter": "P3",
+        "Name": "Training Begins"
+      },
+      {
+        "Chapter": "P4",
+        "Name": "New Companions"
+      },
+      {
+        "Chapter": "P5",
+        "Name": "March Duty"
+      },
+      {
+        "Chapter": "P6",
+        "Name": "Bonds"
+      },
+      {
+        "Chapter": "P7",
+        "Name": "The Final Test"
+      },
+      {
+        "Chapter": "P8",
+        "Name": "Assassination of the Hero-King"
+      },
+      {
+        "Chapter": "1",
+        "Name": "The Grustian Expedition"
+      },
+      {
+        "Chapter": "2",
+        "Name": "Rebellion at Macedon"
+      },
+      {
+        "Chapter": "3",
+        "Name": "Abducted Princess"
+      },
+      {
+        "Chapter": "3x",
+        "Name": "Shadows Behind the Scenes"
+      },
+      {
+        "Chapter": "4",
+        "Name": "Joy and Sorrow"
+      },
+      {
+        "Chapter": "5",
+        "Name": "Liberation of Grust"
+      },
+      {
+        "Chapter": "6",
+        "Name": "The Nest of Evil"
+      },
+      {
+        "Chapter": "6x",
+        "Name": "Mercenary Squad"
+      },
+      {
+        "Chapter": "7",
+        "Name": "The Scarlet Sword"
+      },
+      {
+        "Chapter": "8",
+        "Name": "Soulful Bridge"
+      },
+      {
+        "Chapter": "9",
+        "Name": "Sanctuary of Sorcery"
+      },
+      {
+        "Chapter": "10",
+        "Name": "Two Sorcerers"
+      },
+      {
+        "Chapter": "10x",
+        "Name": "The Mask Laughs"
+      },
+      {
+        "Chapter": "11",
+        "Name": "Anri's Way"
+      },
+      {
+        "Chapter": "12",
+        "Name": "Graveyard of Fire Dragons"
+      },
+      {
+        "Chapter": "13",
+        "Name": "Frozen Land"
+      },
+      {
+        "Chapter": "13x",
+        "Name": "Within the White Darkness"
+      },
+      {
+        "Chapter": "14",
+        "Name": "A Mystery Revealed"
+      },
+      {
+        "Chapter": "15",
+        "Name": "Return of the Prince"
+      },
+      {
+        "Chapter": "16",
+        "Name": "Regaining the Capital"
+      },
+      {
+        "Chapter": "16x",
+        "Name": "Reunion"
+      },
+      {
+        "Chapter": "17",
+        "Name": "Gra's Sun Sets"
+      },
+      {
+        "Chapter": "18",
+        "Name": "Battle of the Pass"
+      },
+      {
+        "Chapter": "19",
+        "Name": "The Last Decisive Battle"
+      },
+      {
+        "Chapter": "20",
+        "Name": "Dark Emperor"
+      },
+      {
+        "Chapter": "20x",
+        "Name": "Bottom of the Deep Abyss"
+      },
+      {
+        "Chapter": "21",
+        "Name": "The Wyvern's Dale"
+      },
+      {
+        "Chapter": "22",
+        "Name": "The Dragon Altar"
+      },
+      {
+        "Chapter": "23",
+        "Name": "The Dark Pontifex Lives"
+      },
+      {
+        "Chapter": "Endgame",
+        "Name": "Light and Shadow"
+      }
+    ]
   }
 ]

@@ -27,6 +27,17 @@
         /// </summary>
         public bool ManuallyCreated { get; set; } = false;
 
+        public RaceSplit Clone() {
+            RaceSplit clone = new RaceSplit();
+            clone.Chapter = Chapter;
+            clone.Name = Name;
+            clone.SplitDuration = SplitDuration;
+            clone.SplitTimestamp = SplitTimestamp;
+            clone.Skipped = Skipped;
+            clone.ManuallyCreated = ManuallyCreated;
+            return clone;
+        }
+
         public override bool Equals(object? obj) {
             return obj is RaceSplit split &&
                    Chapter == split.Chapter &&

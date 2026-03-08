@@ -22,7 +22,7 @@
         public RaceCategory clone() {
             RaceCategory clone = new RaceCategory();
             clone.AllowChanges = AllowChanges;
-            clone.Splits = new List<RaceSplit>(Splits);
+            clone.Splits = new List<RaceSplit>(Splits.Select(split => split.Clone()));
             clone.Name = Name;
             return clone;
         }
