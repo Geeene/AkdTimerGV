@@ -108,12 +108,13 @@
 </ModalDialog>
 
 @code {
-    ResourcesJson configuredResources = JsonSerializer.Deserialize<ResourcesJson>(File.ReadAllText("wwwroot/resources.json"));
+    ResourcesJson configuredResources = JsonSerializer.Deserialize<ResourcesJson>(File.ReadAllText(GetFileLocation()));
     Dictionary<string, int> Tags = new Dictionary<string, int>();
     Dictionary<string, bool> TagDisplayDict = new Dictionary<string, bool>();
     Dictionary<string, int> GameFilters = new Dictionary<string, int>();
     Dictionary<string, bool> GameFilterDict = new Dictionary<string, bool>();
     private static readonly String ENVIRONMENT_VARIABLE_PASSCODE = "AkdTimerGVResourcesPasscode";
+    private static readonly String ENVIRONMENT_VARIABLE_LOCATION = "AkdTimerGVResourcesLocation";
 
     private ModalDialog ResourceManagementDialog { get; set; }
 
@@ -198,9 +199,9 @@
     }
 
     private void AddEntry() {
-    {
-        if (SelectedParentForEntry == null || EnteredTags.Length == 0 || EnteredGames.Length == 0)
-            return;
+        {
+            if (SelectedParentForEntry == null || EnteredTags.Length == 0 || EnteredGames.Length == 0)
+                return;
         }
 
         // Override duplicate entries
@@ -234,12 +235,27 @@
     }
 
     private async void SaveChanges() {
-        File.Move("wwwroot/resources.json", "wwwroot/backup/" + DateTime.Now.ToString("yyyy_MM_dd_mm_HH") + "_resources.json", true);
-        FileStream stream = File.OpenWrite("wwwroot/resources.json");
+        File.Move(GetFileLocation(), GetBasePath()+"/backup/" + DateTime.Now.ToString("yyyy_MM_dd_mm_HH") + "_resources.json", true);
+        FileStream stream = File.OpenWrite(GetFileLocation());
         await JsonSerializer.SerializeAsync<ResourcesJson>(stream, configuredResources);
         stream.Close();
         ResourceManagementDialog.closeDialog();
         StateHasChanged();
+    }
+
+    private static String GetBasePath() {
+        String? location = System.Environment.GetEnvironmentVariable(ENVIRONMENT_VARIABLE_LOCATION);
+
+        if (location == null) {
+            return "wwwroot";
+        }
+
+        return location;
+
+    }
+
+    private static String GetFileLocation() {
+        return GetBasePath() + "/resources.json";
     }
 
     
