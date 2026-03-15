@@ -34,13 +34,13 @@
         }
         @foreach (Team team in GetTeamsToShow()) {
             <div class="d-flex @(Orientation == ORIENTATION_HORZIONTAL ? "flex-row" : "flex-column")" style="margin-right: 5px;">
-                <div class="draft-label-holder" style="width: 200px; border: 3px solid black; border-collapse:collapse; background-color: #212529; @(i == 0 ? "" : "border-top: none")">
+                <div class="draft-label-holder" style="width: 200px; border: 3px solid black; border-collapse:collapse; background-color: @team.TimerData.DraftGrouping.Color; @(i == 0 ? "" : "border-top: none"); font-weight: bold; color: black;">
                     @team.Name
                 </div>
 
                 <div style="max-width: 650px; height: 64px;">
                     <div class="draft-tier @(Orientation == ORIENTATION_HORZIONTAL ? "flex-row" : "flex-column")">
-                        @foreach (DraftCharacter character in team.TimerData.DraftedCharacters) {
+                        @foreach (DraftCharacter character in team.TimerData.DraftGrouping.Characters) {
                             <div class="draft-character-image" style="background-image:url('@character.ImagePath') !important;" />
                         }
                     </div>
@@ -94,7 +94,7 @@
         if (TeamId != null) {
             Teams.Add(Lobby.GetTeamByTeamId((Guid) TeamId));
         } else {
-            Teams.AddRange(Lobby.GetParticipatingTeams().Where(Team => Team.TimerData.DraftedCharacters.Count > 0));
+            Teams.AddRange(Lobby.GetParticipatingTeams().Where(Team => Team.TimerData.DraftGrouping.Characters.Count > 0));
 
             if (SlideshowSeconds > 0) {
                 DetermineNextTeamForSlideshow();

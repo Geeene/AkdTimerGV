@@ -47,11 +47,23 @@
         public void DoSplit(int relevantSplit, long NewActiveTime) {
             long previousActiveTime = 0;
             if (CurrentSplit > 0) {
-                RaceSplit Previous = Splits[relevantSplit - 1];
-                // If the Previous Split was skipped, it's impossible to deterimne the length of the current split. So we just keep the Duration at 0.
-                // User can later enter the time for the previous Split and then we can re-calculate it
+                // To match the way LiveSplit handles Skipped splits (and to properly handle the case
+                // that like in New Mystery, some teams might take different gaiden chapters. 
+                // Whenever a split is skipped, just base the reference on the next previous split
+                int PreviousSplitNumber = relevantSplit - 1;
+                RaceSplit Previous = Splits[PreviousSplitNumber];
+                while (Previous.Skipped) {
+                    PreviousSplitNumber--;
+
+                    if (PreviousSplitNumber < 0) {
+                        break;
+                    }
+
+                    Previous = Splits[PreviousSplitNumber];
+                }
+
                 if (!Previous.Skipped) {
-                    previousActiveTime = Splits[relevantSplit - 1].SplitTimestamp;
+                    previousActiveTime = Previous.SplitTimestamp;
                 } else {
                     previousActiveTime = NewActiveTime;
                 }

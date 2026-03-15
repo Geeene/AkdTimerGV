@@ -100,9 +100,9 @@
                 }
         }
     </div>
-    @if (Team.TimerData.DraftedCharacters.Count >= 1 && DisplayDraft) {
+    @if (Team.TimerData.DraftGrouping != null && DisplayDraft) {
         <div class="" style="max-width: 320px">
-            @foreach (DraftCharacter character in Team.TimerData.DraftedCharacters) {
+            @foreach (DraftCharacter character in Team.TimerData.DraftGrouping.Characters) {
                 <div class="draft-character-image-small" style="background-image:url('@character.ImagePath') !important;float:left" />
             }
         </div>

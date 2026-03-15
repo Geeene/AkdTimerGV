@@ -64,6 +64,7 @@
             clone.Order = this.Order;
             clone.RemainingAuctionCurrency = this.RemainingAuctionCurrency;
             clone.Color = this.Color;
+            clone.AdditionalRowNames = this.AdditionalRowNames;
             return clone;
         }
 

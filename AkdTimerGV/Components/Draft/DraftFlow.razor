@@ -192,18 +192,41 @@
                 </div>
 
                 <!-- Some other Controlls and options -->
-                <input type="button" value="Commit changes" onclick="@(() => CommitChanges(false))" />
-                <span><input type="checkbox" @bind="AutoCommit" /> Automatic Commit</span>
-                <span><input type="checkbox" @bind="SuppressAutoRefresh" /> Suppress refreshes</span>
-                <input type="button" value="Manual refresh" onclick="@(() => refreshFromDraftState(false))" />
-                <input type="button" value="Take Screenshot" onclick="@(() => takeScreenshot())" />
-                <input type="button" value="Merge Lines per Participant" onclick="@(() => MergeForScreenshot())" />
-                <div class="d-flex flex-column" style="margin-top: 10px">
-                    <span><input type="checkbox" @bind="ExportIncludingParticipants" /> Include Participants <input type="button" value="Generate Tiermaker Code" onclick="@(() => ExportToTiermakerCode())"/></span>
-                    <span><textarea @bind="TiermakerCode" cols="50" rows="5"/></span>
+
+                <hr />
+
+                <div class="accordion-item" style="border: 3px solid black; padding: 10px">
+                    <div class="accordion-header" id="heading">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse" aria-expanded="false" aria-controls="collapse">
+                            Controls
+                        </button>
+                    </div>
+
+                    <div id="collapse" class="accordion-collapse collapse" aria-labelledby="heading" data-bs-parent="#accordion">
+                        <div class="d-flex flex-row justify-content-around">
+                            <div class="d-flex flex-column">
+                                State Control
+                                <input type="button" value="Commit changes" onclick="@(() => CommitChanges(false))" />
+                                <span><input type="checkbox" @bind="AutoCommit" /> Automatic Commit</span>
+                                <span><input type="checkbox" @bind="SuppressAutoRefresh" /> Suppress refreshes</span>
+                                <input type="button" value="Manual refresh" onclick="@(() => refreshFromDraftState(false))" />
+                            </div>
+
+                            <div class="d-flex flex-column">
+                                Screenshot Tools
+                                <input type="button" value="Take Screenshot" onclick="@(() => takeScreenshot())" />
+                                <input type="button" value="Merge Lines per Participant" onclick="@(() => MergeForScreenshot())" />
+                            </div>
+
+                            <div class="d-flex flex-column">
+                                Export
+                                <span><input type="checkbox" @bind="ExportIncludingParticipants" /> Include Participants <input type="button" value="Generate Tiermaker Code" onclick="@(() => ExportToTiermakerCode())" /></span>
+                                <span><textarea @bind="TiermakerCode" cols="50" rows="5" /></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
         }
     }
 </div>
@@ -399,9 +422,11 @@
         }
 
         if (DraftStateHolder.GetParticipants().Count == 0) {
-            DraftGrouping DummyGrouping = new DraftGrouping("NEW", "NEW");
-            DraftStateHolder.GetDraftState().DraftGroupings.Add("NEW", DummyGrouping);
-            DummyGrouping.Color = DraftStateHolder.GetDraftState().DraftGroupingColors.GetNextDefaultColor();
+            foreach (String name in new String[]{ "S", "A", "B", "C", "D", "E","F" }) {
+                DraftGrouping DummyGrouping = new DraftGrouping(name, name);
+                DraftStateHolder.GetDraftState().DraftGroupings.Add(name, DummyGrouping);
+                DummyGrouping.Color = DraftStateHolder.GetDraftState().DraftGroupingColors.GetNextDefaultColor();
+            }
         }
 
         DraftStateHolder.GetDraftState().SetAvailableCharacters(draftCharacters);
@@ -517,18 +542,19 @@
     /// Advances the FlowState to the final state. Also copies the draft to the TimerData if the draft is for a Timer Lobby
     /// </summary>
     private async void FinishDraft() {
-        if (DraftStateHolder is Lobby) {
-            int LargestTeamSize = DraftStateHolder.GetDraftState().DraftGroupings.Values.Select(dg => dg.Characters.Count).Max();
 
-            foreach (DraftGrouping dg in DraftStateHolder.GetDraftState().DraftGroupings.Values) {
-                Team? team = ((Lobby)DraftStateHolder).GetTeamByName(dg.InternalName);
+        if (DraftStateHolder is Lobby) {
+            List<DraftGrouping> Groupings = MergeImpl();
+            int LargestTeamSize = MergeImpl().Select(dg => dg.Characters.Count).Max();
+
+            foreach (DraftGrouping dg in Groupings) {
+                Team? team = ((Lobby) DraftStateHolder).GetTeamByName(dg.InternalName);
                 if (dg.IsPlayer && team != null) {
-                    team.TimerData.DraftedCharacters = [];
-                    team.TimerData.DraftedCharacters.AddRange(dg.Characters);
+                    team.TimerData.DraftGrouping = dg;
                     // It's pretty ugly to have differently formatted timers when displaying draft in timer if there 
                     // is an uneven number of Drafted Units. To avoid this, just fill each team to the same size with empty images
-                    while (team.TimerData.DraftedCharacters.Count < LargestTeamSize) {
-                        team.TimerData.DraftedCharacters.Add(new DraftCharacter("Transparent", ""));
+                    while (team.TimerData.DraftGrouping.Characters.Count < LargestTeamSize) {
+                        team.TimerData.DraftGrouping.Characters.Add(new DraftCharacter("Transparent", ""));
                     }
                 }
 
@@ -686,8 +712,9 @@
         await JSRuntime.InvokeVoidAsync("window.takeScreenshot", "DraftTierList");
     }
 
-    private void MergeForScreenshot() {
-        IOrderedEnumerable<DraftGrouping> SortedGroupings = DraftGroupings.Where(dg => dg.IsPlayer).OrderBy(dg => dg.Name);
+    private List<DraftGrouping> MergeImpl() {
+        List<DraftGrouping> Copy = new List<DraftGrouping>(DraftGroupings);
+        IOrderedEnumerable<DraftGrouping> SortedGroupings = Copy.Where(dg => dg.IsPlayer).OrderBy(dg => dg.Name);
         DraftGrouping? Parent = null;
         foreach (DraftGrouping draftGrouping in SortedGroupings) {
             if (Parent == null || Parent.InternalName != draftGrouping.InternalName) {
@@ -698,12 +725,17 @@
             Parent.Characters.AddRange(draftGrouping.Characters);
             draftGrouping.Characters.Clear();
 
-            DraftGroupings.Remove(draftGrouping);
+            Copy.Remove(draftGrouping);
             foreach (DraftGrouping draftGroup in DraftGroupings.Where(dg => dg.Order > draftGrouping.Order)) {
                 draftGroup.Order--;
             }
         }
 
+        return Copy;
+    }
+
+    private void MergeForScreenshot() {
+        DraftGroupings = MergeImpl();
         StateHasChanged();
     }
 

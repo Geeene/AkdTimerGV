@@ -71,8 +71,7 @@ namespace AkdTimerGV.Components.Models {
         /// <summary>
         /// The Characters this team drafted
         /// </summary>
-        public List<DraftCharacter> DraftedCharacters { get; set; } = [];
-
+        public DraftGrouping DraftGrouping { get; set; }
 
         /// <summary>
         /// Start the break, mainly sets the StartCurrentBreak to now
