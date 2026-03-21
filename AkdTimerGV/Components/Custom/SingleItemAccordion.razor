@@ -1,0 +1,38 @@
+﻿<div class="accordion-item @Classes" style="@Style">
+    <div class="accordion-header" id="heading-@Identifier">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@Identifier" aria-expanded="false" aria-controls="collapse-@Identifier">
+            @Title
+        </button>
+    </div>
+
+    <div id="collapse-@Identifier" class="accordion-collapse collapse" aria-labelledby="heading-@Identifier" data-bs-parent="#accordion-@Identifier">
+        @ChildContent
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    [Parameter]
+    public String Style { get; set; }
+    [Parameter]
+    public String Classes { get; set; }
+
+    private Guid Identifier = Guid.NewGuid();
+
+    public string displayProperty { get; set; } = "none;";
+
+
+    public void showDialog() {
+        displayProperty = "block;";
+        StateHasChanged();
+    }
+
+    public void closeDialog() {
+        displayProperty = "none;";
+        StateHasChanged();
+    }
+}

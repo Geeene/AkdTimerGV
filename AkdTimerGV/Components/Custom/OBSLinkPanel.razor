@@ -23,46 +23,49 @@
             </span>
         </div>
     }
+    <hr />
 
-    @if (LINK_TYPE_TIMER == LinkType) {
+    <SingleItemAccordion Title="Settings" Style="border: 2px solid black; padding: 10px; margin: 5px 0px 5px 0px;">
         <div class="d-flex flex-column">
-            <span>
-                <input class="form-check-input" type="checkbox" @bind="IncludeTable"/>
-                <label class="form-check-label form-check-label">
-                     Include Table
-                </label>
-            </span>
-            <span>
-                <input class="form-check-input" type="checkbox" @bind="TransparentBackground"/>
-                <label class="form-check-label form-check-label">
-                     Transparent Background
-                </label>
-            </span>
-            <span>
-                <input class="form-check-input" type="checkbox" @bind="ShowDraft"/>
-                <label class="form-check-label form-check-label">
-                     Show Draft
-                </label>
-            </span>
+            @if (LINK_TYPE_TIMER == LinkType) {
+                    <span>
+                        <input class="form-check-input" type="checkbox" @bind="IncludeTable"/>
+                        <label class="form-check-label form-check-label">
+                             Include Table
+                        </label>
+                    </span>
+                    <span>
+                        <input class="form-check-input" type="checkbox" @bind="TransparentBackground"/>
+                        <label class="form-check-label form-check-label">
+                             Transparent Background
+                        </label>
+                    </span>
+                    <span>
+                        <input class="form-check-input" type="checkbox" @bind="ShowDraft"/>
+                        <label class="form-check-label form-check-label">
+                             Show Draft
+                        </label>
+                    </span>
+            } else {
+            
+                <span>
+                    <input class="form-check-input" id="StreamLinkDraftDisplayOptionHorizontal" type="radio" @onchange="(() => { Orientation = ORIENTATION_HORZIONTAL; })" name="DraftOrientationChoice" checked>
+                    <label class="form-check-label" for="StreamLinkDraftDisplayOptionHorizontal">
+                        @ORIENTATION_HORZIONTAL
+                    </label>
+                </span>
+
+                <span >
+                    <input class="form-check-input" id="StreamLinkDraftDisplayOptionVertical" type="radio" @onchange="(() => { Orientation = ORIENTATION_VERTICAL; })" name="DraftOrientationChoice">
+                    <label class="form-check-label" for="StreamLinkDraftDisplayOptionVertical">
+                        @ORIENTATION_VERTICAL
+                    </label>
+                </span>
+
+                <span>Slideshow seconds: <input type="number" @bind="SlideshowSeconds" style="width: 50px"/></span>
+            }
         </div>
-    } else {
-        <hr />
-        <span>
-            <input class="form-check-input" id="StreamLinkDraftDisplayOptionHorizontal" type="radio" @onchange="(() => { Orientation = ORIENTATION_HORZIONTAL; })" name="DraftOrientationChoice" checked>
-            <label class="form-check-label" for="StreamLinkDraftDisplayOptionHorizontal">
-                @ORIENTATION_HORZIONTAL
-            </label>
-        </span>
-
-        <span >
-            <input class="form-check-input" id="StreamLinkDraftDisplayOptionVertical" type="radio" @onchange="(() => { Orientation = ORIENTATION_VERTICAL; })" name="DraftOrientationChoice">
-            <label class="form-check-label" for="StreamLinkDraftDisplayOptionVertical">
-                @ORIENTATION_VERTICAL
-            </label>
-        </span>
-
-        <span>Slideshow seconds: <input type="number" @bind="SlideshowSeconds" style="width: 50px"/></span>
-    }
+    </SingleItemAccordion>
 
 
     <input type="button" class="btn btn-light" value="Generate Link" onclick="@(() => generateLink())"/>

@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo("/home/web/Apps/AkdTimerGV/Keys"));
+builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(System.Environment.GetEnvironmentVariable("KeysLocation") == null ? "/home/web/Apps/AkdTimerGV/Keys" : System.Environment.GetEnvironmentVariable("KeysLocation")));
 builder.Services.AddBlazorDragDrop();
 var app = builder.Build();
 
