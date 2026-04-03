@@ -1,35 +1,35 @@
 ﻿using System.Text;
 
-namespace AkdTimerGV.Components.Models {
+namespace AkdTimerGV.Components.Utils {
     public class TimeUtil {
 
-        public static String getTimeAsString(long timeInMillis) {
+        public static string getTimeAsString(long timeInMillis) {
             return getTimeAsString(timeInMillis, false);
         }
 
-        public static String getTimeAsStringWithZeros(long timeInMillis) {
+        public static string getTimeAsStringWithZeros(long timeInMillis) {
             long timeInSeconds = timeInMillis / 1000;
             long numberSeconds = timeInSeconds % 60;
 
             long timeWithoutSeconds = timeInSeconds - numberSeconds;
 
-            long numberMinutes = (timeWithoutSeconds % (60 * 60)) / 60;
+            long numberMinutes = timeWithoutSeconds % (60 * 60) / 60;
 
-            long timeHoursOnly = timeWithoutSeconds - (timeWithoutSeconds % (60 * 60));
+            long timeHoursOnly = timeWithoutSeconds - timeWithoutSeconds % (60 * 60);
             long numberHours = timeHoursOnly / (60 * 60);
 
             return numberHours.ToString("00") + ":" + numberMinutes.ToString("00") + ":" + numberSeconds.ToString("00");
         }
 
-        public static String getTimeAsString(long timeInMillis, bool includingMillis) {
+        public static string getTimeAsString(long timeInMillis, bool includingMillis) {
             long timeInSeconds = timeInMillis / 1000;
             long numberSeconds = timeInSeconds % 60;
 
             long timeWithoutSeconds = timeInSeconds - numberSeconds;
 
-            long numberMinutes = (timeWithoutSeconds % (60 * 60)) / 60;
+            long numberMinutes = timeWithoutSeconds % (60 * 60) / 60;
 
-            long timeHoursOnly = timeWithoutSeconds - (timeWithoutSeconds % (60 * 60));
+            long timeHoursOnly = timeWithoutSeconds - timeWithoutSeconds % (60 * 60);
             long numberHours = timeHoursOnly / (60 * 60);
 
             StringBuilder stringBuilder = new();
