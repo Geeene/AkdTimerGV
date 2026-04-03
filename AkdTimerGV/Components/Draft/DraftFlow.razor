@@ -1,12 +1,13 @@
 ﻿@page "/draft"
 @page "/draft/{draftId}"
 @rendermode InteractiveServer
+@using System.Text
+@using System.Threading
+@using AkdTimerGV.Components.Reusable
+@using AkdTimerGV.Components.Lobby
 @using AkdTimerGV.Components.Models
-@using AkdTimerGV.Components.Custom
 @using AkdTimerGV.Components.Pages.OBS
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
-@using System.Threading
-@using System.Text
 @inject ProtectedLocalStorage BrowserStorage;
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager;
@@ -139,7 +140,8 @@
                         @foreach (DraftGrouping draftGrouping in DraftGroupings) {
                             <tr class="flex-container" style="border: 5px solid black;">
                                 <td class="draft-label-holder" style="background-color: @draftGrouping.Color;">
-                                    <textarea style="border:none; background-color: @draftGrouping.Color; text-align: center; width: auto; resize:none;" disabled="@draftGrouping.IsPlayer" @bind="draftGrouping.Name" />
+                                    <textarea style="border:none; background-color: @draftGrouping.Color; text-align: center; width: auto; resize:none;" disabled="@draftGrouping.IsPlayer" 
+                                    @bind="draftGrouping.Name" @bind:after="(() => CommitChanges(true))"/>
                                     <input class="ColorSelection" type="color" @bind="draftGrouping.Color" @bind:after="(() => CommitChanges(true))"/>
                                 </td>
 
@@ -537,7 +539,7 @@
 
         if (DraftStateHolder is Lobby) {
             List<DraftGrouping> Groupings = MergeImpl();
-            int LargestTeamSize = MergeImpl().Select(dg => dg.Characters.Count).Max();
+            int LargestTeamSize = MergeImpl().Where(dg => dg.IsPlayer).Select(dg => dg.Characters.Count).Max();
 
             foreach (DraftGrouping dg in Groupings) {
                 Team? team = ((Lobby) DraftStateHolder).GetTeamByName(dg.InternalName);
